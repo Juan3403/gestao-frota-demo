@@ -1,0 +1,304 @@
+/* ============================================================================
+   07-alert.css — NOTIFICAÇÃO GLOBAL (.ds-alert)
+
+   Componente único para toda mensagem de sistema/feedback (erro, aviso, sucesso,
+   informação) — substitui o zoológico de banners que o legado acumulou por
+   módulo: `.ro-banner`, `.manut-banner`, `.preview-banner`, `.inv-avisos`,
+   `.func-obrig-aviso`, `.bkp-aviso-risco`, `.imp-aviso`, `.v2-erro`, entre
+   outros — cada um com sua própria borda/fundo/ícone, alguns em `var()`, um em
+   cor literal (ver auditoria). Nenhum desses foi apagado nesta rodada (são
+   migrados um a um depois, como qualquer outro componente do Design System);
+   este arquivo só define a forma nova para onde apontar.
+
+   Estrutura (o HTML decide o conteúdo, o CSS só veste):
+     <div class="ds-alert ds-alert-warning">
+       <div class="ds-alert-icon">...svg...</div>
+       <div class="ds-alert-content">...texto...</div>
+       <button class="ds-alert-action">Ação</button>
+     </div>
+
+   Barra horizontal, borda fina, fundo neutro, ícone, texto, ação alinhada à
+   direita — o padrão já aprovado na Frota (`.v2-erro`/`.v2-ofi-*`), agora sem
+   nome de módulo. Só a cor de destaque (borda esquerda + fundo suave + ícone)
+   muda entre as 4 variantes; a moldura é uma regra só.
+
+   Nenhuma cor literal: tudo vem dos tokens semânticos do 02-themes. Escopado em
+   `body.design-v2` (não exige `.ds-modulo`): um alerta pode aparecer solto no
+   shell (ex.: substituindo o `.toast`) ou dentro do conteúdo de um módulo — as
+   duas situações precisam do mesmo componente. Só ≥768px, como o resto do
+   Design System — o celular continua com os banners de hoje, intocado.
+
+   ---- Extensão: título+subtítulo inline e lista expansível de itens ----
+   Migração de Multas/Funcionários/Programas SST/Frota (docs/DESIGN.md, registro
+   do componente de alerta): o resumo (ícone + título + subtítulo + botão) já
+   cabia na forma acima, mas faltava a parte que a Frota (piloto `.v2-ofi-*`,
+   `faixaOficinaV2` em app.js) tinha e nenhum outro consumidor: uma lista
+   expansível de itens individuais, cada um com sua própria severidade. Estende
+   em vez de recriar — reaproveita `.ds-alert-action` como o próprio botão de
+   abrir/fechar a lista (mesmo slot, papel novo).
+
+     <div class="ds-alert ds-alert-warning">
+       <div class="ds-alert-icon">...svg...</div>
+       <div class="ds-alert-content">
+         <div class="ds-alert-cab">
+           <span class="ds-alert-title">5 multas vencidas ou a vencer em até 7 dias</span>
+           <span class="ds-alert-subtitle">texto opcional, trunca com reticências</span>
+         </div>
+         <ul class="ds-alert-lista" id="multasAlertas-lista" hidden>
+           <li class="ds-alert-item">
+             <button class="ds-alert-linha ds-alert-error">
+               <span class="ds-alert-linha-id">ABC1D23</span>
+               <span class="ds-alert-linha-desc">Excesso de velocidade</span>
+               <span class="ds-alert-linha-info">Vencida há 112 d</span>
+             </button>
+           </li>
+         </ul>
+       </div>
+       <button class="ds-alert-action" aria-expanded="false" aria-controls="multasAlertas-lista">Ver 5 multas</button>
+     </div>
+
+   `.ds-alert-linha` reaproveita as MESMAS 4 classes de variante do alerta pai
+   (`.ds-alert-warning/-error/-success/-info`) para a barra de acento por item —
+   severidade é sempre a mesma paleta de 4 cores, nunca um vocabulário novo por
+   domínio (evita repetir "vencido"/"avencer" como nome de classe a cada módulo
+   que copiar isto). `.ds-alert-lista` tem teto de altura com rolagem: a lista
+   é "todos os itens", não os primeiros N — sem isso uma faixa com 50 itens
+   empurraria a tela inteira para baixo ao expandir.
+   ============================================================================ */
+
+@media (min-width: 768px) {
+
+/* Padding/altura casados com a faixa da Frota (#frota #frotaOficinaAlertas,
+   design-v2.css) de propósito — Multas/Funcionários/Programas SST usam este
+   componente, e as três faixas precisam ter a MESMA altura da Frota, não uma
+   parecida. Era `--ds-space-6 14px` (12px/12px) — 12px a mais de altura só
+   de padding vertical contra os 6px da Frota (`--ds-space-3 --ds-space-5`).
+
+   `align-items: center` fica CERTO para o alerta de uma linha só (ex.: o card
+   de backup do Início) — ícone, texto e ação têm a mesma altura, então centro
+   e topo dão o mesmo resultado. Mas quando `.ds-alert-lista` expande (abaixo),
+   `.ds-alert-content` cresce para até 320px+ e o pai passa a centralizar o
+   ícone/botão na altura NOVA e enorme da linha — o botão "Ver N documentos"
+   pulava para o meio vertical da faixa em vez de ficar ancorado junto do
+   título (bug relatado com prints, ago/2026). Corrigido com `align-self:
+   flex-start` no ícone/ação/fechar (abaixo) em vez de trocar este
+   `align-items`: assim o caso de uma linha só nem precisa ser tocado. */
+/* Host das faixas geradas por montarFaixaAlerta (Multas/Funcionários/Programas):
+   mesmo respiro inferior da faixa da Frota (#frotaOficinaAlertas, design-v2.css)
+   — sem isso a faixa cola na linha de resumo logo abaixo. Fica no host (não no
+   .ds-alert base) para não empurrar consumidores soltos como o card de backup. */
+body.design-v2 .ds-alert-faixa:not([hidden]) { margin-bottom: var(--ds-space-5); }
+
+body.design-v2 .ds-alert {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--ds-space-6);
+  padding: var(--ds-space-3) var(--ds-space-5);
+  border: var(--ds-border) solid var(--ds-line);
+  border-left: var(--ds-border-accent) solid var(--ds-muted);
+  border-radius: var(--ds-radius-lg);
+  background: var(--ds-surface);
+  box-shadow: var(--ds-shadow-none);
+  font-size: var(--ds-text-md);
+  color: var(--ds-ink);
+}
+
+body.design-v2 .ds-alert-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-self: flex-start;
+  width: var(--ds-text-lg);
+  height: var(--ds-text-lg);
+  margin-top: 1px;
+  color: inherit;
+}
+body.design-v2 .ds-alert-icon svg { width: 100%; height: 100%; }
+
+body.design-v2 .ds-alert-content { flex: 1 1 auto; min-width: 0; line-height: var(--ds-leading-normal); }
+body.design-v2 .ds-alert-title {
+  display: block;
+  margin-bottom: var(--ds-space-1);
+  font-weight: var(--ds-weight-semibold);
+  color: var(--ds-ink);
+}
+body.design-v2 .ds-alert-content p { margin: 0; color: var(--ds-muted); }
+
+/* Título + subtítulo NA MESMA linha (em vez de título/parágrafo empilhados) —
+   para quando o texto secundário é curto e cabe ao lado, não abaixo. Dentro de
+   `.ds-alert-cab` o título perde o `margin-bottom`/`display:block` de cima
+   (não há segunda linha para separar) e o subtítulo encolhe com reticências
+   em vez de forçar a faixa a crescer.
+
+   `padding-right` reserva o canto onde `.ds-alert-action` flutua (ver abaixo) —
+   sem isso um título comprido passaria por baixo do botão. Não é espaçamento
+   de sistema (por isso não é `--ds-space-*`): é a largura do texto mais longo
+   do botão hoje ("Ver 26 documentos"), com folga. O card de backup do Início
+   não usa `.ds-alert-cab` (título solto direto em `.ds-alert-content`), então
+   fica de fora sozinho — nada muda lá. */
+body.design-v2 .ds-alert-cab {
+  display: flex; align-items: baseline; flex-wrap: wrap;
+  gap: var(--ds-space-2) var(--ds-space-5); min-width: 0;
+  padding-right: 170px;
+}
+body.design-v2 .ds-alert-cab .ds-alert-title { display: inline; margin-bottom: 0; flex: 0 0 auto; }
+body.design-v2 .ds-alert-subtitle {
+  flex: 1 1 auto; min-width: 0;
+  font-size: var(--ds-text-xs); color: var(--ds-muted);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* Ação alinhada à direita — botão ou link, o mesmo slot serve para os dois.
+   Altura por PADDING (não `height` fixo), mesma receita de `.v2-ofi-ver`
+   (design-v2.css): era `height: --ds-control-h-sm` (30px) — 3px a mais que o
+   botão da Frota, a segunda causa da faixa ficar mais alta.
+
+   `position: absolute` em vez de `flex: 0 0 auto`: como filho de flex ele
+   reservava uma COLUNA na largura toda da linha — só uns 30px de altura de
+   botão, mas a coluna ia até o fim da faixa, e quando `.ds-alert-lista`
+   expandia (a lista mora dentro de `.ds-alert-content`, vizinho dessa
+   coluna), cada linha da lista tinha que parar antes da borda direita para
+   não invadi-la — o vazio à direita das linhas do print (bug relatado,
+   ago/2026). Sem reservar coluna, `.ds-alert-content` (e a lista lá dentro)
+   passa a usar a largura inteira. O respiro para o título não passar por
+   baixo dele é o `padding-right` do `.ds-alert-cab` (acima), não mais o
+   espaço reservado aqui.
+
+   Vertical: centrado (`top: 50%` + translate) — ancorar no topo com o padding
+   (`top: --ds-space-3`) deixava o botão 1-3px mais alto que a linha do título
+   e ele vazava pela borda de baixo da faixa recolhida (print, ago/2026); na
+   Frota o botão é filho flex centrado, este é o mesmo resultado. Com a lista
+   expandida o centro viraria o meio da faixa alta (bug antigo), então o
+   `:has` abaixo devolve a âncora do topo nesse estado. */
+body.design-v2 .ds-alert > button,
+body.design-v2 .ds-alert-action {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  right: var(--ds-space-5);
+  padding: var(--ds-space-2) var(--ds-space-5) 3px;
+  border: var(--ds-border) solid var(--ds-line-strong);
+  border-radius: var(--ds-radius-sm);
+  background: var(--ds-surface);
+  color: var(--ds-ink);
+  font: inherit;
+  font-size: var(--ds-text-xs);
+  font-weight: var(--ds-weight-semibold);
+  cursor: pointer;
+}
+body.design-v2 .ds-alert:has(.ds-alert-lista:not([hidden])) > button,
+body.design-v2 .ds-alert:has(.ds-alert-lista:not([hidden])) .ds-alert-action {
+  top: var(--ds-space-3);
+  transform: none;
+}
+body.design-v2 .ds-alert > button:hover,
+body.design-v2 .ds-alert-action:hover {
+  border-color: var(--ds-primary);
+  color: var(--ds-primary);
+  background: var(--ds-surface-subtle);
+}
+/* Fechar (×) é mais discreto que uma ação — sem moldura própria. */
+body.design-v2 .ds-alert-close {
+  border: 0; background: none; padding: var(--ds-space-2);
+  align-self: flex-start;
+  color: var(--ds-muted); font-size: var(--ds-text-lg); line-height: 1;
+}
+body.design-v2 .ds-alert-close:hover { color: var(--ds-ink); background: none; border-color: transparent; }
+
+/* Indicador de ação em TEXTO, sem moldura de botão — para quando o `.ds-alert`
+   inteiro já é a área clicável (ex.: o card de status do backup no Início é um
+   único `<button>`; um `.ds-alert-action` com sua própria borda dentro dele
+   pareceria "botão dentro de botão"). Não usar junto de `.ds-alert-action` no
+   mesmo alerta — são duas respostas para o mesmo papel, nunca as duas juntas. */
+body.design-v2 .ds-alert-cta {
+  flex: 0 0 auto;
+  font-size: var(--ds-text-sm); font-weight: var(--ds-weight-semibold); color: var(--ds-primary);
+}
+
+/* ----- Variantes: só cor de destaque muda — moldura é a mesma para as 4 -----
+   O parágrafo de descrição (`.ds-alert-content p`) também acompanha a variante:
+   um alerta de status único (ex.: card de backup do Início) depende de a
+   MENSAGEM mudar de cor quando vira aviso, não só o ícone e a borda — mesmo
+   contrato que `.ds-alert-linha-info` já segue por item na lista. Aviso usa o
+   token "-ink" dedicado (mesmo motivo do resto do sistema: o âmbar puro não
+   fecha AA como texto sobre o próprio fundo suave); os outros três já são
+   escuros/saturados o bastante para servir como texto direto. */
+body.design-v2 .ds-alert-warning { border-left-color: var(--ds-warning); background: var(--ds-warning-soft); }
+body.design-v2 .ds-alert-warning .ds-alert-icon { color: var(--ds-warning); }
+body.design-v2 .ds-alert-warning .ds-alert-content p { color: var(--ds-warning-ink); font-weight: var(--ds-weight-semibold); }
+
+body.design-v2 .ds-alert-error { border-left-color: var(--ds-danger); background: var(--ds-danger-soft); }
+body.design-v2 .ds-alert-error .ds-alert-icon { color: var(--ds-danger); }
+body.design-v2 .ds-alert-error .ds-alert-content p { color: var(--ds-danger); font-weight: var(--ds-weight-semibold); }
+
+body.design-v2 .ds-alert-success { border-left-color: var(--ds-success); background: var(--ds-success-soft); }
+body.design-v2 .ds-alert-success .ds-alert-icon { color: var(--ds-success); }
+body.design-v2 .ds-alert-success .ds-alert-content p { color: var(--ds-success); font-weight: var(--ds-weight-semibold); }
+
+body.design-v2 .ds-alert-info { border-left-color: var(--ds-info); background: var(--ds-info-soft); }
+body.design-v2 .ds-alert-info .ds-alert-icon { color: var(--ds-info); }
+body.design-v2 .ds-alert-info .ds-alert-content p { color: var(--ds-info); font-weight: var(--ds-weight-semibold); }
+
+/* ----- Lista expansível de itens (dentro de .ds-alert-content) -----
+   <ul> de verdade (leitor de tela anuncia "lista de N itens"), uma linha por
+   item, largura inteira — sem overflow-x em lugar nenhum. Teto de altura com
+   rolagem vertical: é a lista INTEIRA, não uma amostra, então precisa de um
+   limite que não dependa de quantos itens vierem. */
+body.design-v2 .ds-alert-lista {
+  display: flex; flex-direction: column; gap: var(--ds-space-1);
+  margin: var(--ds-space-4) 0 0; padding: var(--ds-space-4) 0 0; list-style: none;
+  border-top: var(--ds-border) solid var(--ds-line);
+  max-height: 320px; overflow-y: auto;
+}
+body.design-v2 .ds-alert-lista[hidden] { display: none; }
+body.design-v2 .ds-alert-item { display: block; min-width: 0; }
+
+/* Item: mesmo grid de 3 colunas do piloto (id | descrição | info à direita).
+   A barra de acento por item reaproveita as 4 classes de variante do alerta
+   pai (.ds-alert-warning/-error/-success/-info) — severidade nunca ganha
+   vocabulário próprio por módulo. */
+body.design-v2 .ds-alert-linha {
+  display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr) minmax(0, 140px);
+  align-items: baseline; gap: var(--ds-space-5); width: 100%; min-width: 0; text-align: left;
+  appearance: none; cursor: pointer; font: inherit;
+  background: var(--ds-surface);
+  border: var(--ds-border) solid var(--ds-line);
+  border-left: var(--ds-border-accent) solid var(--ds-line);
+  border-radius: var(--ds-radius-sm);
+  padding: 5px var(--ds-space-5);
+}
+body.design-v2 .ds-alert-linha:hover { border-color: var(--ds-primary); }
+body.design-v2 .ds-alert-linha.ds-alert-warning { border-left-color: var(--ds-warning); background: var(--ds-surface); }
+body.design-v2 .ds-alert-linha.ds-alert-error { border-left-color: var(--ds-danger); background: var(--ds-surface); }
+/* Identificador do item: NÃO é sempre um código curto — no piloto da Frota era
+   sempre placa (daí o mono/92px de largura fixa), mas o componente genérico
+   também precisa caber nome de pessoa (Funcionários) e "tipo · contrato"
+   (Programas), que não são código e não cabem em 92px. Por isso a coluna é
+   flexível com teto, fonte normal por padrão, e encolhe com reticências como
+   a descrição — o mono vira modificador `.ds-alert-linha-codigo`, só para
+   quem realmente tem um código (placa, nº de série). */
+body.design-v2 .ds-alert-linha-id {
+  font-size: var(--ds-text-xs); font-weight: var(--ds-weight-semibold); color: var(--ds-ink);
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+body.design-v2 .ds-alert-linha-id.ds-alert-linha-codigo {
+  font-family: var(--mono); letter-spacing: var(--ds-tracking-code);
+}
+/* a descrição é o texto longo: encolhe com reticências em vez de esticar a linha */
+body.design-v2 .ds-alert-linha-desc {
+  font-size: var(--ds-text-sm); color: var(--ds-ink); min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+body.design-v2 .ds-alert-linha-info {
+  font-size: var(--ds-text-2xs); color: var(--ds-muted); flex: 0 0 auto;
+  justify-self: end; text-align: right; white-space: nowrap;
+}
+body.design-v2 .ds-alert-linha.ds-alert-warning .ds-alert-linha-info { color: var(--ds-warning); }
+body.design-v2 .ds-alert-linha.ds-alert-error .ds-alert-linha-info { color: var(--ds-danger); }
+/* Em telas estreitas a info desce para a segunda linha em vez de espremer a descrição. */
+@media (max-width: 1100px) {
+  body.design-v2 .ds-alert-linha { grid-template-columns: minmax(0, 220px) minmax(0, 1fr); }
+  body.design-v2 .ds-alert-linha-info { grid-column: 1 / -1; justify-self: start; text-align: left; }
+}
+
+}

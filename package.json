@@ -1,0 +1,45 @@
+{
+  "name": "gestao-frota-demo",
+  "version": "1.55.52",
+  "description": "Central integrada de gestão operacional, de pessoas e financeira (versão de demonstração com dados fictícios)",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "node --watch backend/server.js",
+    "test": "node --test",
+    "test:e2e": "node --test --test-concurrency=1 e2e/browser.e2e.js e2e/frota-design-v2.e2e.js e2e/hub.e2e.js e2e/multa-ocr.e2e.js",
+    "test:ocr": "node --test test/multa-ocr.test.js && node --test e2e/multa-ocr.e2e.js",
+    "avaliar:ocr": "node scripts/avaliar-ocr-multas.js",
+    "test:e2e:design-v2": "node --test e2e/frota-design-v2.e2e.js",
+    "security:secrets": "node scripts/scan-secrets.js",
+    "security:audit": "npm audit --audit-level=high && node scripts/scan-secrets.js"
+  },
+  "engines": {
+    "node": ">=20.19"
+  },
+  "dependencies": {
+    "archiver": "^7.0.1",
+    "compression": "^1.8.1",
+    "docxtemplater": "^3.71.0",
+    "exceljs": "^4.4.0",
+    "express": "^4.19.2",
+    "mongodb": "^6.8.0",
+    "multer": "^2.2.0",
+    "pdf-lib": "^1.17.1",
+    "pdf-parse": "^2.4.5",
+    "pdf-to-img": "^5.0.0",
+    "pizzip": "^3.3.0",
+    "sharp": "^0.35.3",
+    "tesseract.js": "^7.0.0",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
+    "yauzl": "^3.4.0"
+  },
+  "devDependencies": {
+    "playwright": "^1.61.1"
+  },
+  "overrides": {
+    "exceljs": {
+      "uuid": "^11.1.1"
+    }
+  }
+}

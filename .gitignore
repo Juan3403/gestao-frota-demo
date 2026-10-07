@@ -1,0 +1,125 @@
+node_modules/
+
+# Dados locais de desenvolvimento (modo arquivo): todo o "banco" local, backups
+# automáticos, uploads e config local vivem aqui. NUNCA versionar (placas, CPF,
+# valores, % dos sócios). Em produção usa-se Mongo, então nada disto vai pro deploy.
+/data/
+
+*.bak
+data.json.bak
+historico.json
+usuarios.json
+login_logs.json
+instalacoes.json
+envios.json
+contratos.json
+feedbacks.json
+manutencao.json
+simulacoes.json
+backups/
+backups_rast/
+por.traineddata
+uploads/
+# Dados reais da frota — NÃO versionar (contêm placa, chassi, renavam, valores, % dos sócios)
+data.json
+multas.json
+rastreadores.json
+cadastros.json
+.DS_Store
+npm-debug.log*
+
+*.log
+
+# Backups gerados por scripts (não versionar)
+*backup*.json
+
+# Config de sistema (modo manutenção etc.) — estado local, não versionar
+sistema_config.json
+
+# Scripts utilitários de uso único
+migrar_rastreadores_mongo.js
+atualizar_tipo_dispositivos.js
+baixar_dados_mongo.js
+importar_aportes.js
+importar_controles.js
+diag_mongo.js
+stress.js
+mongo-uri.local
+celular.js
+shots/
+# Backup local feito antes de sincronizar dados do Mongo
+backup-local-antes-sync/
+
+# Variáveis locais (NUNCA versionar — contém senhas locais)
+.env
+.env.*
+# ...mas o modelo SEM valores é versionado (referência para quem for configurar):
+!.env.example
+
+# Config local do editor/preview
+.claude/
+.agents/
+.codex/
+porte/
+Núcleo RM (standalone).html
+public/demo-temas.html
+
+# Aba de abastecimento — dados reais (placas, motoristas, valores)
+abastecimento.json
+# Aba de fornecedores — oficinas/distribuidoras (nomes, contatos)
+fornecedores.json
+# Aba de aportes — aportes dos sócios nos contratos (valores, % dos sócios)
+aportes.json
+# Controles dos sócios — empréstimos entre contratos, percentuais por NF, retiradas
+emprestimos.json
+percentuais.json
+retiradas.json
+# Aba de funcionários — colaboradores (CPF/RG, documentos, dados pessoais)
+funcionarios.json
+# Aba de programas de SST — PCMSO/PGR/... (documentos por contrato)
+programas.json
+# Matriz de documentos obrigatórios por cargo/contrato
+func_obrigatorios.json
+# Trilha de auditoria de segurança (IPs, ações sensíveis) — não versionar
+seguranca_logs.json
+# Dumps / backups completos baixados
+*.dump
+# Dump do mongodump (gera <banco>/<colecao>.bson) — dados reais, NUNCA versionar
+dump-frota/
+dump/
+*.bson
+backup-frota-*.json
+backup-auto.json
+# Relatórios de scan de segredos (podem conter trechos sensíveis) — manter fora do git
+gitleaks-report.json
+*.secrets.json
+.secrets-report.*
+# Backups com timestamp (não cobertos por *.bak)
+*.bak-*
+# Planilhas-fonte (dados sensíveis de negócio)
+*.xlsx
+# Artefatos de teste do Playwright (snapshots de página / screenshots)
+.playwright-mcp/
+# Imagens avulsas baixadas do WhatsApp (não são assets do projeto)
+WhatsApp_Image_*
+
+# Pipeline de renda fixa (Banco Inter PJ) — extratos e saídas contêm dados
+# financeiros sensíveis da NTE. NUNCA versionar os PDFs nem os relatórios gerados.
+/extratos/
+/output/
+dados_consolidados.json
+dados_consolidados.csv
+
+
+# Cache do Python (pipeline de renda fixa)
+__pycache__/
+*.pyc
+
+# Artefatos de auditoria/QA (gerados localmente, não fazem parte do app)
+qa-screenshots/
+RELATORIO-QA.md
+screenshots/
+
+# Estudo do app BoxHero (capturas de tela de app de terceiro, só referência local)
+boxhero/
+CLAUDE.md

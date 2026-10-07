@@ -1,0 +1,1054 @@
+/* ============================================================================
+   05-components.css — COMPONENTES REUTILIZÁVEIS
+
+   Escopo único, sem nome de módulo:
+
+       body.design-v2 .ds-modulo …
+
+   `.ds-modulo` é uma classe estática na <section> de cada módulo migrado (hoje
+   só a Frota). Migrar o próximo módulo é acrescentar essa classe — nenhum
+   seletor daqui precisa mudar.
+
+   Nenhuma cor literal: tudo vem dos tokens semânticos do 02-themes, e é por
+   isso que o tema escuro não duplica uma única regra deste arquivo.
+   ============================================================================ */
+
+@media (min-width: 768px) {
+
+/* ============================================================
+   1. SUB-ABAS
+   ============================================================ */
+body.design-v2 .ds-modulo > .subtabs {
+  gap: var(--ds-space-1);
+  margin: 0 0 var(--ds-space-6);
+  border-bottom: var(--ds-border) solid var(--ds-line);
+}
+body.design-v2 .ds-modulo > .subtabs .subtab {
+  padding: 7px var(--ds-space-6);
+  font-size: var(--ds-text-md);
+  font-weight: var(--ds-weight-medium);
+  border-radius: 0;
+  color: var(--ds-muted);
+  border-bottom: var(--ds-border-tab) solid transparent;
+}
+body.design-v2 .ds-modulo > .subtabs .subtab:hover:not(.active) {
+  background: transparent;
+  color: var(--ds-ink);
+}
+body.design-v2 .ds-modulo > .subtabs .subtab.active {
+  color: var(--ds-ink);
+  font-weight: var(--ds-weight-semibold);
+  border-bottom-color: var(--ds-primary);
+}
+
+/* ============================================================
+   2. INDICADOR (StatTile) — a faixa de números do topo
+   O contêiner define a moldura; QUANTAS colunas ele tem é decisão de cada
+   módulo (a Frota declara 4 no design-v2.css).
+   ============================================================ */
+/* A Multas usa esta marcação `.v2-kpi*` sem ser um módulo migrado (não tem `.ds-modulo`). O par
+   `#multas` de cada regra daqui mora em `design-multas.css`, a camada DO módulo — CSS genérico
+   não conhece nome de módulo (test/design-system.test.js cobra isso). */
+body.design-v2 .ds-modulo .v2-kpis {
+  display: grid;
+  gap: 1px;
+  margin-bottom: var(--ds-space-6);
+  background: var(--ds-line);
+  border: var(--ds-border) solid var(--ds-line);
+  border-radius: var(--ds-radius-lg);
+  overflow: hidden;
+}
+body.design-v2 .ds-modulo .v2-kpi {
+  display: flex; flex-direction: column; gap: 1px;
+  padding: var(--ds-space-4) 14px;
+  background: var(--ds-surface);
+  min-width: 0;
+  container-type: inline-size; /* habilita o `cqi` do .v2-kpi-val abaixo */
+}
+body.design-v2 .ds-modulo .v2-kpi-rot {
+  font-size: var(--ds-text-xs);
+  font-weight: var(--ds-weight-medium);
+  color: var(--ds-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+body.design-v2 .ds-modulo .v2-kpi-val {
+  font-family: var(--mono);
+  /* valor grande (ex.: "5 • R$ 101.075,64") encolhe com a largura do card
+     em vez de quebrar linha */
+  font-size: clamp(14px, 8.5cqi, var(--ds-text-2xl));
+  font-weight: var(--ds-weight-medium);
+  line-height: var(--ds-leading-tight);
+  color: var(--ds-ink);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+body.design-v2 .ds-modulo .v2-kpi-nota { font-size: var(--ds-text-xs); color: var(--ds-muted); }
+/* ação/link dentro da nota (ex.: "Ver eventos →" da Manutenção, "▸ filtrar lista" do EPI) */
+body.design-v2 .ds-modulo .v2-kpi-nota a,
+body.design-v2 .ds-modulo .v2-kpi-nota .epi-card-acao {
+  color: var(--ds-primary); font-weight: var(--ds-weight-semibold); text-decoration: none;
+}
+body.design-v2 .ds-modulo .v2-kpi-nota a:hover { text-decoration: underline; text-underline-offset: 3px; }
+/* Estado do indicador: NUNCA só pela cor — o rótulo já diz o que é, e um zero
+   desejável fica neutro em vez de vermelho. */
+body.design-v2 .ds-modulo .v2-kpi.aviso .v2-kpi-val { color: var(--ds-warning); }
+body.design-v2 .ds-modulo .v2-kpi.risco .v2-kpi-val { color: var(--ds-danger); }
+/* `.positivo` — não existia antes da Multas: "Pagas" é um resultado bom (dívida
+   quitada), diferente do neutro padrão dos demais KPIs de exibição. Mesmo padrão
+   de `.aviso`/`.risco`: só o número muda de cor, o rótulo continua dizendo o quê. */
+body.design-v2 .ds-modulo .v2-kpi.positivo .v2-kpi-val { color: var(--ds-success); }
+
+/* ============================================================
+   3. KPI CLICÁVEL (StatTile como filtro)
+   `.v2-kpi` nasceu só-exibição (Frota). A Multas precisa do MESMO cartão, mas
+   clicável e com estado "filtro ativo" — equivalente a `.card-clic`/`.card-ativo`
+   (styles.css), porém nos tokens do DS em vez da borda de cor fixa `--brand`.
+   Marcação: `.v2-kpi.v2-kpi-clicavel[role="button"][tabindex="0"]`, `.ativo`
+   quando é o filtro em uso. JS continua tratando Enter/Espaço (nada disso é CSS).
+   ============================================================ */
+body.design-v2 .ds-modulo .v2-kpi-clicavel {
+  cursor: pointer;
+  transition: background-color .12s ease, box-shadow .12s ease;
+}
+body.design-v2 .ds-modulo .v2-kpi-clicavel:hover {
+  background: var(--ds-surface-hover);
+}
+body.design-v2 .ds-modulo .v2-kpi-clicavel.ativo {
+  background: var(--ds-surface-hover);
+  box-shadow: inset 0 0 0 2px var(--ds-primary);
+}
+/* `.func-dash-card` saiu — o dashboard de Funcionários virou `.v2-kpi` e usa
+   os estados `risco`/`aviso` acima. */
+
+/* ============================================================
+   3. TOOLBAR
+   ============================================================ */
+/* `.forn-topo` (achado ao migrar Fornecedores, seção 11) é a MESMA barra, só que para telas
+   organizadas em cards/lista em vez de tabela — mesmo gap, mesma busca, mesmos botões. Uma
+   única regra de moldura para as duas, em vez de duplicar: é a mesma "toolbar", só o filtro
+   muda de forma (chips em vez de multisseleção). `.func-topo` (achado ao migrar Programas) é a
+   MESMA barra outra vez, com um TERCEIRO nome de classe — o próprio styles.css já dizia isso
+   ("Barra de topo alinhada ao padrão .toolbar... usada por Funcionários e Programas SST"); os
+   valores são idênticos aos de `.forn-topo`, byte a byte. Entra na mesma regra pelo mesmo
+   motivo: sem isso seria CSS duplicado para o mesmo componente. */
+body.design-v2 .ds-modulo .toolbar,
+body.design-v2 .ds-modulo .forn-topo,
+body.design-v2 .ds-modulo .func-topo {
+  position: relative;
+  display: flex; align-items: center; gap: var(--ds-space-4); flex-wrap: wrap;
+  padding: 7px var(--ds-space-4);
+  margin-bottom: var(--ds-space-5);
+  background: var(--ds-surface);
+  border: var(--ds-border) solid var(--ds-line);
+  border-radius: var(--ds-radius-lg);
+  box-shadow: var(--ds-shadow-none);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+/* `.epi-filtros-barra` (EPI, barra única das 4 sub-abas) é a MESMA toolbar com um
+   quarto nome, mas com layout próprio em duas fileiras (seletores+datas / chips) —
+   por isso só a PELE entra aqui; o flex-column dela continua vindo do styles.css. */
+body.design-v2 .ds-modulo .epi-filtros-barra {
+  background: var(--ds-surface);
+  border: var(--ds-border) solid var(--ds-line);
+  border-radius: var(--ds-radius-lg);
+  box-shadow: var(--ds-shadow-none);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* ----- 3.1 Busca -----
+   `.empresa-toolbar .busca` (achado ao migrar Senhas) entra aqui pelo mesmo motivo dos outros:
+   é o MESMO campo de busca. A diferença é que `.empresa-toolbar` continua SEM caixa (sem
+   fundo/borda) — a página já tem uma caixa acima (`.empresa-hero`, rejeitada do DS: fundo em
+   gradiente, identidade visual própria) e uma segunda caixa logo abaixo pesaria a tela; só o
+   campo em si precisa vestir o Design System. */
+body.design-v2 .ds-modulo .toolbar .busca,
+body.design-v2 .ds-modulo .forn-topo .forn-busca,
+body.design-v2 .ds-modulo .func-topo .func-busca,
+body.design-v2 .ds-modulo .empresa-toolbar .busca {
+  /* margem: a toolbar-cartão da 1.51.0 deixa 6px embaixo da busca (lá ela é um
+     campo sublinhado de linha inteira); aqui é um campo com borda, na mesma linha. */
+  flex: 1 1 240px; min-width: 200px;
+  height: var(--ds-control-h);
+  margin: 0; padding: 0 var(--ds-space-6) 0 32px;
+  border-radius: var(--ds-radius-sm);
+  border: var(--ds-border) solid var(--ds-line-strong);
+  /* Longhands, NUNCA o atalho `background:`. O `--ds-surface` só existe depois que o app.js
+     põe `tema-claro`/`tema-escuro` no body (fim da página); até lá o var() é inválido e, dentro
+     do atalho, invalida a declaração INTEIRA → repeat/size/position voltam ao inicial e a lupa
+     se repetia em fileira pelo campo a cada recarga (1.55.45). Separado, só a cor fica
+     pendente no 1º paint; tamanho e posição usam tokens do :root, que existem desde o início. */
+  background-color: var(--ds-surface);
+  background-repeat: no-repeat;
+  background-position: var(--ds-space-5) center;
+  background-size: var(--ds-text-lg) var(--ds-text-lg);
+  /* NÃO é `currentColor`, e não dá para ser: <input> é elemento substituído e não
+     renderiza ::before/::after, então o ícone tem de vir como background-image, e
+     data URI não interpola variável CSS. Consequência prática: o ícone é fixo e
+     por isso usa um cinza que funciona nos dois temas. Trocar por SVG inline
+     pediria um wrapper em volta do campo — mexeria no DOM e no `.busca` de todos
+     os módulos. Registrado como melhoria futura, não bloqueante: o placeholder é
+     que nomeia o campo; o ícone é decorativo. */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a9aa2' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cline x1='21' y1='21' x2='16.7' y2='16.7'/%3E%3C/svg%3E");
+  font-size: var(--ds-text-md);
+  color: var(--ds-ink);
+}
+body.design-v2 .ds-modulo .toolbar .busca:focus,
+body.design-v2 .ds-modulo .forn-topo .forn-busca:focus,
+body.design-v2 .ds-modulo .func-topo .func-busca:focus,
+body.design-v2 .ds-modulo .empresa-toolbar .busca:focus {
+  border-color: var(--ds-focus);
+  box-shadow: 0 0 0 var(--ds-ring-width) color-mix(in srgb, var(--ds-focus) 18%, transparent);
+}
+
+/* ----- 3.1.1 Select de ordenar/filtrar -----
+   `.ord-select` (achado ao migrar Documentos): select nativo dentro da barra de busca, ao lado
+   da `.busca`. Cor/fonte/borda já saem certas pela ponte com o legado (`var(--line)`/
+   `var(--panel)`/`var(--ink)`, todas remapeadas dentro de `.ds-modulo`); só altura e raio
+   precisam de regra própria, para não ficar mais baixo/redondo que a busca ao lado (legado:
+   10px de raio, ~35px de altura por padding). Sem `:focus` próprio de propósito: o anel de foco
+   já vem do `:focus-visible` global (styles.css), que não muda com a migração.
+   `.toolbar .ord-select` (achado ao migrar Feedback, segundo consumidor real) entra na MESMA
+   regra: é o mesmo controle, só que dentro da barra de tabela em vez da barra de cards — não
+   duplica, só estende a lista de seletores. */
+body.design-v2 .ds-modulo .empresa-toolbar .ord-select,
+body.design-v2 .ds-modulo .toolbar .ord-select {
+  height: var(--ds-control-h);
+  padding: 0 var(--ds-space-5);
+  border-radius: var(--ds-radius-sm);
+  border-color: var(--ds-line-strong);
+  font-size: var(--ds-text-base);
+}
+
+/* ----- 3.2 Botões da toolbar -----
+   `min-height` (e não só `height`): a toolbar-cartão da 1.51.0 impõe
+   `.toolbar .btn, .toolbar .msel-btn { min-height: 38px }`, que vencia a altura
+   daqui e mantinha a barra 6px mais alta do que o desenho pede. */
+body.design-v2 .ds-modulo .toolbar .btn,
+body.design-v2 .ds-modulo .forn-topo .btn,
+body.design-v2 .ds-modulo .func-topo .btn,
+body.design-v2 .ds-modulo .epi-filtros-barra .btn,
+body.design-v2 .ds-modulo .cst-topo-acoes .btn {
+  height: var(--ds-control-h); min-height: var(--ds-control-h);
+  padding: 0 var(--ds-space-6);
+  border-radius: var(--ds-radius-sm);
+  font-size: var(--ds-text-base);
+  font-weight: var(--ds-weight-medium);
+  box-shadow: var(--ds-shadow-none);
+}
+body.design-v2 .ds-modulo .toolbar .btn:hover,
+body.design-v2 .ds-modulo .forn-topo .btn:hover,
+body.design-v2 .ds-modulo .func-topo .btn:hover,
+body.design-v2 .ds-modulo .epi-filtros-barra .btn:hover,
+body.design-v2 .ds-modulo .cst-topo-acoes .btn:hover { transform: none; box-shadow: var(--ds-shadow-none); }
+body.design-v2 .ds-modulo .toolbar .btn-ghost,
+body.design-v2 .ds-modulo .forn-topo .btn-ghost,
+body.design-v2 .ds-modulo .func-topo .btn-ghost,
+body.design-v2 .ds-modulo .epi-filtros-barra .btn-ghost,
+body.design-v2 .ds-modulo .cst-topo-acoes .btn-ghost {
+  background: var(--ds-surface);
+  border-color: var(--ds-line-strong);
+  color: var(--ds-ink);
+}
+body.design-v2 .ds-modulo .toolbar .btn-ghost:hover,
+body.design-v2 .ds-modulo .forn-topo .btn-ghost:hover,
+body.design-v2 .ds-modulo .func-topo .btn-ghost:hover,
+body.design-v2 .ds-modulo .epi-filtros-barra .btn-ghost:hover,
+body.design-v2 .ds-modulo .cst-topo-acoes .btn-ghost:hover {
+  background: var(--ds-surface-subtle);
+  border-color: var(--ds-primary);
+  color: var(--ds-primary);
+}
+/* botão primário SÓLIDO: sem gradiente, sem sombra colorida, sem varredura.
+   Regra GERAL para qualquer .btn-primary dentro de módulo DS (antes era restrita a
+   .toolbar/.forn-topo/.func-topo): fora dessas barras o botão caía no legado
+   (`--brand` + #fff fixo), que no tema escuro vira texto branco sobre azul-claro —
+   varredura de contraste achou o caso em 11 abas (Contabilidade, Investimentos,
+   Multas·Termos, Manutenção·Relatórios, Locações, Feedback, Senhas, Documentos,
+   Usuários, Cadastros, Segurança). Modais ficam de fora (não são descendentes de
+   .ds-modulo) — mesmo limite estrutural dos demais componentes. */
+body.design-v2 .ds-modulo .btn-primary {
+  background: var(--ds-primary);
+  border-color: var(--ds-primary);
+  color: var(--ds-on-primary);
+}
+body.design-v2 .ds-modulo .btn-primary:hover {
+  background: var(--ds-primary-hover);
+  border-color: var(--ds-primary-hover);
+  filter: none;
+}
+body.design-v2 .ds-modulo .btn-primary::after { content: none; }
+/* chip de empresa ativa da Contabilidade: mesmo vício de #fff fixo do legado
+   (styles.css .contab-emp-tab.ativa) — no DS o par primário/on-primary decide. */
+body.design-v2 .ds-modulo .contab-emp-tab.ativa {
+  background: var(--ds-primary);
+  border-color: var(--ds-primary);
+  color: var(--ds-on-primary);
+}
+body.design-v2 .ds-modulo .toolbar .planilha-acoes { gap: var(--ds-space-3); }
+
+/* ----- 3.3 Campo de data solto na toolbar -----
+   Usado por 3 módulos (Rastreadores, Instalações, Envios) para intervalo "de/até" — texto
+   livre com máscara dd/mm/aaaa, não é um DatePicker nativo. Só a altura/borda acompanham o
+   resto da fileira (mesma régua de .busca/.btn/.msel-btn); a largura fica como o legado define. */
+body.design-v2 .ds-modulo .toolbar .filtro-data {
+  height: var(--ds-control-h);
+  padding: 0 var(--ds-space-5);
+  border-radius: var(--ds-radius-sm);
+  border-color: var(--ds-line-strong);
+  font-size: var(--ds-text-base);
+  color: var(--ds-ink);
+}
+body.design-v2 .ds-modulo .toolbar .filtro-data:focus {
+  border-color: var(--ds-focus);
+  box-shadow: 0 0 0 var(--ds-ring-width) color-mix(in srgb, var(--ds-focus) 18%, transparent);
+}
+
+/* ----- 3.3.1 Intervalo De/Até com <input type="date"> nativo -----
+   Usado por Almoxarifado e EPI (barra compartilhada + Notas Fiscais) via `.almox-data`.
+   O styles.css estiliza esses campos com `:is(.epi-filtros-barra, #epi-notas-fiscais .toolbar)
+   input[type=date]` — um `:is()` com ID vale (1,1,1) para TODOS os argumentos e vence qualquer
+   regra só de classes daqui. Por isso os pares com ID (#epi/#almoxarifado) vivem nas camadas
+   design-epi.css/design-almoxarifado.css: CSS genérico não conhece nome de módulo. */
+body.design-v2 .ds-modulo .almox-data input[type="date"] {
+  height: var(--ds-control-h);
+  padding: 0 var(--ds-space-5);
+  border: var(--ds-border) solid var(--ds-line-strong);
+  border-radius: var(--ds-radius-sm);
+  background: var(--ds-surface);
+  color: var(--ds-ink);
+  font-size: var(--ds-text-base);
+  box-shadow: var(--ds-shadow-none);
+}
+body.design-v2 .ds-modulo .almox-data input[type="date"]:hover {
+  border-color: var(--ds-primary);
+}
+body.design-v2 .ds-modulo .almox-data input[type="date"]:focus-visible {
+  outline: none;
+  border-color: var(--ds-focus);
+  box-shadow: 0 0 0 var(--ds-ring-width) color-mix(in srgb, var(--ds-focus) 18%, transparent);
+}
+body.design-v2 .ds-modulo .almox-data {
+  color: var(--ds-muted);
+  font-size: var(--ds-text-sm);
+  font-weight: var(--ds-weight-medium);
+}
+/* `.hdate` é o campo de data SEGMENTADO que o date picker do app desenha por cima do
+   input nativo (que fica oculto) — é ele que aparece nos filtros. Mesma régua. */
+body.design-v2 .ds-modulo .hdate {
+  height: var(--ds-control-h);
+  border-color: var(--ds-line-strong);
+  border-radius: var(--ds-radius-sm);
+  background: var(--ds-surface);
+}
+body.design-v2 .ds-modulo .hdate:focus-within {
+  border-color: var(--ds-focus);
+  box-shadow: 0 0 0 var(--ds-ring-width) color-mix(in srgb, var(--ds-focus) 18%, transparent);
+}
+
+/* ============================================================
+   4. FILTROS — botão + painel ancorado
+
+   O painel É o `.filtros` de sempre: mesmos multiselects, mesmos handlers,
+   mesmo resultado. Só muda de lugar. Fora do Design System ele volta a ser a
+   fileira inline, sem uma linha de JS a mais.
+
+   `role="dialog"`, `aria-labelledby` e `aria-haspopup` são POSTOS E RETIRADOS
+   juntos pelo app.js: anunciar "diálogo" numa fileira inline seria regressão de
+   leitor de tela.
+   ============================================================ */
+body.design-v2 .ds-modulo .v2-filtros-btn {
+  display: inline-flex; align-items: center; gap: 7px; flex: 0 0 auto;
+  height: var(--ds-control-h); padding: 0 11px;
+  border: var(--ds-border) solid var(--ds-line-strong);
+  border-radius: var(--ds-radius-sm);
+  background: var(--ds-surface);
+  color: var(--ds-ink);
+  font: inherit; font-size: var(--ds-text-base); font-weight: var(--ds-weight-medium);
+  cursor: pointer; white-space: nowrap;
+}
+body.design-v2 .ds-modulo .v2-filtros-btn:hover {
+  background: var(--ds-surface-subtle);
+  border-color: var(--ds-primary);
+  color: var(--ds-primary);
+}
+/* Com filtro ativo o botão muda de PESO e ganha o contador, não só de cor. */
+body.design-v2 .ds-modulo .v2-filtros-btn.tem-filtros,
+body.design-v2 .ds-modulo .v2-filtros-btn[aria-expanded="true"] {
+  border-color: var(--ds-primary);
+  color: var(--ds-primary);
+  font-weight: var(--ds-weight-semibold);
+}
+body.design-v2 .ds-modulo .v2-filtros-cont {
+  display: inline-grid; place-items: center;
+  min-width: 18px; height: 18px; padding: 0 5px;
+  border-radius: var(--ds-radius-xs);
+  background: var(--ds-primary);
+  color: var(--ds-on-primary);
+  font-size: var(--ds-text-3xs);
+  font-weight: var(--ds-weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+/* ⚠️ Painel é OPT-IN por estrutura, não por módulo: só entra quando a toolbar TEM o botão
+   `.v2-filtros-btn` (Frota tem; um módulo com `.filtros` inline comum, como Multas, não tem).
+   `:has()` aqui não é o anti-padrão de module-lock — não nomeia módulo nenhum, só detecta se
+   ESTE componente (o widget de painel) está presente. Sem essa guarda, `.filtros{display:none}`
+   e `.msel{width:100%}` se aplicariam a QUALQUER `.filtros` de QUALQUER módulo migrado — inclusive
+   a fileira inline de Multas, que ficaria com os filtros escondidos ou empilhados a 100% de largura. */
+body.design-v2 .ds-modulo :is(.toolbar, .forn-topo, .func-topo, .epi-filtros-barra):has(.v2-filtros-btn) .filtros {
+  position: absolute; top: calc(100% - 2px); left: 0; z-index: 96;
+  display: none;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ds-space-4);
+  width: 448px; max-width: calc(100vw - 48px);
+  padding: var(--ds-space-6);
+  background: var(--ds-surface);
+  border: var(--ds-border) solid var(--ds-line);
+  border-radius: var(--ds-radius-lg);
+  box-shadow: var(--ds-shadow-float);
+}
+body.design-v2 .ds-modulo :is(.toolbar, .forn-topo, .func-topo, .epi-filtros-barra):has(.v2-filtros-btn) .filtros.aberto { display: grid; }
+body.design-v2 .ds-modulo .v2-filtros-tit {
+  display: block; grid-column: 1 / -1; margin-bottom: var(--ds-space-1);
+  font-size: var(--ds-text-xs);
+  font-weight: var(--ds-weight-semibold);
+  color: var(--ds-muted);
+}
+body.design-v2 .ds-modulo :is(.toolbar, .forn-topo, .func-topo, .epi-filtros-barra):has(.v2-filtros-btn) .filtros .msel { display: block; min-width: 0; }
+body.design-v2 .ds-modulo :is(.toolbar, .forn-topo, .func-topo, .epi-filtros-barra):has(.v2-filtros-btn) .filtros .msel-btn { width: 100%; max-width: none; }
+body.design-v2 .ds-modulo :is(.toolbar, .forn-topo, .func-topo, .epi-filtros-barra):has(.v2-filtros-btn) .filtros .msel-menu { min-width: 100%; }
+
+/* "Limpar filtros" é o MESMO botão de sempre; só muda de lugar (rodapé do
+   painel) em vez de disputar a linha principal. Selecionado pela posição
+   (único botão dentro do painel), não por id — é o que mantém a regra genérica.
+   Escopado ao painel pelo mesmo motivo acima: em fileira inline (Multas) o botão
+   continua com a cara normal de `.toolbar .btn`, sem virar link sozinho na linha. */
+body.design-v2 .ds-modulo :is(.toolbar, .forn-topo, .func-topo, .epi-filtros-barra):has(.v2-filtros-btn) .filtros > .btn {
+  grid-column: 1 / -1; justify-self: end; margin-top: var(--ds-space-4);
+  height: auto; min-height: 0; padding: 0;
+  border: 0; border-radius: 0; background: none;
+  color: var(--ds-focus);
+  font-size: var(--ds-text-sm);
+  font-weight: var(--ds-weight-semibold);
+  text-decoration: underline; text-underline-offset: 2px;
+}
+body.design-v2 .ds-modulo :is(.toolbar, .forn-topo, .func-topo, .epi-filtros-barra):has(.v2-filtros-btn) .filtros > .btn:hover {
+  background: none; border: 0; color: var(--ds-primary); box-shadow: none;
+}
+/* Sem nada para limpar, o botão é desabilitado pelo app.js. Ele perde o
+   sublinhado e o azul de link: continua legível, mas para de se oferecer como
+   ação. `opacity` sozinha não serve — o azul desbotado ainda lê como clicável. */
+body.design-v2 .ds-modulo :is(.toolbar, .forn-topo, .func-topo, .epi-filtros-barra):has(.v2-filtros-btn) .filtros > .btn:disabled,
+body.design-v2 .ds-modulo :is(.toolbar, .forn-topo, .func-topo, .epi-filtros-barra):has(.v2-filtros-btn) .filtros > .btn:disabled:hover {
+  opacity: 1; color: var(--ds-muted); text-decoration: none; cursor: default;
+}
+
+/* ----- 4.1 Multiselect na toolbar ----- */
+body.design-v2 .ds-modulo .toolbar .msel-btn,
+body.design-v2 .ds-modulo .func-topo .msel-btn,
+body.design-v2 .ds-modulo .epi-filtros-barra .msel-btn {
+  height: var(--ds-control-h); min-height: var(--ds-control-h);
+  padding: 0 9px; gap: var(--ds-space-3); max-width: 168px;
+  border-radius: var(--ds-radius-sm);
+  border-color: var(--ds-line-strong);
+  background: var(--ds-surface);
+  color: var(--ds-ink);
+  font-size: var(--ds-text-base);
+  font-weight: var(--ds-weight-medium);
+}
+body.design-v2 .ds-modulo .toolbar .msel.tem-sel .msel-btn,
+body.design-v2 .ds-modulo .toolbar .msel.aberto .msel-btn,
+body.design-v2 .ds-modulo .func-topo .msel.tem-sel .msel-btn,
+body.design-v2 .ds-modulo .func-topo .msel.aberto .msel-btn,
+body.design-v2 .ds-modulo .epi-filtros-barra .msel.tem-sel .msel-btn,
+body.design-v2 .ds-modulo .epi-filtros-barra .msel.aberto .msel-btn {
+  border-color: var(--ds-primary); color: var(--ds-primary);
+}
+body.design-v2 .ds-modulo .toolbar .msel-count,
+body.design-v2 .ds-modulo .func-topo .msel-count,
+body.design-v2 .ds-modulo .epi-filtros-barra .msel-count {
+  background: var(--ds-primary); color: var(--ds-on-primary);
+  border-radius: var(--ds-radius-xs);
+}
+
+/* ----- 4.2 Itens de largura cheia dentro do painel -----
+   Datas (Admissão de/até, De/Até do Almox/EPI) e chips de período entram no painel
+   junto com os multiselects, mas não cabem numa meia-coluna do grid. */
+body.design-v2 .ds-modulo :is(.toolbar, .forn-topo, .func-topo, .epi-filtros-barra):has(.v2-filtros-btn) .filtros :is(.hdate, .func-adm-filtro, .almox-atalhos) {
+  grid-column: 1 / -1;
+}
+/* `.epi-filtros-barra` só ganha a pele da toolbar (sem position) na seção 3;
+   com o painel dentro dela o absolute precisa de referência. */
+body.design-v2 .ds-modulo .epi-filtros-barra:has(.v2-filtros-btn) { position: relative; }
+
+/* ============================================================
+   4.3 MENU "⋯" (mais ações da toolbar)
+
+   As ações secundárias (Importar/Exportar/Relatório/…) saem da linha principal e
+   passam a viver num menu flutuante ancorado no botão "⋯". Os <button> são os
+   MESMOS de sempre, só mudam de lugar no DOM (ver app.js, abrirKebab/fecharKebab).
+   Fora do Design System o wrapper e o menu são `display:contents`: os botões voltam
+   a ser itens inline da toolbar, sem uma linha de JS a mais.
+   ============================================================ */
+/* Regras-base (fora do DS/celular: botão escondido, wrapper e menu transparentes)
+   moram em 03-base.css, FORA do @media — este arquivo inteiro só vale ≥768px. */
+body.design-v2 .ds-modulo .v2-kebab-btn {
+  display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
+  height: var(--ds-control-h); min-width: var(--ds-control-h); padding: 0 9px;
+  border: var(--ds-border) solid var(--ds-line-strong);
+  border-radius: var(--ds-radius-sm);
+  background: var(--ds-surface);
+  color: var(--ds-ink);
+  font: inherit; font-size: var(--ds-text-lg); font-weight: var(--ds-weight-semibold);
+  line-height: 1; cursor: pointer;
+}
+body.design-v2 .ds-modulo .v2-kebab-btn:hover {
+  background: var(--ds-surface-subtle);
+  border-color: var(--ds-primary);
+  color: var(--ds-primary);
+}
+body.design-v2 .ds-modulo .v2-kebab-btn[aria-expanded="true"] {
+  border-color: var(--ds-primary);
+  color: var(--ds-primary);
+}
+/* Fechado: escondido (os botões "somem" da linha). Aberto: ancorarMenuFixo porta o
+   menu para o <body> e o posiciona (position:fixed via style inline) — por isso as
+   regras do estado aberto NÃO passam por .ds-modulo. z-index acima dos .pill-menu
+   portados (180). */
+body.design-v2 .v2-kebab-menu { display: none; }
+body.design-v2 .v2-kebab-menu.aberto {
+  display: flex; flex-direction: column; align-items: stretch; gap: 2px;
+  z-index: 200; overflow: auto;
+  min-width: 200px; padding: var(--ds-space-3);
+  background: var(--ds-surface);
+  border: var(--ds-border) solid var(--ds-line);
+  border-radius: var(--ds-radius-lg);
+  box-shadow: var(--ds-shadow-float);
+}
+/* O grupo `.planilha-acoes` (padronizarAcoesPlanilha) pode ser montado dentro do menu:
+   vira transparente para os botões empilharem como itens normais. */
+body.design-v2 .v2-kebab-menu .planilha-acoes { display: contents; }
+/* Dentro do menu, .btn/.btn-ghost perdem a cara de botão e viram item de menu. */
+body.design-v2 .v2-kebab-menu.aberto :is(.btn, button) {
+  display: flex; align-items: center; gap: var(--ds-space-3); width: 100%;
+  justify-content: flex-start; text-align: left;
+  height: auto; min-height: 0; margin: 0; padding: var(--ds-space-3) var(--ds-space-4);
+  border: 0; border-radius: var(--ds-radius-sm); background: none; box-shadow: none;
+  color: var(--ds-ink);
+  font: inherit; font-size: var(--ds-text-base); font-weight: var(--ds-weight-medium);
+  white-space: nowrap; cursor: pointer;
+}
+body.design-v2 .v2-kebab-menu.aberto :is(.btn, button):hover {
+  background: var(--ds-surface-subtle); color: var(--ds-primary);
+  border: 0; box-shadow: none;
+}
+/* permissões escondem por `hidden`/display inline — precisa vencer o display:flex acima */
+body.design-v2 .v2-kebab-menu.aberto :is(.btn, button)[hidden] { display: none; }
+
+/* ============================================================
+   5. DENSIDADE (controle)
+   ============================================================ */
+body.design-v2 .ds-modulo .v2-densidade {
+  display: inline-flex; flex: 0 0 auto; height: var(--ds-control-h);
+  border: var(--ds-border) solid var(--ds-line-strong);
+  border-radius: var(--ds-radius-sm);
+  overflow: hidden;
+}
+body.design-v2 .ds-modulo .v2-dens-btn {
+  appearance: none; border: 0; cursor: pointer; font: inherit;
+  background: var(--ds-surface); color: var(--ds-muted); width: 32px;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+body.design-v2 .ds-modulo .v2-dens-btn + .v2-dens-btn { border-left: var(--ds-border) solid var(--ds-line); }
+body.design-v2 .ds-modulo .v2-dens-btn:hover { background: var(--ds-surface-subtle); color: var(--ds-ink); }
+body.design-v2 .ds-modulo .v2-dens-btn[aria-pressed="true"] {
+  background: var(--ds-surface-subtle);
+  color: var(--ds-ink);
+  font-weight: var(--ds-weight-semibold);
+}
+
+/* ----- "Selecionar todos" da tabela: mesma altura dos demais controles da toolbar ----- */
+body.design-v2 .ds-modulo .sel-todos {
+  height: var(--ds-control-h); min-height: var(--ds-control-h); padding: 0 11px;
+  border: var(--ds-border) solid var(--ds-line-strong);
+  border-radius: var(--ds-radius-sm);
+  background: var(--ds-surface); color: var(--ds-ink);
+  font-size: var(--ds-text-base); font-weight: var(--ds-weight-medium);
+}
+body.design-v2 .ds-modulo .sel-todos:hover {
+  background: var(--ds-surface-subtle); border-color: var(--ds-primary); color: var(--ds-primary);
+}
+body.design-v2 .ds-modulo .sel-todos:has(input:checked),
+body.design-v2 .ds-modulo .sel-todos:has(input:indeterminate) {
+  border-color: var(--ds-primary); color: var(--ds-primary); font-weight: var(--ds-weight-semibold);
+}
+
+/* ============================================================
+   6. CHIPS de filtro ativo
+   ============================================================ */
+body.design-v2 .ds-modulo .v2-chips {
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: var(--ds-space-3); margin-bottom: var(--ds-space-5);
+}
+body.design-v2 .ds-modulo .v2-chips:empty { display: none; }
+body.design-v2 .ds-modulo .v2-chip-rot {
+  font-size: var(--ds-text-sm); color: var(--ds-muted); margin-right: var(--ds-space-1);
+}
+body.design-v2 .ds-modulo .v2-chip {
+  display: inline-flex; align-items: center; gap: var(--ds-space-3);
+  border: var(--ds-border) solid var(--ds-line-strong);
+  border-radius: var(--ds-radius-pill);
+  background: var(--ds-surface);
+  padding: var(--ds-space-2) var(--ds-space-4) var(--ds-space-2) var(--ds-space-5);
+  font: inherit; font-size: var(--ds-text-sm);
+  color: var(--ds-ink); cursor: pointer;
+}
+body.design-v2 .ds-modulo .v2-chip:hover {
+  border-color: var(--ds-danger); color: var(--ds-danger); background: var(--ds-danger-soft);
+}
+body.design-v2 .ds-modulo .v2-chip b { font-weight: var(--ds-weight-semibold); }
+body.design-v2 .ds-modulo .v2-chip .v2-chip-x { font-size: var(--ds-text-base); line-height: 1; opacity: .65; }
+body.design-v2 .ds-modulo .v2-chip:hover .v2-chip-x { opacity: 1; }
+body.design-v2 .ds-modulo .v2-chip-limpar {
+  border: 0; background: none; padding: var(--ds-space-2) var(--ds-space-3); cursor: pointer;
+  font: inherit; font-size: var(--ds-text-sm); font-weight: var(--ds-weight-semibold);
+  color: var(--ds-focus); text-decoration: underline; text-underline-offset: 2px;
+}
+
+/* ============================================================
+   7. TABELA DE DADOS
+   ============================================================ */
+body.design-v2 .ds-modulo .tabela-wrap {
+  background: var(--ds-surface);
+  border: var(--ds-border) solid var(--ds-line);
+  border-radius: var(--ds-radius-lg);
+  box-shadow: var(--ds-shadow-none);
+  scrollbar-color: var(--ds-scroll-thumb) transparent;
+}
+body.design-v2 .ds-modulo .tabela-wrap::-webkit-scrollbar-thumb { background: var(--ds-scroll-thumb); }
+body.design-v2 .ds-modulo .tabela-wrap::-webkit-scrollbar-thumb:hover { background: var(--ds-muted); }
+body.design-v2 .ds-modulo .tabela-wrap table { font-size: var(--ds-text-base); }
+
+/* cabeçalho: 12px, peso 600, sentence case — o mono uppercase de 9,5px sai.
+   `.func-tabela` (Funcionários), `.mntv-tabela` (históricos por veículo de
+   Manutenção/Abastecimento, em modal) e `.bkp-tab-mod` (módulos do Backup) são
+   tabelas SEM `.tabela-wrap` que ainda vestiam o cabeçalho antigo — entram no
+   MESMO contrato pelo mesmo motivo de `.forn-topo`/`.func-topo` na toolbar:
+   é o mesmo componente com outro nome, não CSS duplicado (auditoria ago/2026). */
+body.design-v2 .ds-modulo .tabela-wrap thead th,
+body.design-v2 .ds-modulo .func-tabela thead th,
+body.design-v2 .modal-overlay :is(.mntv-tabela, .bkp-tab-mod) thead th {
+  background: var(--ds-surface-subtle);
+  font-family: var(--body);
+  font-size: var(--ds-text-xs);
+  font-weight: var(--ds-weight-semibold);
+  letter-spacing: 0; text-transform: none;
+  color: var(--ds-muted);
+  padding: var(--ds-space-4) var(--ds-space-6);
+  border-bottom: var(--ds-border) solid var(--ds-line);
+}
+body.design-v2 .ds-modulo .tabela-wrap thead th:hover { color: var(--ds-primary); }
+body.design-v2 .ds-modulo .tabela-wrap thead .th-2l span:first-child {
+  font-size: var(--ds-text-xs); font-weight: var(--ds-weight-semibold); color: var(--ds-muted);
+}
+body.design-v2 .ds-modulo .tabela-wrap thead .ord-ico.ativo { color: var(--ds-primary); }
+
+/* Linha compacta = 32px (confortável em 03-base). `height` numa célula vale
+   como ALTURA MÍNIMA: com todo o conteúdo da linha em <= 22px, ela fecha na
+   medida pedida em vez de ficar refém do elemento mais alto. */
+body.design-v2 .ds-modulo .tabela-wrap tbody td {
+  height: var(--ds-row-compact);
+  padding: var(--ds-space-2) var(--ds-space-6);
+  border-bottom: var(--ds-border) solid var(--ds-line);
+  color: var(--ds-ink);
+  vertical-align: middle;
+}
+body.design-v2 .ds-modulo .tabela-wrap tbody tr:last-child td { border-bottom: 0; }
+/* zebra desligada: a divisória de 1px já separa; zebra + hover + linha de
+   alerta colorida viravam três camadas de fundo brigando.
+   Faxina do design antigo: o desligamento vale para QUALQUER tabela do painel
+   (com ou sem .tabela-wrap) e para tabelas em modal — a zebra legada
+   (#f6f8fd/#0c1526 no styles.css) sobrevivia fora do .tabela-wrap. */
+body.design-v2 .ds-modulo tbody tr:nth-child(even):not(:hover) td,
+body.design-v2 .modal-overlay tbody tr:nth-child(even):not(:hover) td { background: transparent; }
+body.design-v2 .ds-modulo .tabela-wrap tbody tr:hover td,
+body.design-v2 .ds-modulo .tabela-wrap tbody tr:hover { background: var(--ds-surface-hover); }
+/* A seleção de linha SAIU daqui. Era `background: var(--ds-info-soft)`, que no tema escuro
+   vale #14202f sobre a superfície #16212c — 1,008:1, invisível — e ainda por cima é mais
+   escuro que o hover (#1c2836), invertendo a hierarquia: o mouse acendia a linha e selecionar
+   apagava. E, com (0,4,4), perdia da zebra legada (0,5,4) nas linhas pares de qualquer jeito.
+   Agora a seleção é um véu translúcido desenhado em `box-shadow: inset` no styles.css,
+   alimentado pelos tokens --ds-selected-veil/-edge deste Design System através da ponte. */
+/* As classes de estado de negócio (.doc-vencido/.busca-apreensao) continuam sendo aplicadas
+   pelo JS (Frota e Multas), mas NÃO pintam mais o fundo da linha — o estado fica só nas
+   etiquetas/pílulas. Regras de fundo removidas a pedido do usuário. */
+/* valores técnicos em mono; texto corrido na fonte da interface */
+body.design-v2 .ds-modulo .tabela-wrap tbody td.num {
+  font-family: var(--mono); font-size: var(--ds-text-sm); font-weight: var(--ds-weight-medium);
+}
+
+/* ----- 7.1 Placa Mercosul (domínio veicular: Frota, Multas, Rastreadores) -----
+   Ela é o elemento MAIS ALTO da linha (a faixa azul somava ~29px e sozinha
+   segurava a linha em 40px); nesta medida a linha compacta fecha em 32px. */
+body.design-v2 .ds-modulo .placa-chip {
+  box-shadow: var(--ds-shadow-none);
+  border-radius: var(--ds-radius-sm);
+  padding: 0 7px 1px;
+  border-top-width: var(--ds-border-plate);
+  font-size: var(--ds-text-xs);
+  letter-spacing: var(--ds-tracking-plate);
+}
+body.design-v2 .ds-modulo .placa-chip:hover { transform: none; box-shadow: var(--ds-shadow-none); }
+/* Identificador SEM placa (nº de série, patrimônio, tag — equipamento/ferramental locado):
+   mesma métrica da placa para a linha não mudar de altura, mas sem a faixa azul Mercosul e
+   sem o branco fixo — a faixa e o branco são a cor da placa de verdade, e um ferramental não
+   tem placa. Superfície e tinta do tema, como qualquer valor técnico em mono. */
+body.design-v2 .ds-modulo .placa-chip.id-chip {
+  border-top-width: var(--ds-border);
+  border-color: var(--ds-line-strong);
+  background: var(--ds-surface);
+  color: var(--ds-ink);
+  letter-spacing: var(--ds-tracking-code);
+}
+/* Etiqueta de tipo ao lado do nome ("Ferramental", "Com equipamentos"): só aparece no caso
+   raro, o comum (veículo) não leva nada — por isso é discreta, sem cor de estado. */
+body.design-v2 .ds-modulo .tipo-tag {
+  display: inline-block; vertical-align: middle; margin-left: var(--ds-space-1);
+  padding: 0 var(--ds-space-2);
+  border: var(--ds-border) solid var(--ds-line);
+  border-radius: var(--ds-radius-pill);
+  color: var(--ds-muted);
+  background: var(--ds-surface-subtle);
+  font-size: var(--ds-text-2xs);
+  font-weight: var(--ds-weight-semibold);
+  line-height: var(--ds-leading-normal);
+  white-space: nowrap;
+}
+
+/* ----- 7.2 Ações da linha -----
+   O `min-height` é obrigatório: o bloco de densidade do styles.css
+   (`@media (min-width: 701px)`) fixa 28px de mínimo e vencia a altura daqui. */
+body.design-v2 .ds-modulo .tabela-wrap .acoes button,
+body.design-v2 .ds-modulo .acoes button {
+  width: var(--ds-action-h); height: var(--ds-action-h); min-height: var(--ds-action-h);
+  border-radius: var(--ds-radius-sm);
+  border-color: var(--ds-line);
+  color: var(--ds-muted);
+  background: var(--ds-surface);
+}
+body.design-v2 .ds-modulo .acoes button svg { width: var(--ds-text-lg); height: var(--ds-text-lg); }
+body.design-v2 .ds-modulo .acoes .edit:hover {
+  border-color: var(--ds-primary); color: var(--ds-primary); background: var(--ds-info-soft);
+}
+body.design-v2 .ds-modulo .acoes .del:hover {
+  border-color: var(--ds-danger); color: var(--ds-danger); background: var(--ds-danger-soft);
+}
+body.design-v2 .ds-modulo .acoes button:active { transform: none; }
+
+/* ============================================================
+   8. STATUS (pílula)
+   Um padrão só: fundo suave + texto escuro + FORMA. O ponto de 6px é a pista
+   que não depende da cor — vale em todos os temas.
+   ============================================================ */
+body.design-v2 .ds-modulo .pill-trigger,
+body.ds-shell .pill-menu-portaled .pill-item {
+  border-radius: var(--ds-radius-sm);
+  font-size: var(--ds-text-xs);
+  font-weight: var(--ds-weight-medium);
+  box-shadow: var(--ds-shadow-none);
+}
+/* padding explícito: o bloco de densidade de `@media (min-width: 701px)` já
+   dita `.view .tabela-wrap .pill-trigger { padding: 3px 8px }` */
+body.design-v2 .ds-modulo .tabela-wrap .pill-trigger { padding: var(--ds-space-1) var(--ds-space-4); line-height: var(--ds-leading-normal); }
+body.design-v2 .ds-modulo .pill-trigger:hover { filter: none; }
+body.design-v2 .ds-modulo .pill-trigger:not(.cc)::before {
+  content: ""; width: var(--ds-space-3); height: var(--ds-space-3);
+  border-radius: var(--ds-radius-circle);
+  background: currentColor; flex: 0 0 auto; box-shadow: none; opacity: .8;
+}
+body.design-v2 .ds-modulo .pill-trigger.ativ,
+body.ds-shell .pill-menu-portaled .pill-item.ativ {
+  --c: var(--ds-success);
+  background: var(--ds-success-soft); color: var(--ds-success);
+  border-color: color-mix(in srgb, var(--ds-success) 28%, transparent);
+  box-shadow: var(--ds-shadow-none);
+}
+body.design-v2 .ds-modulo .pill-trigger.ofic,
+body.ds-shell .pill-menu-portaled .pill-item.ofic,
+body.design-v2 .ds-modulo .pill-trigger.alien,
+body.ds-shell .pill-menu-portaled .pill-item.alien {
+  --c: var(--ds-warning);
+  background: var(--ds-warning-soft); color: var(--ds-warning);
+  border-color: color-mix(in srgb, var(--ds-warning) 28%, transparent);
+  box-shadow: var(--ds-shadow-none);
+}
+/* NADA CONSTA é situação boa → verde (decisão de ago/2026; era --ds-info, que
+   virou grafite com a marca nova e deixava a pílula sem cor) */
+body.design-v2 .ds-modulo .pill-trigger.livre,
+body.ds-shell .pill-menu-portaled .pill-item.livre {
+  --c: var(--ds-success);
+  background: var(--ds-success-soft); color: var(--ds-success);
+  border-color: color-mix(in srgb, var(--ds-success) 28%, transparent);
+  box-shadow: var(--ds-shadow-none);
+}
+/* GALPÃO mantém o roxo histórico da camada legada (#7c3aed) via tokens violeta */
+body.design-v2 .ds-modulo .pill-trigger.galpao,
+body.ds-shell .pill-menu-portaled .pill-item.galpao {
+  --c: var(--ds-accent-violet);
+  background: var(--ds-accent-violet-soft); color: var(--ds-accent-violet);
+  border-color: color-mix(in srgb, var(--ds-accent-violet) 28%, transparent);
+  box-shadow: var(--ds-shadow-none);
+}
+/* vermelho SÓ para bloqueio/ação vencida */
+body.design-v2 .ds-modulo .pill-trigger.vend,
+body.ds-shell .pill-menu-portaled .pill-item.vend {
+  --c: var(--ds-danger);
+  background: var(--ds-danger-soft); color: var(--ds-danger);
+  border-color: color-mix(in srgb, var(--ds-danger) 28%, transparent);
+  box-shadow: var(--ds-shadow-none);
+}
+/* PARADO em azul-céu (ago/2026) — matiz só dele: laranja confundia com o
+   vermelho do VENDIDO e teal com o verde de EM ATIVIDADE */
+body.design-v2 .ds-modulo .pill-trigger.parado,
+body.ds-shell .pill-menu-portaled .pill-item.parado {
+  --c: var(--ds-accent-sky);
+  background: var(--ds-accent-sky-soft); color: var(--ds-accent-sky);
+  border-color: color-mix(in srgb, var(--ds-accent-sky) 28%, transparent);
+  box-shadow: var(--ds-shadow-none);
+}
+/* Situação da MULTA — a Multas é .ds-modulo mas as variantes dela nunca subiram
+   para cá e vestiam a paleta hex do legado (migração ago/2026). Mesma família de
+   estado da Frota: verde = dívida quitada, âmbar = em movimento, vermelho = pendência. */
+body.design-v2 .ds-modulo .pill-trigger.m-pago,
+body.ds-shell .pill-menu-portaled .pill-item.m-pago {
+  --c: var(--ds-success);
+  background: var(--ds-success-soft); color: var(--ds-success);
+  border-color: color-mix(in srgb, var(--ds-success) 28%, transparent);
+  box-shadow: var(--ds-shadow-none);
+}
+body.design-v2 .ds-modulo .pill-trigger.m-andamento,
+body.ds-shell .pill-menu-portaled .pill-item.m-andamento {
+  --c: var(--ds-warning);
+  background: var(--ds-warning-soft); color: var(--ds-warning);
+  border-color: color-mix(in srgb, var(--ds-warning) 28%, transparent);
+  box-shadow: var(--ds-shadow-none);
+}
+body.design-v2 .ds-modulo .pill-trigger.m-pendente,
+body.ds-shell .pill-menu-portaled .pill-item.m-pendente {
+  --c: var(--ds-danger);
+  background: var(--ds-danger-soft); color: var(--ds-danger);
+  border-color: color-mix(in srgb, var(--ds-danger) 28%, transparent);
+  box-shadow: var(--ds-shadow-none);
+}
+/* ALUGADO em azul-céu: não é dívida nem processo em curso — a multa é do locatário.
+   Matiz próprio para não confundir com verde (quitada), âmbar (andamento) e vermelho (pendência). */
+body.design-v2 .ds-modulo .pill-trigger.m-alugado,
+body.ds-shell .pill-menu-portaled .pill-item.m-alugado {
+  --c: var(--ds-accent-sky);
+  background: var(--ds-accent-sky-soft); color: var(--ds-accent-sky);
+  border-color: color-mix(in srgb, var(--ds-accent-sky) 28%, transparent);
+  box-shadow: var(--ds-shadow-none);
+}
+/* pílula de observação do veículo (Frota): alerta de busca e apreensão é vermelho
+   de bloqueio; texto livre fica âmbar suave; vazio é neutro sem cor de estado */
+body.design-v2 .ds-modulo .pill-trigger.obs-busca,
+body.ds-shell .pill-menu-portaled .pill-item.obs-busca {
+  --c: var(--ds-danger);
+  background: var(--ds-danger-soft); color: var(--ds-danger);
+  border-color: color-mix(in srgb, var(--ds-danger) 28%, transparent);
+  box-shadow: var(--ds-shadow-none);
+}
+body.design-v2 .ds-modulo .pill-trigger.obs-texto,
+body.ds-shell .pill-menu-portaled .pill-item.obs-texto {
+  --c: var(--ds-warning);
+  background: var(--ds-warning-soft); color: var(--ds-warning);
+  border-color: color-mix(in srgb, var(--ds-warning) 28%, transparent);
+  box-shadow: var(--ds-shadow-none);
+}
+body.design-v2 .ds-modulo .pill-trigger.obs-vazio,
+body.ds-shell .pill-menu-portaled .pill-item.obs-vazio {
+  --c: var(--ds-muted);
+  background: transparent; color: var(--ds-muted);
+  border-color: color-mix(in srgb, var(--ds-muted) 34%, transparent);
+  box-shadow: var(--ds-shadow-none);
+}
+/* opção vigente do menu: a borda acompanha a cor da variante (o ✓ vem do legado) */
+body.ds-shell .pill-menu-portaled .pill-item.sel { border-color: currentColor; }
+body.design-v2 .ds-modulo .pill-trigger.cc {
+  background: transparent; color: var(--ds-ink);
+  border-color: color-mix(in srgb, var(--ds-muted) 34%, transparent);
+}
+body.design-v2 .ds-modulo .pill-trigger.cc:hover { border-color: var(--ds-primary); color: var(--ds-primary); }
+
+/* ============================================================
+   9. BADGE de tipo/categoria (rótulo só-leitura em coluna de tabela ou item de lista)
+   Achado ao migrar Rastreadores: `.tipo-badge` (Instalado/Removível/Outros, também usado na
+   sub-aba Vistorias da própria Frota) estava em pílula 999px enquanto a coluna Situação ao
+   lado já usa a forma do DS (raio --ds-radius-sm) — a mesma divergência da seção 8, só que
+   nunca corrigida aqui. Auditoria de padronização visual (ago/2026) achou o MESMO componente
+   reimplementado sob outros treze nomes de classe, um por módulo, todos nascidos antes deste
+   padrão existir e nenhum com cobertura no Design System: Manutenção (`.mntv-tipo`), Controles
+   (`.apt-pill`), Funcionários (`.func-pill`, cartão e tabela), Integração (`.treino-status`),
+   Segurança (`.seg-area`, `.acao-tag`), Investimentos (`.inv-fonte`), Locações
+   (`.loc-table-contrato`), Almoxarifado (`.almox-sit`), Usuários (`.usr-badge`), Feedback
+   (`.fb-status`, `.fb-tipo`), Admissão (`.adm-pill`). Pedido explícito: mesma forma da coluna
+   Situação — raio, padding, altura e tipografia idênticos; só a paleta por estado continua
+   própria de cada consumidor (permanece declarada no styles.css do próprio módulo, inalterada
+   aqui). `min-height: 0` neutraliza um `min-height` legado que só `.loc-table-contrato` tinha.
+   Fora desta lista, de propósito: `.dev-pill` (painel interno de diagnóstico do desenvolvedor,
+   fora de qualquer `.ds-modulo`) e `.almox-pill` (tag composta com ícone + sub-selo de
+   quantidade, registrada como exceção própria — não é um rótulo simples). */
+body.design-v2 .ds-modulo .tipo-badge,
+body.design-v2 .ds-modulo .mntv-tipo,
+body.design-v2 .ds-modulo .apt-pill,
+body.design-v2 .ds-modulo .func-pill,
+body.design-v2 .ds-modulo .treino-status,
+body.design-v2 .ds-modulo .seg-area,
+body.design-v2 .ds-modulo .acao-tag,
+body.design-v2 .ds-modulo .inv-fonte,
+body.design-v2 .ds-modulo .loc-table-contrato,
+body.design-v2 .ds-modulo .almox-sit,
+body.design-v2 .ds-modulo .usr-badge,
+body.design-v2 .ds-modulo .fb-status,
+body.design-v2 .ds-modulo .fb-tipo,
+body.design-v2 .ds-modulo .adm-pill {
+  display: inline-block;
+  min-height: 0;
+  padding: var(--ds-space-1) var(--ds-space-4);
+  border-radius: var(--ds-radius-sm);
+  font-size: var(--ds-text-xs);
+  font-weight: var(--ds-weight-medium);
+  line-height: var(--ds-leading-normal);
+}
+body.design-v2 .ds-modulo .tipo-badge.tipo-inst { background: var(--ds-info-soft); color: var(--ds-info); }
+body.design-v2 .ds-modulo .tipo-badge.tipo-rem { background: var(--ds-warning-soft); color: var(--ds-warning); }
+body.design-v2 .ds-modulo .tipo-badge.tipo-outros { background: var(--ds-surface-subtle); color: var(--ds-muted); }
+
+/* ============================================================
+   10. RODAPÉ DE LISTA e BARRA DE SELEÇÃO
+   ============================================================ */
+body.design-v2 .ds-modulo .v2-rodape {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--ds-space-7); flex-wrap: wrap;
+  padding: var(--ds-space-4) var(--ds-space-1) 0;
+  font-size: var(--ds-text-sm);
+  color: var(--ds-muted);
+  font-variant-numeric: tabular-nums;
+}
+body.design-v2 .ds-modulo .v2-rodape b { color: var(--ds-ink); font-weight: var(--ds-weight-semibold); }
+/* rodapé cala quando não há o que contar (o JS o esvazia) */
+body.design-v2 .ds-modulo .v2-rodape:empty { display: none; }
+
+body.design-v2 .ds-modulo .sel-bar {
+  border-radius: var(--ds-radius-lg);
+  border-color: var(--ds-primary);
+  background: var(--ds-surface);
+  box-shadow: var(--ds-shadow-float);
+  padding: var(--ds-space-5) 14px;
+  margin-top: var(--ds-space-6);
+}
+body.design-v2 .ds-modulo .sel-bar .sb-item { font-size: var(--ds-text-sm); color: var(--ds-muted); }
+body.design-v2 .ds-modulo .sel-bar .sb-item b {
+  font-family: var(--mono); font-size: var(--ds-text-md);
+  font-weight: var(--ds-weight-semibold); color: var(--ds-ink);
+}
+body.design-v2 .ds-modulo .sel-bar .btn {
+  height: var(--ds-control-h-sm); border-radius: var(--ds-radius-sm); font-size: var(--ds-text-sm);
+}
+
+/* ============================================================
+   11. FILTRO POR CHIP DE ALTERNÂNCIA (telas em cards/lista)
+   Achado ao migrar Fornecedores: `.forn-filtros`/`.forn-chip`/`.forn-contagem` já eram usados,
+   com a MESMA moldura e o MESMO padrão de estado (`.on`), em pelo menos 5 módulos —
+   Fornecedores, Cartões, Integração (catálogo e acompanhamento) e a sub-aba Relatórios da
+   própria Manutenção. É a função que `.filtros`/`.msel` cobrem para tabela (busca + filtro +
+   contagem), só que numa tela organizada em cards/lista: o filtro aqui é por CHIP DE
+   ALTERNÂNCIA de valor único (`.on` liga/desliga, sem multisseleção), por isso ganha vestimenta
+   própria em vez de reaproveitar `.msel-btn`, que é outro componente (dropdown). O conteúdo que
+   vem depois (`.forn-cards`, `.cards`, uma lista própria) fica de fora de propósito — isso é
+   decisão de cada tela, não do filtro. A caixa/busca/botões de `.forn-topo` são a MESMA regra de
+   `.toolbar`, ver seção 3.
+
+   Achado ao migrar Programas: `.func-filtros`/`.func-chip`/`.func-contagem` são o MESMO
+   componente com um terceiro nome — mesmos valores, byte a byte, do `.forn-*` acima (o
+   styles.css já documentava os dois como a mesma "barra de topo"). `.func-chip` é usado só por
+   Programas (Funcionários filtra por `.msel`, não por chip — módulo maior, fora desta migração);
+   ainda assim entra na MESMA regra, não numa cópia, pelo mesmo motivo do `.forn-topo`/`.func-topo`
+   na seção 3: é o mesmo componente, evitar duas fontes de verdade para o mesmo desenho.
+   ============================================================ */
+body.design-v2 .ds-modulo .forn-filtros,
+body.design-v2 .ds-modulo .func-filtros { gap: var(--ds-space-3); }
+/* `.loc-chip` (Locações) e `.adm-chip` (Admissão) são o MESMO chip com nomes locais —
+   entram na mesma regra. Estado ligado: `.on` em quase todos; Admissão usa `.ativo`.
+   Raio de CONTROLE (--ds-radius-sm, 4 px), como botão e campo, desde a 1.55.45: a cápsula
+   (--ds-radius-pill) destoava do resto do sistema, que é quadrado (pedido do usuário). */
+body.design-v2 .ds-modulo .forn-chip,
+body.design-v2 .ds-modulo .func-chip,
+body.design-v2 .ds-modulo .loc-chip,
+body.design-v2 .ds-modulo .adm-chip {
+  border: var(--ds-border) solid var(--ds-line-strong);
+  border-radius: var(--ds-radius-sm);
+  background: var(--ds-surface);
+  color: var(--ds-muted);
+  padding: var(--ds-space-3) var(--ds-space-6);
+  font-size: var(--ds-text-sm);
+  font-weight: var(--ds-weight-semibold);
+  box-shadow: var(--ds-shadow-none);
+}
+body.design-v2 .ds-modulo .forn-chip:hover,
+body.design-v2 .ds-modulo .func-chip:hover,
+body.design-v2 .ds-modulo .loc-chip:hover,
+body.design-v2 .ds-modulo .adm-chip:hover { color: var(--ds-ink); border-color: var(--ds-primary); }
+body.design-v2 .ds-modulo .forn-chip.on,
+body.design-v2 .ds-modulo .func-chip.on,
+body.design-v2 .ds-modulo .loc-chip.on,
+body.design-v2 .ds-modulo .adm-chip.ativo {
+  background: var(--ds-primary);
+  border-color: var(--ds-primary);
+  color: var(--ds-on-primary);
+}
+body.design-v2 .ds-modulo .forn-contagem,
+body.design-v2 .ds-modulo .func-contagem,
+body.design-v2 .ds-modulo .empresa-contagem {
+  color: var(--ds-muted);
+  font-size: var(--ds-text-sm);
+  margin: 0 0 var(--ds-space-5);
+}
+
+/* ============================================================
+   12. ALTERNADOR DE VISÃO (segmented control)
+   Achado ao migrar Integração: `.func-vis`/`.func-vis-btn` já era usado, com a MESMA moldura e
+   o MESMO padrão de estado (`.on`), em pelo menos 2 módulos — Integração (Catálogo ×
+   Acompanhamento) e a própria Funcionários (Contratos/Cartões/Detalhes/Pendências/
+   Desmobilizados; o segmento interno "Vence em / Não vence" reaproveita o mesmo CSS lá dentro).
+
+   Estruturalmente PARECIDO com a densidade (seção 5) — grupo segmentado, item ativo, container
+   com `overflow: hidden` — mas não é o mesmo componente: aqui o ativo PREENCHE com a cor da
+   marca (é o alternador PRINCIPAL da tela, troca o que está sendo visto), enquanto a densidade é
+   um ajuste secundário e sutil (fundo só um tom mais escuro). Tratar os dois como uma coisa só
+   forçaria uma aparência em cima da outra por engano — por isso ganham regras próprias, cada uma
+   fiel ao que o legado já desenhava.
+   ============================================================ */
+body.design-v2 .ds-modulo .func-vis {
+  display: inline-flex;
+  border: var(--ds-border) solid var(--ds-line-strong);
+  border-radius: var(--ds-radius-sm);
+  overflow: hidden;
+}
+body.design-v2 .ds-modulo .func-vis-btn {
+  border: 0;
+  background: var(--ds-surface);
+  color: var(--ds-muted);
+  padding: var(--ds-space-3) var(--ds-space-6);
+  font-size: var(--ds-text-sm);
+  font-weight: var(--ds-weight-semibold);
+}
+body.design-v2 .ds-modulo .func-vis-btn + .func-vis-btn { border-left: var(--ds-border) solid var(--ds-line); }
+body.design-v2 .ds-modulo .func-vis-btn:hover { color: var(--ds-ink); }
+body.design-v2 .ds-modulo .func-vis-btn.on {
+  background: var(--ds-primary);
+  color: var(--ds-on-primary);
+}
+
+}

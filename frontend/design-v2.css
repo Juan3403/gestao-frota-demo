@@ -1,0 +1,237 @@
+/* ============================================================================
+   design-v2.css — CAMADA DO MÓDULO FROTA
+
+   Este arquivo era o piloto inteiro. Depois da extração do Design System ele
+   guarda só o que é da FROTA: ordem da tela, faixa de veículos na oficina,
+   colunas específicas e os campos de negócio. Tudo que era reutilizável —
+   shell, tabela, toolbar, filtros, chips, indicadores, estados, status,
+   densidade — mudou-se para `design-system/` e agora vale para qualquer módulo
+   que ganhe a classe `ds-modulo`.
+
+   Carrega DEPOIS do Design System. Continua sem um único `!important`.
+
+   O que decide se estas regras valem:
+     body.design-v2   → a preferência do usuário (?design=v2)
+     #frota.ds-modulo → a <section> do módulo, marcada no index.html
+   ============================================================================ */
+
+@media (min-width: 768px) {
+
+/* ============================================================
+   1. ORDEM DA TELA
+   A sequência (cabeçalho > indicadores > aviso > toolbar > chips > erro >
+   tabela > rodapé) é obtida por `order`, sem mover nada no DOM: mexer na
+   árvore quebraria os observadores que o app.js pendura na toolbar
+   (.toolbar-acoes / grupo de planilha).
+
+   ⚠️ `.active` no seletor não é estético — é o que corrige o bug de Dashboard/
+   Análises/Comprados/Vendidos renderizando ABAIXO da tabela em vez de
+   substituir a lista. Causa raiz: `#frota-lista` é também uma `.subview`
+   (styles.css: `.subview { display: none }` / `.subview.active { display:
+   block }`, ambas por CLASSE). Sem `.active` aqui, esta regra é
+   `body.design-v2 #frota-lista` — 1 ID — que bate `.subview.active` (2
+   classes, 0 ID) e principalmente bate `.subview` sozinho (1 classe): o
+   `display: flex` valia INCONDICIONALMENTE, `trocarSubFrota()` tirava
+   `.active` de `#frota-lista` mas o CSS nunca escondia — a lista ficava
+   plantada na tela e a sub-aba nova entrava por baixo. Qualificar com
+   `.active` faz a regra ID só valer quando `.subview.active` também vale
+   (mesmo estado, então o `display: flex` daqui já é redundante com o
+   `display: block` de lá só nesse caso — e cede a vez ao `display: none`
+   genérico em qualquer outro. */
+body.design-v2 #frota-lista.active { display: flex; flex-direction: column; }
+body.design-v2 #frota-lista > * { min-width: 0; }
+body.design-v2 #frota-lista > #frotaKpis { order: 1; }
+body.design-v2 #frota-lista > #frotaOficinaAlertas { order: 2; }
+body.design-v2 #frota-lista > .toolbar { order: 3; }
+body.design-v2 #frota-lista > #frotaChips { order: 4; }
+body.design-v2 #frota-lista > #frotaErro { order: 5; }
+body.design-v2 #frota-lista > .tabela-wrap { order: 6; }
+body.design-v2 #frota-lista > #frotaRodape { order: 7; }
+body.design-v2 #frota-lista > .sel-bar { order: 8; }
+/* A linha "Exibindo N de M · FIPE somado" virou a faixa de indicadores + o
+   rodapé. Continua no DOM (e sendo preenchida) de propósito: é o texto que
+   volta a valer assim que o Design System é desligado. */
+body.design-v2 #frota-lista > #resumoLinha { display: none; }
+
+/* ============================================================
+   2. INDICADORES DA FROTA — são QUATRO
+   A moldura vem do Design System; quantas colunas ela tem é decisão desta tela.
+   ============================================================ */
+body.design-v2 #frota #frotaKpis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 1100px) {
+  body.design-v2 #frota #frotaKpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* ============================================================
+   3. AVISO DE VEÍCULOS NA OFICINA — resumo recolhido + lista expansível
+
+   NÃO tem `overflow-x` em lugar nenhum, de propósito: a versão anterior era uma
+   fileira horizontal rolável que cortava o 2º veículo já em 1440px e escondia
+   metade do conteúdo em 1024px atrás de uma barra discreta — parecia carrossel
+   sem ser. Aqui ou está recolhido (e o botão diz quantos são), ou está aberto e
+   a lista empurra a tabela para baixo.
+
+   ⚠️ Regra de escopo que o texto carrega: `veiculosNaOficina()` lê VEICULOS
+   direto, sem passar por `fleetAtiva()` — conta o CADASTRO INTEIRO. Por isso a
+   faixa diz "Entre todos os veículos cadastrados" e não "na frota ativa".
+
+   SEM `body.design-v2` de propósito, diferente do resto deste arquivo: essa
+   variante era a única forma da faixa (`renderAlertasOficina()` não tem mais
+   ramo legado — a versão de cartão sem ícone, `.func-alerta-item`, saiu; ver
+   docs/DESIGN.md, registro do componente de alerta). Sem gate na regra a
+   faixa sempre aparece no padrão novo — decisão deliberada, não
+   esquecimento: a faixa velha não existe mais para "sem gate" cair nela.
+   ============================================================ */
+#frota #frotaOficinaAlertas {
+  display: block; min-width: 0;
+  border: var(--ds-border) solid color-mix(in srgb, var(--ds-warning) 30%, var(--ds-line));
+  border-left: var(--ds-border-accent) solid var(--ds-warning);
+  background: var(--ds-warning-soft);
+  border-radius: var(--ds-radius-lg);
+  padding: var(--ds-space-3) var(--ds-space-5);
+  margin-bottom: var(--ds-space-5);
+}
+#frota .v2-ofi-resumo {
+  display: flex; align-items: center; flex-wrap: wrap;
+  gap: var(--ds-space-2) var(--ds-space-5); min-width: 0;
+}
+#frota .v2-ofi-ico { flex: 0 0 auto; color: var(--ds-warning); }
+#frota .v2-ofi-num {
+  flex: 0 0 auto; font-size: var(--ds-text-sm);
+  font-weight: var(--ds-weight-semibold); color: var(--ds-warning-ink);
+}
+/* o escopo pode encolher e reticenciar — é o único texto secundário da faixa */
+#frota .v2-ofi-escopo {
+  flex: 1 1 auto; min-width: 0;
+  font-size: var(--ds-text-xs); color: var(--ds-warning-ink-soft);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+#frota .v2-ofi-ver {
+  flex: 0 0 auto; margin-left: auto; appearance: none; cursor: pointer;
+  border: var(--ds-border) solid color-mix(in srgb, var(--ds-warning) 45%, transparent);
+  background: var(--ds-surface); color: var(--ds-warning-ink);
+  border-radius: var(--ds-radius-sm);
+  padding: var(--ds-space-2) var(--ds-space-5) 3px;
+  font: inherit; font-size: var(--ds-text-xs); font-weight: var(--ds-weight-semibold);
+}
+#frota .v2-ofi-ver:hover {
+  border-color: var(--ds-warning); background: var(--ds-warning-surface-hover);
+}
+/* Lista inline: <ul> de verdade (o leitor de tela anuncia "lista de N itens"),
+   uma linha por veículo, largura inteira, sem rolagem de nenhum eixo. */
+#frota .v2-ofi-lista {
+  display: flex; flex-direction: column; gap: var(--ds-space-1);
+  margin: var(--ds-space-4) 0 0; padding: var(--ds-space-4) 0 0; list-style: none;
+  border-top: var(--ds-border) solid color-mix(in srgb, var(--ds-warning) 28%, transparent);
+}
+#frota .v2-ofi-lista[hidden] { display: none; }
+#frota .v2-ofi-item { display: block; min-width: 0; }
+#frota .v2-ofi-linha {
+  display: grid; grid-template-columns: 92px minmax(0, 1fr) minmax(0, 250px);
+  align-items: baseline; gap: var(--ds-space-5); width: 100%; min-width: 0; text-align: left;
+  appearance: none; cursor: pointer; font: inherit;
+  background: var(--ds-surface);
+  border: var(--ds-border) solid var(--ds-line);
+  border-left: var(--ds-border-accent) solid var(--ds-line);
+  border-radius: var(--ds-radius-sm);
+  padding: 5px var(--ds-space-5);
+}
+#frota .v2-ofi-linha:hover { border-color: var(--ds-primary); }
+#frota .v2-ofi-linha.avencer { border-left-color: var(--ds-warning); }
+#frota .v2-ofi-linha.vencido { border-left-color: var(--ds-danger); }
+#frota .v2-ofi-placa {
+  font-family: var(--mono); font-size: var(--ds-text-xs);
+  font-weight: var(--ds-weight-semibold); color: var(--ds-ink);
+  letter-spacing: var(--ds-tracking-code);
+}
+/* o modelo é o texto longo: encolhe com reticências em vez de esticar a linha */
+#frota .v2-ofi-modelo {
+  font-size: var(--ds-text-sm); color: var(--ds-ink); min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+#frota .v2-ofi-prev {
+  font-size: var(--ds-text-2xs); color: var(--ds-muted);
+  justify-self: end; text-align: right;
+}
+#frota .v2-ofi-linha.avencer .v2-ofi-prev { color: var(--ds-warning); }
+#frota .v2-ofi-linha.vencido .v2-ofi-prev { color: var(--ds-danger); }
+/* Em telas estreitas a previsão desce para a segunda linha em vez de espremer o modelo. */
+@media (max-width: 1100px) {
+  #frota .v2-ofi-linha { grid-template-columns: 92px minmax(0, 1fr); }
+  #frota .v2-ofi-prev { grid-column: 1 / -1; justify-self: start; text-align: left; }
+}
+
+/* ============================================================
+   4. COLUNAS DA TABELA DA FROTA
+   ============================================================ */
+/* Nome longo (modelo): largura reservada e reticências em vez de esticar a
+   tabela ou quebrar em 3 linhas (o que jogava a linha de 32px para 62px). O
+   texto inteiro fica no `title` da célula — ver linhaHTML no app.js. */
+body.design-v2 #frota #tabela tbody td.cel-sub { max-width: 250px; overflow: hidden; text-overflow: ellipsis; }
+body.design-v2 #frota #tabela thead th[data-campo="modelo"] { min-width: 170px; }
+/* styles.css fixa `#tabela ... { padding: 8px 9px }` por ID — vence a regra
+   compacta do DS e deixava a Frota mais alta que as demais abas. Repõe as
+   medidas do DS (compacta e confortável) com a mesma especificidade de ID. */
+body.design-v2 #frota #tabela thead th { padding: var(--ds-space-4) var(--ds-space-6); }
+body.design-v2 #frota #tabela tbody td { padding: var(--ds-space-2) var(--ds-space-6); }
+body.design-v2 #frota[data-densidade="confortavel"] #tabela tbody td { padding: var(--ds-space-4) var(--ds-space-6); }
+/* Mesma armadilha da regra acima, um andar abaixo: a 1.53.32 acrescentou
+   `#tabela .pill-trigger { padding: 3px 8px }` (styles.css, @media min-width:901px). Por ter
+   ID, ela vence os 2px que o DS pede (05-components.css §8) — e com 3px a pílula fecha em
+   24,8px (12px x 1.4 = 16,8 + 6 de padding + 2 de borda), estoura o orçamento de <= 22px da
+   linha e empurra a célula para 33,8px na compacta e 41,8px na confortável. Com o token a
+   pílula volta a 22,8px e a linha fecha em 32/40 exatos.
+   Gêmea de design-manutencao.css, que já fez isto para `#tabelaMnt .pill-trigger`.
+   ⚠️ A folga que sobra é de 0,2px: qualquer elemento novo nesta linha com mais de ~23px
+   volta a estourar (o orçamento está documentado em design-system/01-tokens.css).
+   `line-height` não precisa ser reposto — ali o DS já vence as concorrentes por classe. */
+body.design-v2 #frota #tabela .pill-trigger { padding: var(--ds-space-1) var(--ds-space-4); }
+/* As classes .doc-vencido/.busca-apreensao (linha em estado de negócio) não pintam mais o
+   fundo da linha em nenhuma folha — o estado fica nas etiquetas/pílulas (nota em
+   design-system/05-components.css). */
+
+/* ============================================================
+   5. ANO DO DOCUMENTO (campo editável na linha)
+   Em dia é NEUTRO — valor desejável não pinta de verde nem de vermelho.
+   Vencido é ação vencida: aí sim vermelho.
+   ============================================================ */
+body.design-v2 #frota .doc-input {
+  width: 62px; padding: 1px var(--ds-space-3);
+  border-radius: var(--ds-radius-sm); border-width: var(--ds-border);
+  font-size: var(--ds-text-xs); font-weight: var(--ds-weight-medium); font-family: var(--mono);
+}
+body.design-v2 #frota .doc-input.doc-ok {
+  border-color: var(--ds-line-strong); background: transparent; color: var(--ds-ink);
+}
+body.design-v2 #frota .doc-input.doc-venc {
+  border-color: color-mix(in srgb, var(--ds-danger) 45%, transparent);
+  background: var(--ds-danger-soft); color: var(--ds-danger);
+}
+body.design-v2 #frota .doc-input:focus { outline-color: var(--ds-focus); }
+
+/* ============================================================
+   5.1 SINAL DE CRLV AO LADO DA PLACA (1.55.48, crlvIndicadorHtml no app.js)
+   Com CRLV: ícone com visto em --ds-success (abre o arquivo). Sem CRLV: contorno
+   tracejado apagado (abre o cadastro para anexar). Forma e texto acessível dizem o
+   estado, não só a cor. 20 px: cabe no orçamento de <= 22 px da linha compacta.
+   ============================================================ */
+body.design-v2 #frota #tabela td.col-placa { white-space: nowrap; }
+body.design-v2 #frota .crlv-ind {
+  display: inline-grid; place-items: center; vertical-align: middle;
+  width: 20px; height: 20px; margin-left: var(--ds-space-3); padding: 0;
+  border: var(--ds-border) solid transparent; border-radius: var(--ds-radius-sm);
+  background: transparent; cursor: pointer;
+}
+body.design-v2 #frota .crlv-ind.crlv-ok { color: var(--ds-success); }
+body.design-v2 #frota .crlv-ind.crlv-falta { color: var(--ds-muted); border-color: var(--ds-line-strong); border-style: dashed; opacity: .7; }
+body.design-v2 #frota .crlv-ind:hover { background: var(--ds-surface-hover); opacity: 1; }
+body.design-v2 #frota .crlv-ind:focus-visible { outline: var(--ds-border-tab) solid var(--ds-focus); outline-offset: var(--ds-space-1); }
+
+/* ============================================================
+   6. BARRA DE SELEÇÃO — soma por sócio (Ricardo / Marcelo)
+   A barra em si é componente; a divisão por sócio é regra desta tela.
+   ============================================================ */
+body.design-v2 #frota .sel-bar .sb-j b { color: var(--ds-primary); }
+body.design-v2 #frota .sel-bar .sb-d b { color: var(--ds-warning); }
+
+}

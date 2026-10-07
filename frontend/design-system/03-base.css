@@ -1,0 +1,63 @@
+/* ============================================================================
+   03-base.css — FUNDAÇÃO
+
+   O que é transversal a todo componente: visibilidade do DOM exclusivo do
+   Design System, foco visível e densidade. Nada aqui desenha um componente.
+   ============================================================================ */
+
+/* ============================================================
+   1. DOM exclusivo do Design System
+
+   Estes elementos existem no index.html e são preenchidos pelo app.js SEMPRE,
+   sem `if` de tema no JavaScript: quem decide se aparecem é o CSS. Com o Design
+   System desligado a tela tem de ficar pixel a pixel igual à de hoje.
+
+   ⚠️ FORA de qualquer @media, de propósito: no celular o DS não entra, e estes
+   elementos precisam continuar escondidos lá também.
+
+   ⚠️ Esconder por CLASSE (e não por ID, como o piloto fazia) só é seguro porque
+   as regras que os exibem, em 05-components, têm especificidade MAIOR
+   (`body.design-v2 .ds-modulo .v2-kpis` = 3 classes contra 1). A visibilidade
+   não depende da ordem dos arquivos — depende da especificidade, que é
+   estável.
+   ============================================================ */
+.v2-kpis,
+.v2-chips,
+.v2-rodape,
+.v2-densidade,
+.v2-erro,
+.v2-filtros-btn,
+.v2-filtros-tit,
+.v2-kebab-btn,
+.v2-skel { display: none; }
+/* Menu "⋯": fora do DS (e no celular, onde o DS não entra) o wrapper e o menu são
+   transparentes — os botões continuam itens inline da toolbar, como sempre foram. */
+.toolbar-mais,
+.v2-kebab-menu { display: contents; }
+
+@media (min-width: 768px) {
+
+  /* ============================================================
+     2. Foco visível
+     O anel global é `outline: 2px solid var(--brand) !important` (styles.css).
+     Como --brand foi reapontado para a primária do tema pela ponte do
+     02-themes, o anel já sai na cor certa: aqui só se afina o deslocamento,
+     porque os controles do DS são menores que os legados.
+     ============================================================ */
+  body.design-v2 .ds-modulo :focus-visible,
+  body.ds-shell .topbar :focus-visible { outline-offset: 1px; }
+
+  /* ============================================================
+     3. Densidade
+
+     Compacta (32px) é o padrão e vive na regra da tabela, em 05-components.
+     Aqui fica só a variação — em `[data-densidade]`, não num ID de módulo, para
+     qualquer módulo migrado poder oferecer o mesmo controle.
+     ============================================================ */
+  body.design-v2 .ds-modulo[data-densidade="confortavel"] .tabela-wrap tbody td,
+  body.design-v2 .ds-modulo [data-densidade="confortavel"] .tabela-wrap tbody td {
+    height: var(--ds-row-comfortable);
+    padding: var(--ds-space-4) var(--ds-space-6);
+  }
+
+}

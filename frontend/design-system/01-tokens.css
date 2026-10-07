@@ -1,0 +1,197 @@
+/* ============================================================================
+   01-tokens.css — PRIMITIVOS do Design System (Registro Operacional Industrial)
+
+   Só valores brutos. Nenhum componente, nenhum seletor de tela, nenhuma decisão
+   de significado: "o que é #1e3a5f" mora aqui; "quem usa #1e3a5f" mora no
+   02-themes.css. Componente NUNCA consome um token deste arquivo direto — ele
+   consome o semântico (--ds-primary, --ds-surface…), senão o tema escuro exigiria
+   reescrever componente, que é exatamente o que esta arquitetura evita.
+
+   Os valores vieram do piloto da Frota (design-v2.css, 1.51.7), já verificados em
+   contraste AA. Nada foi inventado nem arredondado aqui: mudança de valor é
+   mudança de aparência e não pertence a uma etapa de reorganização.
+
+   Ordem de carga (definida no index.html):
+     styles.css → 01-tokens → 02-themes → 03-base → 04-shell → 05-components
+     → 06-states → design-v2.css (só o que é da Frota)
+   ============================================================================ */
+
+:root {
+  /* ---------- Cor: neutro mineral (superfícies e tinta do tema claro) ---------- */
+  --ds-white: #ffffff;
+  --ds-mineral-50: #f3f5f2;
+  --ds-mineral-100: #e9ede9;
+  --ds-mineral-150: #eef1ed;   /* hover de linha */
+  --ds-mineral-200: #d4dad5;
+  --ds-mineral-300: #b6c0b8;   /* polegar da barra de rolagem */
+  --ds-mineral-500: #808d85;   /* borda de CONTROLE — ver nota em 02-themes */
+  --ds-mineral-600: #5c685f;
+  --ds-mineral-700: #414b44;
+  --ds-mineral-900: #17211b;
+
+  /* ---------- Cor: grafite (shell) ----------
+     A sidebar é uma superfície escura em QUALQUER tema — é a âncora visual do
+     desenho. Por isso tem família própria, e não "o neutro invertido". */
+  --ds-graphite-950: #0e1013;
+  --ds-graphite-900: #121417;
+  --ds-graphite-850: #17191d;
+  --ds-graphite-800: #191c20;
+  --ds-graphite-750: #1d2024;
+  --ds-graphite-700: #1e2125;
+  --ds-graphite-650: #1f2227;  /* ladrilho do logo */
+  --ds-graphite-600: #22252b;
+  --ds-graphite-550: #2a2e35;  /* ladrilho do logo, hover */
+  --ds-graphite-500: #282c32;
+  --ds-graphite-450: #31363e;
+  --ds-graphite-400: #4a5058;
+  /* Borda de CONTROLE no tema escuro. Não é o mesmo tom da divisória: precisa de 3:1
+     contra a superfície (WCAG 1.4.11). #4a5058 dá 1,98:1 e reprovaria; este dá 3,56:1
+     sobre a superfície e 3,26:1 sobre a superfície sutil — a mesma folga que o
+     #808d85 tem no tema claro (3,46:1). */
+  --ds-graphite-380: #6e7780;
+  --ds-graphite-350: #878d94;
+  --ds-graphite-300: #8e959c;
+  --ds-graphite-250: #a6acb3;
+  --ds-graphite-200: #aab0b7;
+  --ds-graphite-150: #bfc4ca;
+  --ds-graphite-100: #e8eaed;
+  --ds-graphite-50: #f0f1f3;
+
+  /* ---------- Cor: primária (grafite) ---------- */
+  /* Desde ago/2026 a marca é GRAFITE (azul removido do produto inteiro).
+     Os nomes --ds-blue-* ficam por retrocompat — 02/05/09 os referenciam. */
+  --ds-blue-900: #31363e;      /* = graphite-450 */
+  --ds-blue-800: #4a5058;      /* = graphite-400 */
+  --ds-blue-600: #565d66;      /* foco/info claro: 6,2:1 sobre #fff */
+  --ds-blue-400: #a6acb3;      /* = graphite-250 */
+  --ds-blue-300: #bfc4ca;      /* = graphite-150 */
+  --ds-blue-200: #d5d9dd;
+  --ds-blue-100: #eef0f2;
+  --ds-blue-950: #1d2024;      /* fundo suave no escuro (= graphite-750) */
+
+  /* ---------- Cor: semânticas de estado ---------- */
+  --ds-green-700: #1f6f4a;
+  --ds-green-400: #5fd39b;
+  --ds-green-100: #e7f4ec;
+  --ds-green-950: #12271e;
+
+  --ds-amber-900: #6f4600;
+  --ds-amber-800: #8a5700;
+  --ds-amber-700: #7a5a1f;
+  --ds-amber-400: #f0b859;
+  --ds-amber-100: #fff8e8;
+  --ds-amber-50: #fff3d6;
+  --ds-amber-950: #2a2010;
+
+  --ds-red-700: #b42318;
+  --ds-red-400: #f78c82;
+  --ds-red-100: #fdecea;
+  --ds-red-950: #2c1614;
+
+  --ds-violet-700: #6d28d9;
+  --ds-violet-400: #a78bfa;
+  --ds-violet-100: #f1eafd;
+  --ds-violet-950: #241b3a;
+
+  --ds-sky-700: #0369a1;
+  --ds-sky-400: #38bdf8;
+  --ds-sky-100: #dff0fa;
+  --ds-sky-950: #0f2233;
+
+  /* ---------- Cor: superfície do toast (flutuante, fora do fluxo) ---------- */
+  --ds-toast-neutral: #1f2a24;
+
+  /* ---------- Cor: primitivos do MOBILE (<768px) ----------
+     O modelo aprovado do celular (ago/2026) usa o azul institucional como
+     primária e três famílias de badge que o desktop não tem. Valores brutos
+     moram aqui (regra do teste do DS); o significado mora no 02-themes.css,
+     seção 5 (ponte mobile). Nada disto é consumido em >=768px. */
+  --ds-navy-800: #1e3a5f;      /* primária mobile (botão sólido, sublinhado ativo) */
+  --ds-orange-100: #f6e3db;    /* badge "na oficina" pastel */
+  --ds-orange-800: #8e371a;
+  --ds-slate-100: #e3e6e9;     /* badge ardósia (parado/devolvido) */
+  --ds-slate-800: #38455b;
+  --ds-red-50: #fef2f2;        /* fundo suave de multa pendente */
+  --ds-amber-25: #fffbeb;      /* fundo suave de multa em andamento */
+  --ds-red-600: #dc2626;       /* badge de contagem da nav inferior */
+
+  /* ---------- Espaçamento ----------
+     Escala oficial de 8 degraus para CÓDIGO NOVO. O piloto ainda usa 7/9/11/14px
+     em alguns ajustes finos; eles ficam literais nas regras, marcados para
+     normalização na fase de limpeza — trocar agora mudaria pixels de telas já
+     aprovadas, e esta etapa é de reorganização. */
+  --ds-space-1: 2px;
+  --ds-space-2: 4px;
+  --ds-space-3: 6px;
+  --ds-space-4: 8px;
+  --ds-space-5: 10px;
+  --ds-space-6: 12px;
+  --ds-space-7: 16px;
+  --ds-space-8: 24px;
+
+  /* ---------- Tipografia ---------- */
+  --ds-text-3xs: 11px;
+  --ds-text-2xs: 11.5px;
+  --ds-text-xs: 12px;
+  --ds-text-sm: 12.5px;
+  --ds-text-base: 13px;
+  --ds-text-md: 13.5px;
+  --ds-text-lg: 15px;
+  --ds-text-2xl: 21px;
+  --ds-text-3xl: 24px;
+
+  --ds-weight-regular: 400;
+  --ds-weight-medium: 500;
+  --ds-weight-semibold: 600;
+  --ds-weight-bold: 700;
+
+  --ds-leading-tight: 1.15;
+  --ds-leading-snug: 1.2;
+  --ds-leading-normal: 1.4;
+
+  --ds-tracking-tight: -.015em;
+  --ds-tracking-snug: -.01em;
+  --ds-tracking-plate: .07em;   /* placa Mercosul */
+  --ds-tracking-code: .04em;
+
+  /* ---------- Borda e raio ---------- */
+  --ds-border: 1px;
+  --ds-border-tab: 2px;         /* sublinhado de sub-aba ativa */
+  --ds-border-accent: 3px;      /* barra lateral de faixa/linha em destaque */
+  --ds-border-plate: 4px;       /* faixa azul da placa Mercosul */
+
+  --ds-radius-xs: 3px;
+  --ds-radius-sm: 4px;          /* controle */
+  --ds-radius-md: 6px;
+  --ds-radius-lg: 8px;          /* painel */
+  --ds-radius-pill: 999px;
+  --ds-radius-circle: 50%;
+
+  /* ---------- Sombra ----------
+     Superfície chapada é regra do desenho: sombra SÓ em elemento flutuante
+     (menu portado, modal, toast, barra de seleção). */
+  --ds-shadow-none: none;
+  --ds-shadow-float: 0 8px 24px rgba(18, 20, 23, .12);
+  --ds-shadow-toast: 0 8px 24px rgba(18, 20, 23, .22);
+  --ds-ring-width: 3px;
+
+  /* ---------- Transição ---------- */
+  --ds-transition-fast: .12s ease;
+  --ds-transition: .18s ease;
+
+  /* ---------- Densidade e alturas de controle ----------
+     `height` numa <td> vale como ALTURA MÍNIMA: com o conteúdo da linha em
+     <= 22px, a linha fecha na medida pedida em vez de ficar refém do elemento
+     mais alto (era a plaquinha da placa, com 29px). */
+  --ds-row-compact: 32px;
+  --ds-row-comfortable: 40px;
+  --ds-control-h: 34px;
+  --ds-control-h-sm: 30px;
+  --ds-action-h: 22px;
+
+  /* ---------- Ponto de entrada do Design System ----------
+     Abaixo disto o desenho atual continua valendo, intocado (o celular fica de
+     fora por definição, como no piloto). */
+  --ds-bp-ds: 768px;
+  --ds-bp-medium: 1100px;
+}

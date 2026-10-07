@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>Ficha de Admissão – Gestão RM</title>
+<meta name="description" content="Ficha de admissão de pessoal da Gestão RM. Preencha seus dados e envie os documentos pelo link recebido." />
+<link rel="icon" type="image/png" sizes="64x64" href="/favicon-64.png" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* Tela pública auto-contida: os valores abaixo são cópia literal de
+     design-system/01-tokens.css + 02-themes.css (mesmo padrão do login —
+     a página não carrega o DS; ver docs/DESIGN.md §11.4). */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --canvas: #f3f5f2;
+    --surface: #ffffff;
+    --surface-subtle: #e9ede9;
+    --ink: #17211b;
+    --muted: #5c685f;
+    --line: #d4dad5;
+    --line-strong: #808d85; /* borda de CONTROLE — a divisória reprova WCAG 1.4.11 como limite de campo */
+    --primary: #31363e;
+    --primary-hover: #4a5058;
+    --on-primary: #ffffff;
+    --focus: #565d66;
+    --danger: #b42318;
+    --warning: #8a5700;
+    --success: #1f6f4a;
+    /* Shell grafite (faixa de topo, igual ao painel do login) */
+    --shell-bg: #121417;
+    --shell-tile: #1f2227;
+    --shell-tile-line: #31363e;
+    --shell-ink: #f0f1f3;
+    --shell-muted: #8e959c;
+    /* Apelidos herdados da tela antiga (o HTML usa var(--erro) em estilos inline) */
+    --erro: var(--danger);
+    --erro-nevoa: color-mix(in srgb, var(--danger) 8%, var(--surface));
+    --ok: var(--success);
+    --ok-nevoa: color-mix(in srgb, var(--success) 9%, var(--surface));
+    --radius: 8px; /* cartões; controles usam 4px */
+    --foco-anel: 0 0 0 3px color-mix(in srgb, var(--focus) 22%, transparent);
+  }
+
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: 'Hanken Grotesk', system-ui, sans-serif; background: var(--canvas); color: var(--ink);
+    min-height: 100vh; line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ===== Barra superior (grafite, âncora do desenho — como o painel do login) ===== */
+  .topo {
+    background: var(--shell-bg); height: 52px; display: flex; align-items: center;
+    padding: 0 clamp(16px, 4vw, 40px); gap: 12px; border-bottom: 1px solid var(--shell-tile-line);
+  }
+  .logo-box {
+    background: var(--shell-tile); color: var(--shell-ink); border: 1px solid var(--shell-tile-line);
+    font-weight: 700; font-size: 15px; letter-spacing: .04em; padding: 4px 10px; border-radius: 4px;
+  }
+  .topo-nome { color: var(--shell-muted); font-size: 12.5px; font-weight: 600; letter-spacing: .04em; }
+
+  main { max-width: 820px; margin: 0 auto; padding: clamp(16px, 4vw, 40px) clamp(12px, 4vw, 24px) 96px; }
+
+  /* ===== A folha (a ficha em si) ===== */
+  .folha {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  /* Timbre: logo + título da ficha + identificação do formulário */
+  .timbre {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding: clamp(18px, 3.5vw, 28px) clamp(18px, 4vw, 36px);
+    border-bottom: 1px solid var(--line);
+  }
+  .timbre-marca { display: flex; align-items: center; gap: 14px; min-width: 0; }
+  .timbre-logo {
+    background: var(--primary); color: var(--on-primary);
+    font-weight: 700; font-size: 20px; letter-spacing: .02em; padding: 6px 14px; border-radius: 4px; flex-shrink: 0;
+  }
+  .timbre-logo-img {
+    display: block; width: clamp(72px, 12vw, 108px); max-height: 58px;
+    object-fit: contain; flex-shrink: 0;
+  }
+  .timbre-titulo h1 { font-size: clamp(21px, 4vw, 26px); font-weight: 700; letter-spacing: -.015em; line-height: 1.2; }
+  .timbre-titulo p { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+  .timbre-meta { text-align: right; font-size: 11.5px; color: var(--muted); line-height: 1.6; flex-shrink: 0; }
+  .timbre-meta b { color: var(--ink); font-weight: 600; display: block; text-transform: uppercase; letter-spacing: .05em; }
+  #cand-nome:empty::before { content: '________________'; letter-spacing: 0; color: var(--line-strong); }
+
+  @media (max-width: 640px) {
+    /* Timbre empilhado: título em cima, candidato embaixo (lado a lado espremia tudo) */
+    .timbre { flex-direction: column; align-items: stretch; gap: 12px; }
+    .timbre-meta { text-align: left; display: flex; gap: 8px; align-items: baseline; border-top: 1px dashed var(--line-strong); padding-top: 10px; }
+    .timbre-meta b { display: inline; }
+  }
+
+  /* ===== Seções da ficha (fluxo ÚNICO, sem etapas) =====
+     A ficha rola do início ao fim, como um formulário de papel: nada fica
+     escondido, o candidato vê o tamanho do trabalho e o único botão é o
+     "Enviar" no final. O número da seção sai de um contador CSS. */
+  main { counter-reset: secao; }
+  .section-card { display: block; }
+  .section-card + .section-card .etapa-corpo { border-top: 1px solid var(--line); }
+  .etapa-corpo { padding: clamp(20px, 4vw, 36px); }
+  .etapa-cabeca { margin-bottom: 24px; display: grid; grid-template-columns: auto 1fr; column-gap: 12px; align-items: start; }
+  .etapa-cabeca::before {
+    counter-increment: secao; content: counter(secao);
+    grid-row: 1 / span 2; width: 28px; height: 28px; border-radius: 50%; margin-top: 1px;
+    background: var(--primary); color: var(--on-primary);
+    font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+  }
+  .etapa-cabeca h2 { font-size: 19px; font-weight: 700; letter-spacing: -.015em; }
+  .etapa-cabeca p { grid-column: 2; font-size: 13.5px; color: var(--muted); margin-top: 3px; max-width: 62ch; }
+
+  /* Seções do formulário: fieldset com legenda sublinhada, como numa ficha impressa */
+  fieldset { border: none; margin: 0 0 28px; min-width: 0; }
+  fieldset:last-of-type { margin-bottom: 0; }
+  legend {
+    width: 100%; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--muted); padding-bottom: 8px; border-bottom: 1px solid var(--line); margin-bottom: 18px;
+  }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 20px; }
+  .span-2 { grid-column: span 2; }
+  @media (max-width: 620px) {
+    .grid-2 { grid-template-columns: 1fr; }
+    .span-2 { grid-column: span 1; }
+  }
+
+  /* ===== Campos ===== */
+  .field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+  .field > label { font-size: 12.5px; font-weight: 600; color: var(--muted); }
+  .field label .req { color: var(--danger); font-weight: 700; margin-left: 1px; }
+  .field label .opt { color: var(--muted); font-weight: 400; margin-left: 4px; }
+  .field .dica { font-size: 11.5px; color: var(--muted); }
+  .field input, .field select, .field textarea {
+    font: inherit; font-size: 16px; font-weight: 500; color: var(--ink); width: 100%;
+    padding: 8px 12px; min-height: 40px;
+    background: var(--surface); border: 1px solid var(--line-strong); border-radius: 4px;
+    outline: none; transition: border-color .12s ease, box-shadow .12s ease, background .12s ease;
+  }
+  .field textarea { resize: vertical; min-height: 96px; }
+  .field select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%235c685f' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 12px center; padding-right: 34px;
+  }
+  .field input::placeholder, .field textarea::placeholder { color: var(--muted); }
+  .field input:hover, .field select:hover, .field textarea:hover { border-color: var(--focus); }
+  .field input:focus-visible, .field select:focus-visible, .field textarea:focus-visible {
+    border-color: var(--focus); box-shadow: var(--foco-anel);
+  }
+  .field input.error, .field select.error, .field textarea.error { border-color: var(--danger); background: var(--erro-nevoa); }
+  .field-erro { font-size: 12px; font-weight: 500; color: var(--danger); display: flex; align-items: baseline; gap: 4px; }
+  .field-erro:empty { display: none; }
+
+  /* Rádios e checkboxes com alvo de toque generoso */
+  .radio-group { display: flex; flex-wrap: wrap; gap: 10px; }
+  .radio-opt {
+    display: flex; align-items: center; gap: 8px; cursor: pointer;
+    border: 1px solid var(--line-strong); border-radius: 4px; padding: 10px 16px; background: var(--surface);
+    transition: border-color .12s ease, background .12s ease;
+  }
+  .radio-opt:hover { border-color: var(--focus); }
+  .radio-opt:has(input:checked) { border-color: var(--primary); background: var(--surface-subtle); }
+  .radio-opt:has(input:focus-visible) { box-shadow: var(--foco-anel); }
+  .radio-opt input { width: 17px; height: 17px; accent-color: var(--primary); flex-shrink: 0; }
+  .radio-opt span { font-size: 14px; font-weight: 500; }
+
+  /* ===== Checklist de documentos (lista, como o verso de uma ficha) ===== */
+  .doc-lista { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+  .doc-item { padding: 14px 16px; background: var(--surface); transition: background .12s ease; }
+  .doc-item + .doc-item { border-top: 1px solid var(--line); }
+  .doc-item.tem-arquivo { background: var(--ok-nevoa); }
+  .doc-item.error { background: var(--erro-nevoa); outline: 1px solid var(--danger); outline-offset: -1px; }
+  .doc-linha { display: flex; align-items: center; gap: 12px; }
+  .doc-check {
+    width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+    border: 1.5px solid var(--line-strong); background: var(--surface);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; color: transparent; transition: background .2s, border-color .2s, color .2s;
+  }
+  .doc-item.tem-arquivo .doc-check { background: var(--success); border-color: var(--success); color: #fff; }
+  .doc-item.tem-arquivo .doc-check::before { content: '✓'; }
+  .doc-texto { flex: 1; min-width: 0; }
+  .doc-nome { font-size: 14px; font-weight: 600; color: var(--ink); }
+  .doc-nome .req { color: var(--danger); font-weight: 700; }
+  .doc-nome .opt { color: var(--muted); font-weight: 400; font-size: 12.5px; }
+  .doc-dica { font-size: 11.5px; color: var(--muted); margin-top: 1px; }
+  .doc-anexar {
+    position: relative; flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px;
+    font-size: 13px; font-weight: 600; color: var(--ink); background: var(--surface);
+    border: 1px solid var(--line-strong); border-radius: 4px; padding: 9px 14px; min-height: 40px;
+    cursor: pointer; transition: border-color .12s ease, background .12s ease;
+  }
+  .doc-anexar:hover { border-color: var(--focus); background: var(--surface-subtle); }
+  .doc-anexar:has(input:focus-visible) { box-shadow: var(--foco-anel); }
+  .doc-anexar input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .doc-item .field-erro { margin-top: 8px; }
+  @media (max-width: 520px) {
+    .doc-linha { flex-wrap: wrap; }
+    .doc-texto { flex: 1 1 calc(100% - 80px); }
+    .doc-anexar { margin-left: 34px; }
+  }
+
+  /* Arquivos enviados */
+  .file-list { display: flex; flex-direction: column; gap: 6px; }
+  .file-list:not(:empty) { margin-top: 10px; }
+  .doc-item .file-list:not(:empty) { margin-left: 34px; }
+  .file-tag {
+    display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--ink);
+    background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 7px 10px;
+  }
+  .file-tag .nome { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .file-tag.enviando { color: var(--muted); border-style: dashed; }
+  .file-tag button {
+    background: none; border: none; cursor: pointer; color: var(--muted); flex-shrink: 0;
+    font-size: 14px; line-height: 1; padding: 4px 6px; border-radius: 4px; transition: color .12s ease, background .12s ease;
+  }
+  .file-tag button:hover { color: var(--danger); background: var(--erro-nevoa); }
+
+  /* Cartão de filho (dependentes) */
+  .filho-card { border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; background: var(--surface-subtle); }
+  .filho-cabeca { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .filho-cabeca strong { font-size: 13.5px; }
+  .filho-cabeca button { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 16px; line-height: 1; padding: 4px 8px; border-radius: 4px; }
+  .filho-cabeca button:hover { color: var(--danger); background: var(--erro-nevoa); }
+
+  /* Nota informativa */
+  .nota {
+    display: flex; gap: 10px; align-items: flex-start; font-size: 13px; color: var(--ink);
+    background: var(--surface-subtle); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 12px 14px; margin-bottom: 20px;
+  }
+  .nota .icon { flex-shrink: 0; }
+
+  /* ===== Declaração final (bloco de assinatura da ficha) ===== */
+  .declaracao { border: 1px solid var(--line-strong); border-radius: var(--radius); padding: 18px; background: var(--surface-subtle); }
+  .declaracao-titulo { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+  .check-opt { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
+  .check-opt input { width: 18px; height: 18px; accent-color: var(--primary); flex-shrink: 0; margin-top: 1px; }
+  .check-opt:has(input:focus-visible) input { outline: 2px solid var(--focus); outline-offset: 2px; }
+  .check-opt span { font-size: 13.5px; line-height: 1.55; }
+  .declaracao-data { font-size: 12px; color: var(--muted); margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line-strong); }
+  .declaracao-data b { color: var(--ink); font-weight: 600; }
+
+  /* ===== Navegação entre etapas ===== */
+  .nav-bar { display: flex; justify-content: flex-end; align-items: center; gap: 12px; margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--line); }
+  .btn {
+    font: inherit; font-size: 14px; font-weight: 600; letter-spacing: .01em;
+    padding: 10px 24px; min-height: 44px; border: none; border-radius: 4px; cursor: pointer;
+    transition: background .12s ease, border-color .12s ease, transform .12s ease;
+  }
+  .btn:disabled { opacity: .55; cursor: not-allowed; }
+  .btn:focus-visible { outline: none; box-shadow: var(--foco-anel); }
+  .btn:active:not(:disabled) { transform: translateY(1px); }
+  .btn-ghost { background: transparent; color: var(--ink); border: 1px solid var(--line-strong); }
+  .btn-ghost:hover:not(:disabled) { border-color: var(--focus); color: var(--ink); background: var(--surface-subtle); }
+  .btn-primary { background: var(--primary); color: var(--on-primary); }
+  .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
+  .btn-submit { background: var(--primary); color: var(--on-primary); font-size: 15px; padding: 12px 32px; }
+  .btn-submit:hover:not(:disabled) { background: var(--primary-hover); }
+  @media (max-width: 520px) {
+    .nav-bar { flex-direction: column-reverse; align-items: stretch; }
+    .nav-bar .btn { width: 100%; }
+    .nav-bar > div:empty { display: none; }
+  }
+
+  /* ===== Telas de status e sucesso ===== */
+  #status-screen, #success-screen { display: none; text-align: center; padding: clamp(48px, 10vw, 80px) 24px; }
+  .success-icon { font-size: 56px; margin-bottom: 18px; }
+  .success-title { font-size: clamp(24px, 5vw, 30px); font-weight: 700; letter-spacing: -.015em; margin-bottom: 10px; }
+  .success-msg { font-size: 15px; color: var(--muted); max-width: 46ch; margin: 0 auto; line-height: 1.6; }
+  .whatsapp-btn {
+    display: inline-flex; align-items: center; gap: 10px; background: #25D366; color: #fff;
+    font-size: 14px; font-weight: 600; padding: 12px 26px; border-radius: 4px; text-decoration: none;
+    margin-top: 26px; transition: background .12s ease;
+  }
+  .whatsapp-btn:hover { background: #1da851; }
+
+  /* Rodapé da folha */
+  .folha-rodape {
+    display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    padding: 12px clamp(18px, 4vw, 36px); border-top: 1px solid var(--line);
+    font-size: 11px; color: var(--muted); background: var(--surface-subtle);
+  }
+
+  /* ===== Toast ===== */
+  #toast {
+    position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(16px);
+    background: var(--primary); color: var(--on-primary); padding: 12px 20px; border-radius: 8px;
+    font-size: 14px; font-weight: 500; box-shadow: 0 8px 24px rgba(23,33,27,.3);
+    opacity: 0; transition: opacity .2s, transform .2s; z-index: 200; pointer-events: none; max-width: 90vw;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  #toast.erro { background: var(--danger); color: #fff; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+    html { scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topo">
+  <div class="logo-box">RM</div>
+  <span class="topo-nome">Gestão RM · Recursos Humanos</span>
+</header>
+
+<main>
+  <!-- Tela de carregamento / link inválido / já enviado / expirado -->
+  <div id="status-screen" class="folha">
+    <div id="status-icon" class="success-icon">⏳</div>
+    <div id="status-title" class="success-title">Carregando…</div>
+    <p id="status-msg" class="success-msg">Validando o seu link de acesso.</p>
+  </div>
+
+  <div class="folha" id="form-main" style="display:none;">
+
+    <!-- Timbre da ficha -->
+    <div class="timbre">
+      <div class="timbre-marca">
+        <img id="empresa-logo" class="timbre-logo-img" src="/img/logo-nte.png" alt="Logo da Norte Engenharia">
+        <div id="empresa-logo-fallback" class="timbre-logo" hidden>NTE</div>
+        <div class="timbre-titulo">
+          <h1>Ficha de Admissão</h1>
+          <p>Preencha com atenção. Os dados vão direto para o RH.</p>
+        </div>
+      </div>
+      <div class="timbre-meta">
+        <b>Candidato(a)</b>
+        <span id="cand-nome"></span>
+      </div>
+    </div>
+
+    <!-- ═══ SEÇÃO 1 · Dados pessoais (a ficha rola inteira; sem etapas escondidas) ═══ -->
+    <section class="section-card" id="step-1" aria-labelledby="titulo-etapa-1">
+      <div class="etapa-corpo">
+        <div class="etapa-cabeca">
+          <h2 id="titulo-etapa-1">Dados pessoais</h2>
+          <p>Use os dados exatamente como estão nos seus documentos. Campos com <span class="req" style="color:var(--erro);font-weight:700;">*</span> são obrigatórios.</p>
+        </div>
+
+        <fieldset>
+          <legend>Identificação</legend>
+          <div class="grid-2">
+            <div class="field span-2">
+              <label for="nome">Nome completo <span class="req">*</span></label>
+              <input type="text" id="nome" autocomplete="name" placeholder="Como está no seu RG">
+              <span class="field-erro" id="erro-nome"></span>
+            </div>
+            <div class="field">
+              <label for="cpf">CPF <span class="req">*</span></label>
+              <input type="text" id="cpf" placeholder="000.000.000-00" maxlength="14" inputmode="numeric" autocomplete="off">
+              <span class="field-erro" id="erro-cpf"></span>
+            </div>
+            <div class="field">
+              <label for="rg">RG <span class="req">*</span></label>
+              <input type="text" id="rg" placeholder="Número do RG" autocomplete="off">
+              <span class="field-erro" id="erro-rg"></span>
+            </div>
+            <div class="field">
+              <label for="pis">PIS / PASEP / NIT <span class="req">*</span></label>
+              <input type="text" id="pis" placeholder="000.00000.00-0" inputmode="numeric">
+              <span class="field-erro" id="erro-pis"></span>
+            </div>
+            <div class="field">
+              <label for="email">E-mail pessoal <span class="req">*</span></label>
+              <input type="email" id="email" autocomplete="email" placeholder="seu@email.com" inputmode="email">
+              <span class="field-erro" id="erro-email"></span>
+            </div>
+            <div class="field">
+              <label for="titulo">Título de eleitor <span class="opt">(opcional)</span></label>
+              <input type="text" id="titulo" placeholder="Número do título" inputmode="numeric">
+            </div>
+            <div class="field">
+              <label for="reservista">Reservista <span class="opt">(se aplicável)</span></label>
+              <input type="text" id="reservista" placeholder="Número da reservista" inputmode="numeric">
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Endereço</legend>
+          <div class="grid-2">
+            <div class="field span-2">
+              <label for="endereco">Endereço completo <span class="req">*</span></label>
+              <input type="text" id="endereco" autocomplete="street-address" placeholder="Rua, número, bairro">
+              <span class="field-erro" id="erro-endereco"></span>
+            </div>
+            <div class="field">
+              <label for="cidade">Cidade <span class="req">*</span></label>
+              <input type="text" id="cidade" autocomplete="address-level2" placeholder="Cidade">
+              <span class="field-erro" id="erro-cidade"></span>
+            </div>
+            <div class="field">
+              <label for="estado">Estado <span class="req">*</span></label>
+              <select id="estado" autocomplete="address-level1">
+                <option value="">Selecione…</option>
+                <option>PE</option><option>AL</option><option>BA</option><option>CE</option>
+                <option>MA</option><option>PB</option><option>PI</option><option>RN</option>
+                <option>SE</option><option>AC</option><option>AM</option><option>AP</option>
+                <option>GO</option><option>MT</option><option>MS</option><option>PA</option>
+                <option>RO</option><option>RR</option><option>TO</option><option>DF</option>
+                <option>ES</option><option>MG</option><option>RJ</option><option>SP</option>
+                <option>PR</option><option>RS</option><option>SC</option>
+              </select>
+              <span class="field-erro" id="erro-estado"></span>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Dados bancários</legend>
+          <div class="grid-2">
+            <div class="field">
+              <label for="banco">Banco <span class="req">*</span></label>
+              <input type="text" id="banco" placeholder="Nome ou código do banco">
+              <span class="field-erro" id="erro-banco"></span>
+            </div>
+            <div class="field">
+              <label for="pix">Chave PIX <span class="opt">(CPF, e-mail ou telefone)</span></label>
+              <input type="text" id="pix" placeholder="Sua chave PIX">
+            </div>
+            <div class="field">
+              <label for="agencia">Agência <span class="opt">(se não usar PIX)</span></label>
+              <input type="text" id="agencia" placeholder="0000" inputmode="numeric">
+            </div>
+            <div class="field">
+              <label for="conta">Conta corrente <span class="opt">(se não usar PIX)</span></label>
+              <input type="text" id="conta" placeholder="00000-0" inputmode="numeric">
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Escolaridade</legend>
+          <div class="grid-2">
+            <div class="field">
+              <label for="escolaridade">Nível de escolaridade <span class="req">*</span></label>
+              <select id="escolaridade">
+                <option value="">Selecione…</option>
+                <option>Ensino Fundamental Incompleto</option><option>Ensino Fundamental Completo</option>
+                <option>Ensino Médio Incompleto</option><option>Ensino Médio Completo</option>
+                <option>Técnico</option><option>Superior Incompleto</option>
+                <option>Superior Completo</option><option>Pós-Graduação</option>
+              </select>
+              <span class="field-erro" id="erro-escolaridade"></span>
+            </div>
+            <div class="field">
+              <label for="registro">Registro profissional <span class="opt">(OAB, CRM, CREA…)</span></label>
+              <input type="text" id="registro" placeholder="Número do registro">
+            </div>
+          </div>
+        </fieldset>
+
+      </div>
+    </section>
+
+    <!-- ═══ ETAPA 2 · Documentos ═══ -->
+    <section class="section-card" id="step-2" aria-labelledby="titulo-etapa-2">
+      <div class="etapa-corpo">
+        <div class="etapa-cabeca">
+          <h2 id="titulo-etapa-2">Documentos</h2>
+          <p>Fotografe ou digitalize cada documento com boa iluminação. Cada item vira um ✓ verde quando o arquivo sobe. Os itens marcados com <span class="req" style="color:var(--erro);font-weight:700;">*</span> são obrigatórios; os demais, só se for o seu caso.</p>
+        </div>
+
+        <div class="nota">
+          <span class="icon">💡</span>
+          <span>Formatos aceitos: <strong>PDF, JPG e PNG</strong>, até 9 MB por arquivo. O envio acontece na hora, assim que você seleciona o arquivo.</span>
+        </div>
+
+        <fieldset>
+          <legend>Documentos necessários</legend>
+          <div class="doc-lista">
+            <div class="doc-item" data-box="ctps">
+              <div class="doc-linha">
+                <span class="doc-check" aria-hidden="true"></span>
+                <div class="doc-texto">
+                  <div class="doc-nome">CTPS Digital + 2 últimos registros <span class="req">*</span></div>
+                  <div class="doc-dica">Pode anexar mais de um arquivo</div>
+                </div>
+                <label class="doc-anexar">📎 Anexar<input type="file" accept=".pdf,.jpg,.jpeg,.png" multiple data-key="ctps" aria-label="Anexar CTPS"></label>
+              </div>
+              <div class="file-list" id="list-ctps"></div>
+              <span class="field-erro"></span>
+            </div>
+            <div class="doc-item" data-box="foto">
+              <div class="doc-linha">
+                <span class="doc-check" aria-hidden="true"></span>
+                <div class="doc-texto">
+                  <div class="doc-nome">Foto 3×4 <span class="req">*</span></div>
+                  <div class="doc-dica">JPG ou PNG, fundo claro</div>
+                </div>
+                <label class="doc-anexar">📎 Anexar<input type="file" accept=".jpg,.jpeg,.png" data-key="foto" aria-label="Anexar foto 3 por 4"></label>
+              </div>
+              <div class="file-list" id="list-foto"></div>
+              <span class="field-erro"></span>
+            </div>
+            <div class="doc-item" data-box="rg-doc">
+              <div class="doc-linha">
+                <span class="doc-check" aria-hidden="true"></span>
+                <div class="doc-texto">
+                  <div class="doc-nome">RG <span class="req">*</span></div>
+                  <div class="doc-dica">Frente e verso</div>
+                </div>
+                <label class="doc-anexar">📎 Anexar<input type="file" accept=".pdf,.jpg,.jpeg,.png" multiple data-key="rg-doc" aria-label="Anexar RG"></label>
+              </div>
+              <div class="file-list" id="list-rg-doc"></div>
+              <span class="field-erro"></span>
+            </div>
+            <div class="doc-item" data-box="cpf-doc">
+              <div class="doc-linha">
+                <span class="doc-check" aria-hidden="true"></span>
+                <div class="doc-texto">
+                  <div class="doc-nome">CPF <span class="req">*</span></div>
+                  <div class="doc-dica">Ou comprovante de situação cadastral</div>
+                </div>
+                <label class="doc-anexar">📎 Anexar<input type="file" accept=".pdf,.jpg,.jpeg,.png" data-key="cpf-doc" aria-label="Anexar CPF"></label>
+              </div>
+              <div class="file-list" id="list-cpf-doc"></div>
+              <span class="field-erro"></span>
+            </div>
+            <div class="doc-item" data-box="vacina">
+              <div class="doc-linha">
+                <span class="doc-check" aria-hidden="true"></span>
+                <div class="doc-texto">
+                  <div class="doc-nome">Cartão de vacina <span class="req">*</span></div>
+                  <div class="doc-dica">Pode anexar mais de um arquivo</div>
+                </div>
+                <label class="doc-anexar">📎 Anexar<input type="file" accept=".pdf,.jpg,.jpeg,.png" multiple data-key="vacina" aria-label="Anexar cartão de vacina"></label>
+              </div>
+              <div class="file-list" id="list-vacina"></div>
+              <span class="field-erro"></span>
+            </div>
+            <div class="doc-item" data-box="residencia">
+              <div class="doc-linha">
+                <span class="doc-check" aria-hidden="true"></span>
+                <div class="doc-texto">
+                  <div class="doc-nome">Comprovante de residência <span class="req">*</span></div>
+                  <div class="doc-dica">Conta de luz, água ou telefone recente</div>
+                </div>
+                <label class="doc-anexar">📎 Anexar<input type="file" accept=".pdf,.jpg,.jpeg,.png" data-key="residencia" aria-label="Anexar comprovante de residência"></label>
+              </div>
+              <div class="file-list" id="list-residencia"></div>
+              <span class="field-erro"></span>
+            </div>
+            <div class="doc-item" data-box="certidao">
+              <div class="doc-linha">
+                <span class="doc-check" aria-hidden="true"></span>
+                <div class="doc-texto">
+                  <div class="doc-nome">Certidão de nascimento ou casamento <span class="req">*</span></div>
+                </div>
+                <label class="doc-anexar">📎 Anexar<input type="file" accept=".pdf,.jpg,.jpeg,.png" data-key="certidao" aria-label="Anexar certidão"></label>
+              </div>
+              <div class="file-list" id="list-certidao"></div>
+              <span class="field-erro"></span>
+            </div>
+            <div class="doc-item" data-box="escolar">
+              <div class="doc-linha">
+                <span class="doc-check" aria-hidden="true"></span>
+                <div class="doc-texto">
+                  <div class="doc-nome">Histórico ou declaração escolar <span class="req">*</span></div>
+                </div>
+                <label class="doc-anexar">📎 Anexar<input type="file" accept=".pdf,.jpg,.jpeg,.png" data-key="escolar" aria-label="Anexar histórico escolar"></label>
+              </div>
+              <div class="file-list" id="list-escolar"></div>
+              <span class="field-erro"></span>
+            </div>
+            <div class="doc-item" data-box="sus">
+              <div class="doc-linha">
+                <span class="doc-check" aria-hidden="true"></span>
+                <div class="doc-texto">
+                  <div class="doc-nome">Cartão do SUS <span class="req">*</span></div>
+                </div>
+                <label class="doc-anexar">📎 Anexar<input type="file" accept=".pdf,.jpg,.jpeg,.png" data-key="sus" aria-label="Anexar cartão do SUS"></label>
+              </div>
+              <div class="file-list" id="list-sus"></div>
+              <span class="field-erro"></span>
+            </div>
+            <div class="doc-item" data-box="pis-doc">
+              <div class="doc-linha">
+                <span class="doc-check" aria-hidden="true"></span>
+                <div class="doc-texto">
+                  <div class="doc-nome">PIS / PASEP / NIT <span class="req">*</span></div>
+                  <div class="doc-dica">Cartão cidadão, extrato do FGTS ou print do CNIS</div>
+                </div>
+                <label class="doc-anexar">📎 Anexar<input type="file" accept=".pdf,.jpg,.jpeg,.png" data-key="pis-doc" aria-label="Anexar PIS"></label>
+              </div>
+              <div class="file-list" id="list-pis-doc"></div>
+              <span class="field-erro"></span>
+            </div>
+            <!-- Único item sem "*" deste bloco: fica por último para não quebrar a sequência dos
+                 obrigatórios. NÃO tem <span class="field-erro"> nem entra em DOCS_OBRIGATORIOS. -->
+            <div class="doc-item" data-box="cnh">
+              <div class="doc-linha">
+                <span class="doc-check" aria-hidden="true"></span>
+                <div class="doc-texto">
+                  <div class="doc-nome">CNH <span class="opt">(se tiver)</span></div>
+                  <div class="doc-dica">Frente e verso, ou o PDF da CNH Digital</div>
+                </div>
+                <label class="doc-anexar">📎 Anexar<input type="file" accept=".pdf,.jpg,.jpeg,.png" data-key="cnh" aria-label="Anexar CNH"></label>
+              </div>
+              <div class="file-list" id="list-cnh"></div>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Se for o seu caso</legend>
+          <div class="doc-lista">
+            <div class="doc-item" data-box="reservista-doc">
+              <div class="doc-linha">
+                <span class="doc-check" aria-hidden="true"></span>
+                <div class="doc-texto"><div class="doc-nome">Reservista <span class="opt">(se aplicável)</span></div></div>
+                <label class="doc-anexar">📎 Anexar<input type="file" accept=".pdf,.jpg,.jpeg,.png" data-key="reservista-doc" aria-label="Anexar reservista"></label>
+              </div>
+              <div class="file-list" id="list-reservista-doc"></div>
+            </div>
+            <div class="doc-item" data-box="reg-prof">
+              <div class="doc-linha">
+                <span class="doc-check" aria-hidden="true"></span>
+                <div class="doc-texto"><div class="doc-nome">Registro profissional <span class="opt">(se aplicável)</span></div></div>
+                <label class="doc-anexar">📎 Anexar<input type="file" accept=".pdf,.jpg,.jpeg,.png" data-key="reg-prof" aria-label="Anexar registro profissional"></label>
+              </div>
+              <div class="file-list" id="list-reg-prof"></div>
+            </div>
+            <div class="doc-item" data-box="titulo-doc">
+              <div class="doc-linha">
+                <span class="doc-check" aria-hidden="true"></span>
+                <div class="doc-texto"><div class="doc-nome">Título de eleitor <span class="opt">(opcional)</span></div></div>
+                <label class="doc-anexar">📎 Anexar<input type="file" accept=".pdf,.jpg,.jpeg,.png" data-key="titulo-doc" aria-label="Anexar título de eleitor"></label>
+              </div>
+              <div class="file-list" id="list-titulo-doc"></div>
+            </div>
+          </div>
+        </fieldset>
+
+      </div>
+    </section>
+
+    <!-- ═══ ETAPA 3 · Dependentes ═══ -->
+    <section class="section-card" id="step-3" aria-labelledby="titulo-etapa-3">
+      <div class="etapa-corpo">
+        <div class="etapa-cabeca">
+          <h2 id="titulo-etapa-3">Dependentes</h2>
+          <p>Usado para imposto de renda e benefícios. Se não tiver dependentes, é só continuar.</p>
+        </div>
+
+        <div class="field" style="margin-bottom:24px;">
+          <label>Possui dependentes? <span class="req">*</span></label>
+          <div class="radio-group">
+            <label class="radio-opt"><input type="radio" name="tem-dep" value="sim"> <span>Sim</span></label>
+            <label class="radio-opt"><input type="radio" name="tem-dep" value="nao" checked> <span>Não</span></label>
+          </div>
+        </div>
+
+        <div id="dep-fields" style="display:none;">
+          <fieldset>
+            <legend>Cônjuge / companheiro(a)</legend>
+            <div class="grid-2">
+              <div class="field"><label for="conjuge-nome">Nome completo</label><input type="text" id="conjuge-nome" placeholder="Nome do cônjuge"></div>
+              <div class="field"><label for="conjuge-cpf">CPF</label><input type="text" id="conjuge-cpf" placeholder="000.000.000-00" inputmode="numeric"></div>
+              <div class="field"><label for="conjuge-rg">RG</label><input type="text" id="conjuge-rg" placeholder="Número do RG"></div>
+            </div>
+            <div class="doc-lista" style="margin-top:16px;">
+              <div class="doc-item" data-box="conjuge-doc">
+                <div class="doc-linha">
+                  <span class="doc-check" aria-hidden="true"></span>
+                  <div class="doc-texto"><div class="doc-nome">Documentos do cônjuge <span class="opt">(CPF + RG)</span></div></div>
+                  <label class="doc-anexar">📎 Anexar<input type="file" accept=".pdf,.jpg,.jpeg,.png" multiple data-key="conjuge-doc" aria-label="Anexar documentos do cônjuge"></label>
+                </div>
+                <div class="file-list" id="list-conjuge-doc"></div>
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Filhos até 21 anos</legend>
+            <div id="filhos-container"></div>
+            <button type="button" class="btn btn-ghost" data-action="add-filho" style="font-size:13.5px;">+ Adicionar filho</button>
+          </fieldset>
+
+          <fieldset>
+            <legend>Documentos dos dependentes</legend>
+            <div class="doc-lista">
+              <div class="doc-item" data-box="vacina-dep">
+                <div class="doc-linha">
+                  <span class="doc-check" aria-hidden="true"></span>
+                  <div class="doc-texto"><div class="doc-nome">Cartões de vacina <span class="opt">(menores de 18)</span></div></div>
+                  <label class="doc-anexar">📎 Anexar<input type="file" accept=".pdf,.jpg,.jpeg,.png" multiple data-key="vacina-dep" aria-label="Anexar cartões de vacina dos dependentes"></label>
+                </div>
+                <div class="file-list" id="list-vacina-dep"></div>
+              </div>
+              <div class="doc-item" data-box="sus-dep">
+                <div class="doc-linha">
+                  <span class="doc-check" aria-hidden="true"></span>
+                  <div class="doc-texto"><div class="doc-nome">Cartões do SUS dos dependentes</div></div>
+                  <label class="doc-anexar">📎 Anexar<input type="file" accept=".pdf,.jpg,.jpeg,.png" multiple data-key="sus-dep" aria-label="Anexar cartões do SUS dos dependentes"></label>
+                </div>
+                <div class="file-list" id="list-sus-dep"></div>
+              </div>
+            </div>
+          </fieldset>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ═══ ETAPA 4 · Fardamento e envio ═══ -->
+    <section class="section-card" id="step-4" aria-labelledby="titulo-etapa-4">
+      <div class="etapa-corpo">
+        <div class="etapa-cabeca">
+          <h2 id="titulo-etapa-4">Fardamento e envio</h2>
+          <p>Últimos detalhes: tamanhos do uniforme e a sua confirmação.</p>
+        </div>
+
+        <fieldset>
+          <legend>Tamanhos de fardamento</legend>
+          <div class="grid-2">
+            <div class="field">
+              <label for="bota">Número da bota <span class="req">*</span></label>
+              <select id="bota">
+                <option value="">Selecione…</option>
+                <option>36</option><option>37</option><option>38</option><option>39</option>
+                <option>40</option><option>41</option><option>42</option><option>43</option>
+                <option>44</option><option>45</option><option>46</option>
+              </select>
+              <span class="field-erro" id="erro-bota"></span>
+            </div>
+            <div class="field">
+              <label for="macacao">Tamanho do macacão <span class="req">*</span></label>
+              <select id="macacao">
+                <option value="">Selecione…</option>
+                <option>P</option><option>M</option><option>G</option><option>GG</option><option>XG</option>
+              </select>
+              <span class="field-erro" id="erro-macacao"></span>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Observações</legend>
+          <div class="field">
+            <label for="obs">Informações adicionais <span class="opt">(opcional)</span></label>
+            <textarea id="obs" rows="4" placeholder="Alguma informação que queira passar para a empresa…"></textarea>
+          </div>
+        </fieldset>
+
+        <div class="nota">
+          <span class="icon">📲</span>
+          <span>Depois de enviar, você também pode mandar os documentos pelo WhatsApp: <strong>(81) 90000-0003</strong>.</span>
+        </div>
+
+        <div class="declaracao">
+          <div class="declaracao-titulo">Declaração</div>
+          <label class="check-opt">
+            <input type="checkbox" id="confirm-check">
+            <span>Declaro que as informações fornecidas nesta ficha são verdadeiras e que os documentos enviados estão legíveis e correspondem aos originais.</span>
+          </label>
+          <div class="declaracao-data">Data do preenchimento: <b id="decl-data"></b></div>
+          <span class="field-erro" id="erro-confirm" style="margin-top:8px;"></span>
+        </div>
+
+        <div class="nav-bar">
+          <button type="button" class="btn btn-submit" id="btn-enviar" data-action="submit">Enviar ficha de admissão</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ Sucesso ═══ -->
+    <div id="success-screen">
+      <div class="success-icon">✅</div>
+      <div class="success-title">Ficha enviada!</div>
+      <p class="success-msg">Seus dados foram registrados com sucesso. A equipe de RH vai revisar tudo e entrar em contato para os próximos passos da admissão.</p>
+      <a href="https://wa.me/5581900000003" target="_blank" rel="noopener" class="whatsapp-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="white" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Enviar pelo WhatsApp também
+      </a>
+    </div>
+
+    <div class="folha-rodape">
+      <span>Gestão RM · Ficha de admissão de pessoal</span>
+      <span>Uso interno do RH · Seus dados ficam protegidos</span>
+    </div>
+  </div>
+</main>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="/admissao.js"></script>
+</body>
+</html>

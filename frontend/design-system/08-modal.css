@@ -1,0 +1,343 @@
+/* ============================================================================
+   08-modal.css — CASCA GENÉRICA DO MODAL
+
+   Auditoria visual de ago/2026. O app tem ~68 `.modal-overlay`; até aqui só um
+   (`#modal`, Adicionar/Editar veículo) tinha sido trazido para o Design System,
+   por arquivo próprio (`design-veiculo-modal.css`). Os outros 67 continuavam
+   abrindo com o desenho do legado — raio de 18px, sombra `0 20px 60px`,
+   tipografia de display no título, campos de 10px de raio — por cima de telas
+   já chapadas e retas. Era o desvio mais visível do sistema inteiro: ao abrir
+   qualquer cadastro, a impressão era de trocar de produto.
+
+   Este arquivo desenha o que é COMUM a qualquer modal. Nada aqui conhece um
+   módulo: o conteúdo de cada modal continua sendo assunto do CSS dele.
+
+   Divisão de trabalho com a ponte de tokens (02-themes.css):
+     · a ponte já entrega cor, superfície, borda e --display para todo
+       `.modal-overlay` — o legado desses modais já consumia var(--panel),
+       var(--ink), var(--line); só faltava o valor certo atrás;
+     · AQUI fica o que o legado escreveu como PIXEL LITERAL (raio, sombra,
+       altura de controle, padding do cabeçalho), que ponte nenhuma alcança.
+
+   Migração de #funcModal/#multaModal/#almoxModal (ver docs/DESIGN.md §11.7):
+   quase tudo que só `#modal` tinha (campo mais alto, calculados com destaque,
+   painel de histórico, largura reduzida com `.com-historico`) era padrão de
+   "modal de formulário grande", não identidade de veículo — promovido pra cá.
+   A densidade maior (§7) ficou opt-in via `.modal-confortavel`, não virou
+   padrão de TODO modal: promover sem gate afetaria os ~68 modais do app de
+   uma vez, inclusive diálogos pequenos nunca avaliados nessa altura (decisão
+   do usuário, registrada no DESIGN.md). `design-veiculo-modal.css` continua
+   carregando depois e sobrevive com só dois resíduos: `.veic-doc-box`
+   (componente que só existe no veículo) e `#inpFipe` (corte de escopo desta
+   entrega, não decisão de design).
+
+   Exceções que continuam valendo, porque vencem por especificidade ou por
+   `!important` do próprio legado:
+     · `#crachaModal` — folha de impressão do crachá, sem casca de janela;
+     · `#camModal` — câmera em tela cheia;
+     · `.midia-lightbox` — visor de imagem: overlay sem `.modal` dentro, então
+       nenhuma regra deste arquivo o alcança (só a ponte, que é inofensiva).
+
+   Sem `!important` e sem cor literal, como o resto do Design System.
+   Só >= 768px: o celular fica intocado.
+   ============================================================================ */
+
+@media (min-width: 768px) {
+
+/* ============================================================
+   1. VÉU
+   O legado pintava rgba(15,23,42,.5) — um azul-ardósia que não existe em
+   nenhum outro lugar do sistema e que não muda com o tema.
+   ============================================================ */
+body.design-v2 .modal-overlay { background: var(--ds-backdrop); }
+
+/* ============================================================
+   2. CASCA
+   Raio de painel administrativo (6px) no lugar dos 18px de "janela de app", e
+   a sombra de flutuante do DS no lugar de `0 20px 60px rgba(0,0,0,.3)`.
+   ============================================================ */
+body.design-v2 .modal-overlay > .modal {
+  border-radius: var(--ds-radius-md);
+  box-shadow: var(--ds-shadow-float);
+  border: var(--ds-border) solid var(--ds-line);
+}
+
+/* ============================================================
+   3. CABEÇALHO
+   O título herda `font-family: var(--display)` da regra global `h1, h2, h3`;
+   a ponte já reaponta --display para o corpo dentro do overlay, então aqui
+   sobra só tamanho e peso — 18px/800 do legado viravam quase um título de
+   página em cima de um formulário denso.
+   ============================================================ */
+body.design-v2 .modal-overlay .modal-head {
+  padding: var(--ds-space-6) var(--ds-space-7);
+  border-bottom-color: var(--ds-line);
+}
+body.design-v2 .modal-overlay .modal-head h2 {
+  font-size: var(--ds-text-2xl);
+  font-weight: var(--ds-weight-semibold);
+  letter-spacing: var(--ds-tracking-snug);
+}
+
+/* ============================================================
+   4. CAMPOS
+   `.form-grid` é o formulário padrão de praticamente todo modal do app.
+   ============================================================ */
+body.design-v2 .modal-overlay .form-grid label {
+  font-size: var(--ds-text-xs);
+  font-weight: var(--ds-weight-semibold);
+  color: var(--ds-muted);
+}
+body.design-v2 .modal-overlay .form-grid input,
+body.design-v2 .modal-overlay .form-grid select,
+body.design-v2 .modal-overlay .form-grid textarea {
+  min-height: var(--ds-control-h);
+  padding: var(--ds-space-2) var(--ds-space-6);
+  border-radius: var(--ds-radius-sm);
+  border-color: var(--ds-line-strong);
+  background: var(--ds-surface);
+  color: var(--ds-ink);
+  font-size: var(--ds-text-base);
+}
+body.design-v2 .modal-overlay .form-grid textarea {
+  padding-top: var(--ds-space-4);
+  padding-bottom: var(--ds-space-4);
+}
+/* Select próprio do sistema (`.cs` — o app.js troca por ele o <select> nativo de todo modal):
+   mesma régua dos campos acima. Ficava fora dela, com os 9px 11px e 14px do legado — 38px ao
+   lado de um campo de 34px, e a linha desnivelava (ex.: "Tipo" × "Validade (meses)" no Novo
+   treinamento). A borda acompanha a do campo; passar o mouse e abrir a lista acendem o primário,
+   como o multiselect da toolbar (05-components §4.1). O raio já vem de 09-superficies. */
+body.design-v2 .modal-overlay .form-grid .cs-btn {
+  min-height: var(--ds-control-h);
+  padding: var(--ds-space-2) var(--ds-space-6);
+  border-color: var(--ds-line-strong);
+  background: var(--ds-surface);
+  color: var(--ds-ink);
+  font-size: var(--ds-text-base);
+}
+body.design-v2 .modal-overlay .form-grid .cs-btn:hover,
+body.design-v2 .modal-overlay .form-grid .cs.aberto .cs-btn {
+  border-color: var(--ds-primary);
+}
+body.design-v2 .modal-overlay .form-grid .cs-btn:focus-visible {
+  outline: none;
+  border-color: var(--ds-focus);
+  box-shadow: 0 0 0 var(--ds-ring-width) color-mix(in srgb, var(--ds-focus) 18%, transparent);
+}
+/* Foco: anel do Design System, não o halo azul saturado do legado. */
+body.design-v2 .modal-overlay .form-grid input:focus,
+body.design-v2 .modal-overlay .form-grid select:focus,
+body.design-v2 .modal-overlay .form-grid textarea:focus {
+  border-color: var(--ds-focus);
+  box-shadow: 0 0 0 var(--ds-ring-width) color-mix(in srgb, var(--ds-focus) 18%, transparent);
+}
+/* Campo calculado (ex.: valores somados automaticamente): é INFORMAÇÃO, não
+   campo travado — fundo informativo + barra de acento + tipografia maior
+   (tabular-nums). Vinha só de `#modal` (design-veiculo-modal.css); promovido
+   porque "valor calculado pelo sistema" não é decisão do domínio veículo.
+   `:disabled` SOZINHO fica de fora deste tratamento de propósito: é campo
+   bloqueado por permissão/estado (o app.js desabilita campo em runtime em
+   142 pontos — não dá pra auditar um por um), não um valor calculado.
+   Misturar os dois trocaria o SIGNIFICADO da cor, não só o visual (ver
+   docs/DESIGN.md §11.7) — continua com o tratamento neutro de sempre. */
+body.design-v2 .modal-overlay .form-grid .calc input {
+  background: var(--ds-info-soft);
+  border-left: var(--ds-border-accent) solid var(--ds-info);
+  border-color: var(--ds-line);
+  color: var(--ds-ink-strong);
+  font-size: var(--ds-text-lg);
+  font-weight: var(--ds-weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+/* Legado fixava `background: #f1f5f9`, cinza-claro em QUALQUER tema — no
+   escuro virava faixa branca no meio do formulário. Bug de tema, não escolha
+   de desenho; continua neutro, sem a barra de acento do campo calculado. */
+body.design-v2 .modal-overlay .form-grid input:disabled,
+body.design-v2 .modal-overlay .form-grid select:disabled,
+body.design-v2 .modal-overlay .form-grid textarea:disabled {
+  background: var(--ds-surface-subtle);
+  color: var(--ds-ink-strong);
+  border-color: var(--ds-line);
+}
+/* Olho do campo de senha do cofre: quadradinho de 8px ao lado de um campo de 4px. */
+body.design-v2 .modal-overlay .campo-senha-olho { border-radius: var(--ds-radius-xs); }
+
+/* ============================================================
+   5. BOTÕES
+   A régua do DS já valia na toolbar (05-components, 3.2) e no rodapé do modal
+   de veículo. Faltava o resto: dentro de um modal o mesmo `.btn` saía com 8px
+   de raio, 38px de altura e o pulo de `translateY(-1px)` no hover.
+   ============================================================ */
+body.design-v2 .modal-overlay .btn {
+  height: var(--ds-control-h);
+  min-height: var(--ds-control-h);
+  padding: 0 var(--ds-space-7);
+  border-radius: var(--ds-radius-sm);
+  font-size: var(--ds-text-base);
+  font-weight: var(--ds-weight-medium);
+  box-shadow: var(--ds-shadow-none);
+}
+body.design-v2 .modal-overlay .btn.small {
+  height: var(--ds-control-h-sm);
+  min-height: var(--ds-control-h-sm);
+  padding: 0 var(--ds-space-6);
+  font-size: var(--ds-text-sm);
+}
+/* Superfície chapada não pula: o hover fala por cor e borda. */
+body.design-v2 .modal-overlay .btn:hover {
+  transform: none;
+  box-shadow: var(--ds-shadow-none);
+}
+body.design-v2 .modal-overlay .btn:active { transform: none; }
+body.design-v2 .modal-overlay .btn-primary {
+  background: var(--ds-primary);
+  border-color: var(--ds-primary);
+  color: var(--ds-on-primary);
+}
+body.design-v2 .modal-overlay .btn-primary:hover {
+  background: var(--ds-primary-hover);
+  border-color: var(--ds-primary-hover);
+  filter: none;
+}
+body.design-v2 .modal-overlay .btn-ghost {
+  background: var(--ds-surface);
+  border-color: var(--ds-line-strong);
+  color: var(--ds-ink);
+}
+body.design-v2 .modal-overlay .btn-ghost:hover {
+  background: var(--ds-surface-subtle);
+  border-color: var(--ds-primary);
+  color: var(--ds-primary);
+}
+
+/* ============================================================
+   6. RODAPÉ
+   Só a régua do gap; o padding continua vindo do legado, que varia conforme o
+   rodapé seja filho direto do modal ou esteja dentro do formulário (ver a nota
+   sobre `.modal > .modal-foot` no styles.css).
+   ============================================================ */
+body.design-v2 .modal-overlay .modal-foot { gap: var(--ds-space-4); }
+
+/* ============================================================
+   7. VARIANTE "CONFORTÁVEL" (opt-in via .modal-confortavel)
+   Densidade maior para os modais de formulário GRANDES — hoje só #modal,
+   #funcModal, #multaModal e #almoxModal (classe posta à mão em cada um no
+   index.html). NÃO é o padrão dos outros ~64 modais (assinatura, câmera,
+   confirmação...): promover isto sem gate afetaria todo modal do app de uma
+   vez, já que design-v2 é o padrão pra todo mundo desde ago/2026 (não é mais
+   por usuário) — decisão tomada com o usuário, registrada em
+   docs/DESIGN.md §11.7.
+
+   Exemplo de uso — um modal novo que precise da mesma densidade:
+     <div id="meuModalGrande" class="modal-overlay modal-confortavel">
+   Só a classe; nenhum JS precisa saber que ela existe.
+   ============================================================ */
+body.design-v2 .modal-overlay.modal-confortavel { padding: var(--ds-space-8); }
+/* Painel administrativo se apoia em BORDA, não em profundidade — o véu
+   (--ds-backdrop) já separa o modal do fundo; sombra por cima seria o
+   "efeito flutuante" que a densidade maior pediu para tirar. */
+body.design-v2 .modal-overlay.modal-confortavel > .modal { box-shadow: var(--ds-shadow-none); }
+/* Com histórico: 1300px do legado sobrava em notebook (1366/1440px); 1080px
+   deixa respiro real nas duas larguras comuns sem espremer o formulário. */
+body.design-v2 .modal-overlay.modal-confortavel > .modal.com-historico { max-width: 1080px; }
+body.design-v2 .modal-overlay.modal-confortavel .modal-head { padding: var(--ds-space-6) var(--ds-space-7); }
+body.design-v2 .modal-overlay.modal-confortavel .modal-foot {
+  padding: var(--ds-space-6) 0 0;
+  border-top: var(--ds-border) solid var(--ds-line);
+  margin-top: var(--ds-space-7);
+}
+body.design-v2 .modal-overlay.modal-confortavel .form-grid {
+  padding: var(--ds-space-7);
+  row-gap: var(--ds-space-7);
+  column-gap: var(--ds-space-6);
+}
+body.design-v2 .modal-overlay.modal-confortavel .form-grid label { gap: var(--ds-space-2); }
+body.design-v2 .modal-overlay.modal-confortavel .form-grid input,
+body.design-v2 .modal-overlay.modal-confortavel .form-grid select,
+body.design-v2 .modal-overlay.modal-confortavel .form-grid .cs-btn { /* o select próprio acompanha (§4) */
+  height: var(--ds-row-comfortable);
+  padding: 0 var(--ds-space-6);
+}
+body.design-v2 .modal-overlay.modal-confortavel .form-grid textarea { min-height: 68px; }
+/* Validação nativa (`required`) só entra AQUI, dentro da variante — fora dos
+   4 modais grandes há ~30 campos obrigatórios espalhados por mais de uma
+   dezena de outros modais; soltar isto sem gate pintaria borda de erro nova
+   em telas que não fazem parte desta migração (contagem em DESIGN.md §11.7). */
+body.design-v2 .modal-overlay.modal-confortavel .form-grid input:invalid:not(:placeholder-shown),
+body.design-v2 .modal-overlay.modal-confortavel .form-grid input:invalid:not(:focus):required {
+  border-color: var(--ds-danger);
+}
+body.design-v2 .modal-overlay.modal-confortavel .modal-foot .btn {
+  height: var(--ds-row-comfortable);
+  min-height: var(--ds-row-comfortable);
+}
+
+/* ============================================================
+   8. PAINEL DE HISTÓRICO LATERAL (.modal-hist)
+   Compartilhado por #modal e #multaModal (`.modal-split` + `.com-historico`)
+   — não é decisão de veículo, é o componente "histórico ao lado" em si.
+   Confirmado: nenhum outro modal do app usa `.modal-hist` hoje, então
+   promover isto não tem blast radius pra conter (docs/DESIGN.md §11.7).
+   ============================================================ */
+body.design-v2 .modal-overlay .modal-hist {
+  border-left-color: var(--ds-line);
+  padding: var(--ds-space-7);
+}
+body.design-v2 .modal-overlay .modal-hist h3 {
+  font-size: var(--ds-text-sm);
+  font-weight: var(--ds-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--ds-muted);
+}
+body.design-v2 .modal-overlay .modal-hist .hist-item + .hist-item { border-top-color: var(--ds-line); }
+/* Estado vazio institucional: ícone pequeno e discreto + mensagem. `.hist-vazio`
+   é classe COMPARTILHADA com painéis de histórico fora de modal também — o
+   ícone só entra dentro de `.modal-overlay`, pra não mudar quem mais consome
+   a mesma classe fora daqui. */
+body.design-v2 .modal-overlay .modal-hist .hist-vazio {
+  display: flex; flex-direction: column; align-items: center; gap: var(--ds-space-4);
+  padding: var(--ds-space-7) var(--ds-space-6);
+  font-size: var(--ds-text-sm);
+}
+body.design-v2 .modal-overlay .modal-hist .hist-vazio::before {
+  content: "";
+  width: 18px; height: 18px;
+  background-color: var(--ds-muted);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 7v5l3 3'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 7v5l3 3'/%3E%3C/svg%3E") center / contain no-repeat;
+  opacity: .5;
+}
+
+/* ============================================================
+   9. PAINEL LATERAL (.modal-lateral, opt-in) · 1.55.45
+   A mesma casca do modal (véu, borda, sombra de flutuante), ancorada à DIREITA
+   na altura toda: serve para ver o detalhe de um registro sem perder a lista de
+   vista (primeiro uso: o painel do convite no Acompanhamento da Integração,
+   aberto por abrirModalTrn(..., { lateral: true })). Cabeçalho e rodapé ficam
+   fixos e só o miolo rola. Entra deslizando da direita (só transform/opacity,
+   disparado pelo clique; o prefers-reduced-motion global zera a animação).
+   Sem raio: encosta nas bordas da tela, e a única borda é a da esquerda.
+   ============================================================ */
+body.design-v2 .modal-overlay.modal-lateral { place-items: stretch end; padding: 0; }
+body.design-v2 .modal-overlay.modal-lateral > .modal {
+  display: flex; flex-direction: column;
+  height: 100vh; max-height: 100vh; overflow: hidden;
+  border-radius: 0;
+  border-width: 0 0 0 var(--ds-border);
+  animation: painelLateralIn .28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+body.design-v2 .modal-overlay.modal-lateral > .modal > .modal-head { flex: 0 0 auto; }
+body.design-v2 .modal-overlay.modal-lateral > .modal > :not(.modal-head):not(.modal-foot) {
+  flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+}
+body.design-v2 .modal-overlay.modal-lateral > .modal > .modal-foot {
+  flex: 0 0 auto;
+  padding: var(--ds-space-6) var(--ds-space-7);
+  border-top: var(--ds-border) solid var(--ds-line);
+  background: var(--ds-surface);
+}
+@keyframes painelLateralIn { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
+
+}

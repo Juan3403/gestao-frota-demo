@@ -1,0 +1,15 @@
+/* USO: #rastVinculosModal exibe o histórico por aparelho; superfícies e controles usam o DS. */
+.rast-vinculos-modal { width: 100%; max-width: 760px; }
+.rast-vinculos-corpo { padding: var(--ds-space-7); overflow: auto; }
+.rast-vinculos-corpo p { margin: 0 0 var(--ds-space-3); overflow-wrap: anywhere; }
+.rast-vinculos-nota, .rast-vinculo-meta { color: var(--ds-muted); font-size: var(--ds-text-sm); }
+.rast-vinculos-lista { list-style: none; padding: 0; margin: var(--ds-space-7) 0 0; }
+.rast-vinculo { padding: var(--ds-space-7) 0; border-top: var(--ds-border) solid var(--ds-line); }
+.rast-vinculo-cab { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--ds-space-4); margin-bottom: var(--ds-space-4); }
+.rast-vinculo-cab span { color: var(--ds-muted); font-size: var(--ds-text-sm); }
+.rast-vinculo-placa { font-weight: var(--ds-weight-semibold); }
+.rast-vinculo .btn { margin-top: var(--ds-space-4); }
+.rast-vinculos-nav { display: flex; align-items: center; flex-wrap: wrap; gap: var(--ds-space-4); margin-right: auto; }
+.rast-vinculos-nav[hidden] { display: none; }
+.hist-vinculos-rast { cursor: pointer; border: var(--ds-border) solid var(--ds-line); }
+.hist-vinculos-rast:hover { color: var(--ds-primary); border-color: var(--ds-primary); }

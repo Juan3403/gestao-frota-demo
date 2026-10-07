@@ -1,0 +1,338 @@
+/* ============================================================================
+   Hub de acesso NTE (gestao.example.com/) — Design System do Gestão RM
+
+   Tela PÚBLICA: não carrega frontend/design-system/. Segue o padrão das telas
+   públicas (docs/DESIGN.md §10.1), o mesmo do login: os valores abaixo são CÓPIA
+   LITERAL de design-system/01-tokens.css + 02-themes.css, com o nome do token de
+   origem ao lado. Mudou token lá, atualiza a cópia aqui (e no frontend/login.html).
+
+   Tema escuro: classe `dark` no <html>, posta pelo script.js no <head> antes do
+   primeiro paint. Ela SÓ redefine variáveis — nenhum componente é reescrito.
+   ============================================================================ */
+:root {
+  --canvas: #f3f5f2;          /* --ds-canvas          (mineral-50) */
+  --surface: #ffffff;         /* --ds-surface         (white) */
+  --surface-subtle: #e9ede9;  /* --ds-surface-subtle  (mineral-100) */
+  --ink: #17211b;             /* --ds-ink             (mineral-900) */
+  --ink-strong: #414b44;      /* --ds-ink-strong      (mineral-700) */
+  --muted: #5c685f;           /* --ds-muted           (mineral-600) */
+  --line: #d4dad5;            /* --ds-line            (mineral-200): divisória */
+  --line-strong: #808d85;     /* --ds-line-strong     (mineral-500): borda de CONTROLE (3:1, WCAG 1.4.11) */
+  --primary: #31363e;         /* --ds-primary         (blue-900 = grafite) */
+  --primary-hover: #4a5058;   /* --ds-primary-hover   (blue-800) */
+  --on-primary: #ffffff;      /* --ds-on-primary */
+  --focus: #565d66;           /* --ds-focus           (blue-600) */
+  --selo-bg: #eef0f2;         /* --ds-info-soft       (blue-100) */
+  --selo-line: #d5d9dd;       /* --ds-blue-200 */
+  --selo-ink: #4a5058;        /* --ds-blue-800: 7,1:1 sobre o fundo do selo */
+
+  /* Shell grafite — igual nos dois temas (02-themes.css §3), como a sidebar e o login */
+  --shell-bg: #121417;        /* --ds-shell-bg        (graphite-900) */
+  --shell-tile: #1f2227;      /* --ds-shell-tile      (graphite-650) */
+  --shell-tile-hover: #2a2e35;/* --ds-shell-tile-hover (graphite-550) */
+  --shell-tile-line: #31363e; /* --ds-shell-tile-line (graphite-450) */
+  --shell-line: #22252b;      /* --ds-shell-line      (graphite-600) */
+  --shell-ink: #f0f1f3;       /* --ds-shell-ink       (graphite-50) */
+  --shell-ink-2: #bfc4ca;     /* --ds-shell-ink-2     (graphite-150) */
+  --shell-muted: #8e959c;     /* --ds-shell-muted     (graphite-300) */
+  --shell-muted-2: #aab0b7;   /* graphite-200: o MESMO valor do login.html. Atenção: o --ds-shell-muted-2 do app é o graphite-350 (#878d94); login e hub usam o 200 desde o redesign do login (8,4:1 sobre o shell) */
+
+  /* Glifo branco da marca: fica sobre ladrilho escuro nos dois temas (§11.4, `.logo`) */
+  --marca-glifo: #ffffff;     /* --ds-white */
+  /* Exceção registrada (DESIGN.md §11.4): o violeta é a MARCA do Fluxo RM. Vale só no
+     ladrilho do ícone dele; o cartão em volta segue o Design System. */
+  --fluxo-marca: #6d28d9;     /* --ds-violet-700 */
+
+  --radius-sm: 4px;           /* --ds-radius-sm: controle, selo, tecla */
+  --radius-md: 6px;           /* --ds-radius-md */
+  --radius-lg: 8px;           /* --ds-radius-lg: cartão, ladrilho */
+  --radius-lg-interno: calc(var(--radius-lg) - 1px); /* canto de quem fica DENTRO do cartão (8px menos a borda de 1px) */
+  --transition-fast: .12s ease; /* --ds-transition-fast */
+  --font-body: 'Hanken Grotesk', Inter, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  color-scheme: light;
+}
+:root.dark {
+  --canvas: #0e1013;          /* graphite-950 */
+  --surface: #17191d;         /* graphite-850 */
+  --surface-subtle: #1e2125;  /* graphite-700 */
+  --ink: #e8eaed;             /* graphite-100 */
+  --ink-strong: #bfc4ca;      /* graphite-150 */
+  --muted: #a6acb3;           /* graphite-250 */
+  --line: #282c32;            /* graphite-500 */
+  --line-strong: #6e7780;     /* graphite-380: 3,56:1 sobre a superfície */
+  --primary: #bfc4ca;         /* blue-300: no escuro a primária inverte para o tom claro */
+  --primary-hover: #d5d9dd;   /* blue-200 */
+  --on-primary: #0e1013;      /* graphite-950 */
+  --focus: #a6acb3;           /* blue-400 */
+  --selo-bg: #1d2024;         /* --ds-info-soft escuro (blue-950) */
+  --selo-line: #31363e;       /* graphite-450 */
+  --selo-ink: #bfc4ca;        /* graphite-150 */
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  min-height: 100vh;
+  font-family: var(--font-body);
+  background: var(--canvas);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; }
+a:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+kbd { font-family: var(--font-mono); }
+
+.stage {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(340px, 440px) minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+/* ===== Alternador de tema (canto superior direito) ===== */
+.btn-tema {
+  position: absolute; top: 22px; right: 22px; z-index: 2;
+  width: 36px; height: 36px; padding: 0;
+  display: grid; place-items: center;
+  border: 1px solid var(--line-strong); border-radius: var(--radius-sm);
+  background: var(--surface); color: var(--muted); cursor: pointer;
+  transition: color var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
+}
+.btn-tema:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.btn-tema .ico-sol { display: none; }
+:root.dark .btn-tema .ico-sol { display: block; }
+:root.dark .btn-tema .ico-lua { display: none; }
+
+/* ===== Painel institucional (grafite, igual nos 2 temas) ===== */
+.shell {
+  position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 32px;
+  padding: clamp(28px, 4vw, 48px);
+  background: var(--shell-bg); color: var(--shell-ink);
+  border-right: 1px solid var(--shell-line);
+}
+.marca { display: flex; align-items: center; gap: 12px; }
+.marca-tile, .sistema-tile {
+  flex: none; display: grid; place-items: center;
+  border-radius: var(--radius-lg);
+  background: var(--shell-tile); border: 1px solid var(--shell-tile-line);
+}
+.marca-tile { width: 42px; height: 42px; }
+/* Glifo da engrenagem por máscara, igual ao `.logo-mark` da sidebar e ao tile do login:
+   /img/logo-rm.png é só alpha (é público no gate de login, ver PUBLICOS no server). */
+.marca-mark {
+  display: block; width: 30px; height: 30px; background: var(--marca-glifo);
+  -webkit-mask: url(/img/logo-rm.png) center / contain no-repeat;
+          mask: url(/img/logo-rm.png) center / contain no-repeat;
+}
+.marca-texto { display: flex; flex-direction: column; gap: 2px; }
+.marca-nome { font-size: 15px; font-weight: 700; letter-spacing: -.01em; }
+.marca-sub { font-size: 12px; color: var(--shell-muted); }
+
+.shell-meio { max-width: 340px; margin-block: auto; display: flex; flex-direction: column; gap: 24px; } /* centrado no espaço abaixo da marca */
+.shell-meio h1 {
+  margin: 0; font-size: clamp(21px, 2.2vw, 26px); font-weight: 700;
+  letter-spacing: -.015em; line-height: 1.2;
+}
+.shell-meio > p { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--shell-muted-2); }
+
+.atalhos { display: flex; flex-direction: column; gap: 12px; padding-top: 20px; border-top: 1px solid var(--shell-line); }
+.atalhos-titulo { margin: 0; font-size: 12px; font-weight: 600; color: var(--shell-muted); }
+.atalhos-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.atalhos-lista li { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--shell-ink-2); }
+.teclas { flex: none; width: 64px; display: flex; gap: 4px; }
+.shell kbd {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 24px; height: 22px; padding: 0 6px;
+  border-radius: var(--radius-sm); background: var(--shell-tile); border: 1px solid var(--shell-tile-line);
+  font-size: 11.5px; font-weight: 500; color: var(--shell-ink);
+}
+
+
+/* ===== Escolha do sistema ===== */
+.painel { min-width: 0; display: flex; align-items: center; justify-content: center; padding: clamp(24px, 4vw, 56px); }
+.conteudo { width: 100%; max-width: 888px; display: flex; flex-direction: column; gap: 24px; }
+.cabecalho { display: flex; flex-direction: column; gap: 4px; }
+.cabecalho h2 { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -.015em; line-height: 1.2; }
+.cabecalho p { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--muted); }
+
+.sistemas {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px;
+}
+
+/* Cartão chapado: superfície + borda 1px, sem sombra e sem relevo no hover (§1).
+   Sem `overflow: hidden` de propósito: cortaria o anel de foco, que fica 3px FORA do cartão. */
+.sistema {
+  position: relative;
+  display: flex; flex-direction: column;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg);
+  transition: border-color var(--transition-fast);
+}
+/* `marcado` = o sistema que o Enter abre: o último acesso ou o que recebeu foco pelo teclado. */
+.sistema.marcado, .sistema.abrindo { border-color: var(--primary); }
+
+.sistema-previa {
+  height: 188px; overflow: hidden;
+  padding: 16px 16px 0;
+  background: var(--surface-subtle); border-bottom: 1px solid var(--line);
+  border-radius: var(--radius-lg-interno) var(--radius-lg-interno) 0 0;
+}
+.sistema-previa picture { display: block; }
+.sistema-previa img {
+  display: block; width: 100%; height: auto;
+  border: 1px solid var(--line); border-bottom: 0;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.sistema-corpo { flex: 1; display: flex; flex-direction: column; gap: 14px; padding: 20px; }
+.sistema-topo { display: flex; align-items: center; gap: 12px; }
+.sistema-tile { width: 40px; height: 40px; }
+.sistema-tile .marca-mark { width: 28px; height: 28px; }
+.sistema-tile--fluxo { background: var(--fluxo-marca); border-color: var(--fluxo-marca); color: var(--marca-glifo); }
+.sistema-titulos { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.sistema-nome { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: -.015em; line-height: 1.2; }
+.sistema-sub { font-size: 12.5px; color: var(--muted); }
+.sistema-selo {
+  flex: none; display: inline-flex; align-items: center; gap: 5px;
+  padding: 2px 8px; border-radius: var(--radius-sm);
+  background: var(--selo-bg); border: 1px solid var(--selo-line); color: var(--selo-ink);
+  font-size: 12px; font-weight: 500; line-height: 1.4; white-space: nowrap;
+}
+.sistema-selo[hidden] { display: none; }
+.sistema-desc { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--ink-strong); }
+.sistema-modulos { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.sistema-modulos li {
+  display: inline-flex; align-items: center; height: 24px; padding: 0 8px;
+  border-radius: var(--radius-sm); background: var(--surface-subtle); color: var(--ink-strong);
+  font-size: 12px; font-weight: 500;
+}
+
+.sistema-rodape {
+  margin-top: auto;
+  /* wrap: com espaçamento de texto aumentado pelo usuário (WCAG 1.4.12) o botão desce de linha
+     em vez de espremer o endereço; no tamanho normal nada quebra (sobram 5px a 1200px). */
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
+  padding-top: 16px; border-top: 1px solid var(--line);
+}
+.sistema-endereco { min-width: 0; display: flex; align-items: center; gap: 8px; }
+.sistema-url {
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-family: var(--font-mono); font-size: 12px; color: var(--muted);
+}
+.tecla {
+  flex: none; display: inline-flex; align-items: center; justify-content: center;
+  min-width: 22px; height: 22px; padding: 0 6px;
+  border-radius: var(--radius-sm); background: var(--canvas); border: 1px solid var(--line);
+  font-size: 11.5px; font-weight: 500; color: var(--muted);
+}
+
+/* Botão "Entrar": ghost por padrão, sólido no sistema marcado (um só sólido por tela).
+   SEM transform aqui, nem no :active: transform no link o tornaria o bloco de contenção do
+   ::after, e o clique no resto do cartão deixaria de cair nele. */
+.sistema-entrar {
+  flex: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: 40px; padding: 0 16px;
+  border: 1px solid var(--line-strong); border-radius: var(--radius-sm);
+  background: var(--surface); color: var(--ink);
+  font-size: 14px; font-weight: 600; text-decoration: none; white-space: nowrap;
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+}
+/* O cartão inteiro é a área de clique do link (um único interativo por cartão). */
+.sistema-entrar::after { content: ''; position: absolute; inset: 0; border-radius: var(--radius-lg-interno); }
+.sistema-entrar:focus-visible { outline: none; }
+.sistema-entrar:focus-visible::after { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: var(--radius-lg); }
+.sistema.marcado .sistema-entrar { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+
+@media (hover: hover) {
+  .sistema:hover { border-color: var(--line-strong); }
+  .sistema.marcado:hover { border-color: var(--primary); }
+  .sistema:hover .sistema-entrar { background: var(--surface-subtle); border-color: var(--primary); color: var(--primary); }
+  .sistema.marcado:hover .sistema-entrar { background: var(--primary-hover); border-color: var(--primary-hover); color: var(--on-primary); }
+  .btn-tema:hover { background: var(--surface-subtle); border-color: var(--primary); color: var(--primary); }
+}
+
+/* Texto só para leitor de tela (ex.: nome das teclas de seta na lista de atalhos). */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+/* Subtítulo: no celular o painel grafite some, e com ele o "Cada sistema tem login próprio". */
+.so-celular { display: none; }
+
+/* Nome do sistema no botão: fica só para leitor de tela no desktop (o cartão já diz qual é) e
+   aparece no celular, onde o botão ocupa a largura toda. */
+.rotulo-sistema {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* Estado "abrindo": o clique já navegou; o botão avisa até a página trocar. */
+.sistema-entrar .spin, .sistema-entrar .rotulo-abrindo { display: none; }
+.spin {
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid color-mix(in srgb, currentColor 35%, transparent); border-top-color: currentColor;
+  animation: girar .8s linear infinite;
+}
+@keyframes girar { to { transform: rotate(360deg); } }
+.sistema.abrindo .sistema-entrar { background: var(--primary-hover); border-color: var(--primary-hover); color: var(--on-primary); cursor: progress; }
+.sistema.abrindo .spin, .sistema.abrindo .rotulo-abrindo { display: inline-block; }
+.sistema.abrindo .rotulo, .sistema.abrindo .seta { display: none; }
+
+.nota { margin: 0; display: flex; align-items: flex-start; gap: 8px; font-size: 12.5px; line-height: 1.45; color: var(--muted); }
+.nota svg { flex: none; margin-top: 1px; color: var(--focus); }
+
+/* ===== Telas médias: os cartões empilham (lado a lado ficariam estreitos demais) ===== */
+@media (max-width: 1199px) {
+  .sistemas { grid-template-columns: minmax(0, 1fr); }
+  .conteudo { max-width: 560px; }
+}
+
+/* ===== ≤900px (mesmo corte do login): o grafite vira faixa de topo curta ===== */
+@media (max-width: 900px) {
+  .stage { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; }
+  .shell {
+    position: static; height: auto; overflow: visible;
+    flex-direction: row; align-items: center;
+    padding: 16px 72px 16px 16px; /* 16+36+16+1 = faixa de 69px, como no canvas; 72px à direita: lugar do botão de tema */
+    border-right: 0; border-bottom: 1px solid var(--shell-line);
+  }
+  .shell-meio { display: none; }
+  .marca { gap: 10px; }
+  .marca-texto { gap: 1px; }
+  .marca-tile { width: 36px; height: 36px; }
+  .marca-tile .marca-mark { width: 26px; height: 26px; }
+  .marca-nome { font-size: 14px; }
+  .marca-sub { font-size: 11.5px; }
+
+  /* O botão de tema fica sobre a faixa grafite: veste as cores do shell e o alvo de toque de 44px. */
+  .btn-tema {
+    top: 12px; right: 16px; width: 44px; height: 44px; /* 12px acima e abaixo, dentro da faixa */
+    background: var(--shell-tile); border-color: var(--shell-tile-line); color: var(--shell-ink-2);
+  }
+  .btn-tema:focus-visible { outline-color: var(--shell-ink-2); }
+
+  .painel { flex-direction: column; align-items: center; justify-content: flex-start; padding: 24px 16px 20px; }
+  .conteudo { flex: 1; gap: 16px; }
+  .cabecalho h2 { font-size: 21px; }
+  .cabecalho p { font-size: 13px; }
+  .so-desktop { display: none; }
+  .so-celular { display: inline; }
+
+  .sistemas { gap: 12px; }
+  .sistema-previa, .sistema-modulos, .sistema-endereco { display: none; }
+  .sistema-corpo { padding: 16px; gap: 12px; }
+  .sistema-nome { font-size: 17px; }
+  .sistema-rodape { padding-top: 0; border-top: 0; }
+  .sistema-entrar { width: 100%; height: 44px; }
+  .rotulo-sistema { position: static; width: auto; height: auto; margin: 0; overflow: visible; clip: auto; white-space: normal; }
+}
+@media (max-width: 900px) and (hover: hover) {
+  .btn-tema:hover { background: var(--shell-tile-hover); border-color: var(--shell-muted); color: var(--shell-ink); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+}

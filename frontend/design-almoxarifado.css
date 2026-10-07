@@ -1,0 +1,87 @@
+/* ============================================================================
+   design-almoxarifado.css — CAMADA DO MÓDULO ALMOXARIFADO
+
+   Armadilha de especificidade do legado: a densidade da aba (feita para caber num
+   notebook de 1366×768 sem rolar até os itens, ver comentário original em
+   styles.css) usa ~10 regras por ID SEM media query (`#almoxarifado .subtabs`,
+   `#almoxarifado .busca`, `#almoxarifado .msel-btn`, `#almoxarifado #tabelaAlmox
+   tbody td`, `#almoxarifado .almox-atalhos .forn-chip`) — um ID sempre vence
+   qualquer seletor de classe do Design System, então sem isto a barra de
+   ferramentas, as sub-abas e a tabela ficavam presas no tamanho antigo (mais
+   compacto) enquanto o resto do módulo já vestia o Design System. Mesmo achado de
+   Manutenção (ver design-manutencao.css), causa diferente: lá era a tabela; aqui é
+   a aba inteira, ajustada a propósito para uma tela pequena.
+
+   Como o legado usa só UM `#almoxarifado` (não dois IDs como `#frota #tabela`),
+   basta acrescentar a classe `body.design-v2` à esquerda: mesma quantidade de IDs,
+   uma classe a mais, já vence sem precisar de um segundo ID. Os valores abaixo são
+   os MESMOS tokens que o resto do Design System já usa para cada componente — não
+   é um tamanho novo, é o mesmo tamanho, só reafirmado com a especificidade
+   necessária. `.cards-almox`/`.almox-painel`/`.almox-pill` (dashboard e domínio)
+   ficam de fora de propósito, mesmo raciocínio dos outros módulos.
+
+   Carrega DEPOIS do Design System. Continua sem um único `!important`.
+   ============================================================================ */
+
+@media (min-width: 768px) {
+
+body.design-v2 #almoxarifado .subtabs {
+  gap: var(--ds-space-1);
+  margin-bottom: var(--ds-space-6);
+}
+body.design-v2 #almoxarifado .subtabs .subtab {
+  padding: 7px var(--ds-space-6);
+  font-size: var(--ds-text-md);
+  min-height: 0;
+}
+body.design-v2 #almoxarifado .busca {
+  padding: 0 var(--ds-space-6) 0 32px;
+  font-size: var(--ds-text-md);
+}
+body.design-v2 #almoxarifado .toolbar .msel-btn {
+  padding: 0 9px;
+  font-size: var(--ds-text-base);
+}
+body.design-v2 #almoxarifado #tabelaAlmox tbody td {
+  padding-top: var(--ds-space-2);
+  padding-bottom: var(--ds-space-2);
+}
+/* o padding por ID acima vence a regra genérica de densidade (03-base.css) —
+   repõe o respiro no modo confortável */
+body.design-v2 #almoxarifado[data-densidade="confortavel"] #tabelaAlmox tbody td {
+  padding-top: var(--ds-space-4);
+  padding-bottom: var(--ds-space-4);
+}
+body.design-v2 #almoxarifado .almox-atalhos .forn-chip {
+  padding: var(--ds-space-3) var(--ds-space-6);
+  font-size: var(--ds-text-sm);
+}
+
+/* ----- Intervalo De/Até com <input type="date"> nativo (`.almox-data`) -----
+   Par com ID da regra genérica do 05-components (3.3.1) — mesmos valores, nenhum valor novo.
+   Existe por ESPECIFICIDADE (o styles.css alcança esses campos com um `:is()` que carrega ID) e
+   mora aqui porque CSS genérico não conhece nome de módulo (test/design-system.test.js). Gêmea da
+   que está em design-epi.css: as duas telas dividem a mesma barra de datas. */
+body.design-v2 #almoxarifado .almox-data input[type="date"] {
+  height: var(--ds-control-h);
+  padding: 0 var(--ds-space-5);
+  border: var(--ds-border) solid var(--ds-line-strong);
+  border-radius: var(--ds-radius-sm);
+  background: var(--ds-surface);
+  color: var(--ds-ink);
+  font-size: var(--ds-text-base);
+  box-shadow: var(--ds-shadow-none);
+}
+body.design-v2 #almoxarifado .almox-data input[type="date"]:hover { border-color: var(--ds-primary); }
+body.design-v2 #almoxarifado .almox-data input[type="date"]:focus-visible {
+  outline: none;
+  border-color: var(--ds-focus);
+  box-shadow: 0 0 0 var(--ds-ring-width) color-mix(in srgb, var(--ds-focus) 18%, transparent);
+}
+body.design-v2 #almoxarifado .almox-data {
+  color: var(--ds-muted);
+  font-size: var(--ds-text-sm);
+  font-weight: var(--ds-weight-medium);
+}
+
+}

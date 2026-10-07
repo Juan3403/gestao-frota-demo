@@ -1,0 +1,67 @@
+name: Backup para a nuvem
+# Cópia diária do Gestão RM para um armazenamento de objetos (Backblaze B2 / Cloudflare R2).
+#
+# Roda AQUI e não no Render de propósito: o plano grátis dorme após ~15 min ociosos e os timers do
+# servidor são relativos ao boot, então backup agendado dentro da instância não tem execução
+# garantida. Aqui o cron é de verdade e não consome a memória de produção.
+#
+# ⚠️ DUAS COISAS QUE FAZEM ISTO PARAR SEM AVISO:
+#  1. Workflow agendado é DESATIVADO pelo GitHub após 60 dias sem nenhuma atividade no repositório.
+#  2. O cron do GitHub é UTC e pode atrasar sob carga — não conte com o minuto exato.
+# (A chave do S3 não expira, ao contrário do segredo do Azure — esse modo de falha não existe aqui.)
+#
+# RETENÇÃO: configurada como REGRA DE CICLO DE VIDA no painel do bucket, não por script. O provedor
+# aplica sozinho, mesmo que esta rotina pare de rodar.
+
+on:
+  # (demo) sem agendamento: depende de segredos da instância de produção
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Só testar (baixa e confere o backup, sem enviar)'
+        type: boolean
+        default: false
+      sem_anexos:
+        description: 'Backup leve, só os dados (sem fotos e documentos)'
+        type: boolean
+        default: false
+
+# Mínimo necessário: `actions/checkout` precisa LER o repositório para trazer o script do backup.
+# ⚠️ Com `permissions: {}` o GITHUB_TOKEN fica só com `Metadata: read` e o clone falha com
+# "remote: Repository not found" — mensagem genérica que o GitHub dá em repo PRIVADO sem acesso,
+# e que parece repositório inexistente. Foi o que fez esta rotina falhar em TODA execução desde
+# 19/08/2026 (nenhuma cópia chegou ao bucket). Nada além de leitura é preciso: o resto é segredo
+# de ambiente e chamada a serviço externo.
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Só o leitor de .zip. `npm ci` traria sharp, tesseract e pdf-to-img à toa (minutos de
+      # instalação) — este pacote e suas duas dependências instalam em segundos.
+      - name: Instalar o leitor de .zip
+        run: npm i --no-save --no-package-lock yauzl@^3.4.0
+
+      - name: Gerar o backup e enviar para a nuvem
+        env:
+          GDJ_BASE_URL: ${{ secrets.GDJ_BASE_URL }}
+          GDJ_BACKUP_TOKEN: ${{ secrets.GDJ_BACKUP_TOKEN }}
+          S3_ENDPOINT: ${{ secrets.S3_ENDPOINT }}
+          S3_REGION: ${{ secrets.S3_REGION }}
+          S3_BUCKET: ${{ secrets.S3_BUCKET }}
+          S3_KEY_ID: ${{ secrets.S3_KEY_ID }}
+          S3_KEY_SECRET: ${{ secrets.S3_KEY_SECRET }}
+          S3_PREFIXO: ${{ vars.S3_PREFIXO }}
+        run: |
+          node scripts/backup-nuvem.mjs \
+            ${{ (github.event_name == 'workflow_dispatch' && inputs.dry_run) && '--dry-run' || '' }} \
+            ${{ (github.event_name == 'workflow_dispatch' && inputs.sem_anexos) && '--sem-anexos' || '' }}

@@ -1,0 +1,65 @@
+/* ============================================================================
+   design-epi.css — CAMADA DO MÓDULO EPI
+
+   Bug de arquitetura de tokens, não de especificidade: `--epi-brand`/`--epi-ok`/
+   `--epi-warn`/`--epi-bad`/`--epi-mudo` (styles.css) são resolvidos no `<body>`,
+   a partir de `var(--brand)`/`var(--green)`/`var(--amber)`/`var(--red)`/
+   `var(--muted)` — e ficam ACIMA de `.ds-modulo` na árvore. A ponte do Design
+   System (02-themes.css) só redefine `--brand`/`--green`/... DENTRO de
+   `body.design-v2 .ds-modulo`, um nível mais fundo; ela nunca alcança o `<body>`.
+   Resultado sem este arquivo: as pílulas de domínio do EPI (`.epi-ca`/`.epi-mov`/
+   `.epi-est`, que leem `var(--epi-*)`) ficariam presas na cor do tema legado
+   enquanto botões/tabela/msel do mesmo módulo já trocaram de paleta.
+
+   `--epi-warn-forte`/`--epi-sub`/`--epi-info` ficam de fora de propósito: já são
+   hex fixos no legado (não derivam de --brand/--green/...), então não têm esse
+   problema — continuam iguais, como qualquer cor de domínio intencionalmente fixa
+   nos outros módulos.
+
+   Escopado por ID (não por `.ds-modulo`, que é classe): mesmo raciocínio de
+   design-manutencao.css/design-almoxarifado.css, só que aqui não é para vencer
+   especificidade — é para não vazar `--epi-*` redefinido para outro módulo que
+   um dia venha a reaproveitar o mesmo padrão de nome. `#epi` sozinho já vence o
+   `body { --epi-*: ... }` do legado (ID > elemento), sem precisar de `!important`.
+   Carrega DEPOIS do Design System.
+   ============================================================================ */
+
+@media (min-width: 768px) {
+
+body.design-v2 #epi {
+  --epi-brand: var(--ds-primary);
+  --epi-ok: var(--ds-success);
+  --epi-warn: var(--ds-warning);
+  --epi-bad: var(--ds-danger);
+  --epi-mudo: var(--ds-muted);
+}
+
+/* ----- Intervalo De/Até com <input type="date"> nativo (`.almox-data`) -----
+   Par com ID da regra genérica do 05-components (3.3.1). Existe por ESPECIFICIDADE: o styles.css
+   estiliza esses campos com `:is(.epi-filtros-barra, #epi-notas-fiscais .toolbar) input[type=date]`,
+   e um `:is()` com ID vale (1,1,1) — venceria qualquer regra só de classes do Design System.
+   Mesmos valores da regra genérica, nenhum valor novo; mora aqui porque CSS genérico não conhece
+   nome de módulo (test/design-system.test.js). Ao migrar o EPI para `.ds-modulo`, some daqui. */
+body.design-v2 #epi .almox-data input[type="date"] {
+  height: var(--ds-control-h);
+  padding: 0 var(--ds-space-5);
+  border: var(--ds-border) solid var(--ds-line-strong);
+  border-radius: var(--ds-radius-sm);
+  background: var(--ds-surface);
+  color: var(--ds-ink);
+  font-size: var(--ds-text-base);
+  box-shadow: var(--ds-shadow-none);
+}
+body.design-v2 #epi .almox-data input[type="date"]:hover { border-color: var(--ds-primary); }
+body.design-v2 #epi .almox-data input[type="date"]:focus-visible {
+  outline: none;
+  border-color: var(--ds-focus);
+  box-shadow: 0 0 0 var(--ds-ring-width) color-mix(in srgb, var(--ds-focus) 18%, transparent);
+}
+body.design-v2 #epi .almox-data {
+  color: var(--ds-muted);
+  font-size: var(--ds-text-sm);
+  font-weight: var(--ds-weight-medium);
+}
+
+}

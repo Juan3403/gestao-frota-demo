@@ -1,0 +1,309 @@
+/* ============================================================================
+   AÇÕES DE SEGURANÇA (SST) — camada visual do módulo (#acoesSst)
+   Mesmo desenho das demais camadas por módulo (design-epi.css, design-ti.css):
+   só consome tokens do Design System (frontend/design-system, --ds-*) — nada de
+   cor/raio/sombra literal (test/design-system.test.js audita) e nada de
+   !important. O grosso do módulo reusa .func-*/.subtabs/.tabela-densa; aqui
+   vivem apenas o CALENDÁRIO mensal (.acal-*) e as pílulas de status (.acao-st),
+   que não existiam em nenhum outro módulo.
+
+   Legibilidade sem depender só de cor (lição das pílulas .epi-ca): cada status
+   carrega um GLIFO (◇ ◔ ✔ ⚠ ✕) além do fundo suave; o prazo estimado (ação sem
+   prazo definido → vale o fim do mês de referência) usa borda TRACEJADA.
+   ============================================================================ */
+
+/* ---- Barra de filtros: o mês (input type="month") convive com os multiselects ---- */
+#acoesSst .acoes-filtros { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+#acoesSst .acoes-mes {
+  height: 34px;
+  padding: 0 10px;
+  border: var(--ds-border) solid var(--ds-line);
+  border-radius: var(--ds-radius-sm);
+  background: var(--ds-surface);
+  color: var(--ds-ink);
+  font-size: var(--ds-text-base);
+}
+#acoesSst .acoes-mes:focus-visible { outline: var(--ds-border-accent) solid var(--ds-focus); outline-offset: 1px; }
+
+/* ---- Topo do calendário: ‹ Hoje › + rótulo do mês ---- */
+.acal-topo { display: flex; align-items: center; gap: 6px; margin: 10px 0 8px; }
+.acal-rotulo { font-size: var(--ds-text-lg); font-weight: 700; color: var(--ds-ink-strong); margin-left: 6px; }
+
+/* ---- Grade mensal: 7 colunas, cabeçalho D S T Q Q S S + células-dia ---- */
+.acal-grade {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+.acal-dow {
+  text-align: center;
+  font-size: var(--ds-text-2xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--ds-muted);
+  padding: 4px 0;
+}
+.acal-dia {
+  min-height: 84px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  background: var(--ds-surface);
+  border: var(--ds-border) solid var(--ds-line);
+  border-radius: var(--ds-radius-sm);
+  overflow: hidden;
+}
+.acal-vazio { background: var(--ds-surface-subtle); border-color: var(--ds-line); opacity: 0.55; }
+.acal-hoje { border-color: var(--ds-primary); box-shadow: inset 0 0 0 1px var(--ds-primary); }
+.acal-num { font-size: var(--ds-text-xs); font-weight: 700; color: var(--ds-muted); }
+.acal-hoje .acal-num { color: var(--ds-primary); }
+
+/* ---- Pílula de ação dentro do dia ---- */
+.acal-pill {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  min-width: 0;
+  padding: 2px 6px;
+  border: var(--ds-border) solid transparent;
+  border-radius: var(--ds-radius-xs);
+  background: var(--ds-surface-subtle);
+  color: var(--ds-ink);
+  font-size: var(--ds-text-2xs);
+  text-align: left;
+  cursor: pointer;
+}
+.acal-pill:hover { background: var(--ds-surface-hover); }
+.acal-pill-txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.acal-glifo { flex: 0 0 auto; }
+/* Prazo estimado (sem prazo definido — vale o fim do mês): borda tracejada avisa sem texto. */
+.acal-estimado { border-style: dashed; border-color: var(--ds-line-strong); }
+/* Ação "Até o prazo" pendente flutuando no DIA CORRENTE: o dia exibido é derivado a cada
+   render (amanhã ela estará no quadrinho de amanhã) — tracejado + itálico avisam que o dia
+   não é fixo, sem depender de cor. */
+.acal-flutuante { border-style: dashed; }
+.acal-flutuante .acal-pill-txt { font-style: italic; }
+.acal-mais {
+  align-self: flex-start;
+  padding: 1px 6px;
+  border: var(--ds-border) solid var(--ds-line);
+  border-radius: var(--ds-radius-pill);
+  background: var(--ds-surface-subtle);
+  color: var(--ds-muted);
+  font-size: var(--ds-text-3xs);
+  cursor: pointer;
+}
+.acal-mais:hover { background: var(--ds-surface-hover); color: var(--ds-ink); }
+
+/* ---- Cores por status (fundo suave + tinta forte; o glifo garante a leitura) ---- */
+.acal-st-programada { background: var(--ds-surface-subtle); color: var(--ds-ink); }
+.acal-st-andamento { background: var(--ds-info-soft); color: var(--ds-ink-strong); }
+.acal-st-realizada { background: var(--ds-success-soft); color: var(--ds-ink-strong); }
+.acal-st-atrasada { background: var(--ds-danger-soft); color: var(--ds-ink-strong); border-color: var(--ds-danger); }
+.acal-st-cancelada { background: var(--ds-surface-subtle); color: var(--ds-muted); text-decoration: line-through; }
+
+/* ---- Cor de IDENTIDADE escolhida pelo usuário (campo `cor`; '' = Padrão, sem classe) ----
+   Sobrescreve SÓ o background das regras de status acima (mesma especificidade, declarada
+   DEPOIS); tinta, borda da atrasada, risco da cancelada e tracejados ficam intactos. O bloco
+   mobile lá embaixo vem depois no arquivo e re-pinta os pontinhos por situação — celular não
+   muda. Mapeamento chave → classe vive em CORES_ACAO_SST (app.js). */
+.acal-cor-azul { background: var(--ds-accent-sky-soft); }
+.acal-cor-verde { background: var(--ds-success-soft); }
+.acal-cor-ambar { background: var(--ds-warning-soft); }
+.acal-cor-vermelho { background: var(--ds-danger-soft); }
+.acal-cor-roxo { background: var(--ds-accent-violet-soft); }
+.acal-cor-cinza { background: color-mix(in srgb, var(--ds-line-strong) 28%, transparent); }
+
+/* ---- Pílula de status na tabela (Lista) ---- */
+.acao-st {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border: var(--ds-border) solid var(--ds-line);
+  border-radius: var(--ds-radius-pill);
+  font-size: var(--ds-text-2xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.acao-st-programada { background: var(--ds-surface-subtle); color: var(--ds-ink); }
+.acao-st-andamento { background: var(--ds-info-soft); color: var(--ds-ink-strong); border-color: var(--ds-info); }
+.acao-st-realizada { background: var(--ds-success-soft); color: var(--ds-ink-strong); border-color: var(--ds-success); }
+.acao-st-atrasada { background: var(--ds-danger-soft); color: var(--ds-ink-strong); border-color: var(--ds-danger); }
+.acao-st-cancelada { background: var(--ds-surface-subtle); color: var(--ds-muted); }
+
+/* ---- Coluna Evidência + prazo estimado na tabela ---- */
+.acao-evid-falta { color: var(--ds-warning-ink); font-size: var(--ds-text-2xs); font-weight: 600; }
+.acao-evid-nada { color: var(--ds-muted); }
+.acao-prazo-estimado { color: var(--ds-muted); font-style: italic; }
+#acoesSst .acao-td-titulo { max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#acoesSst .acao-td-acoes { white-space: nowrap; }
+
+/* ---- Modal: tipo de agendamento (radios lado a lado, cartão acende no escolhido) ---- */
+#acaoModal .acao-agend { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+#acaoModal .acao-agend-rot { grid-column: 1 / -1; font-size: var(--ds-text-sm); font-weight: 600; color: var(--ds-ink); }
+#acaoModal .acao-agend-op {
+  display: flex;
+  flex-direction: row; /* .form-grid label empilha em coluna — aqui o radio fica AO LADO do texto */
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  border: var(--ds-border) solid var(--ds-line);
+  border-radius: var(--ds-radius-sm);
+  background: var(--ds-surface);
+  cursor: pointer;
+}
+#acaoModal .acao-agend-op:has(input:checked) { border-color: var(--ds-primary); background: var(--ds-surface-subtle); }
+#acaoModal .acao-agend-op input { width: auto; flex: 0 0 auto; margin-top: 2px; }
+/* O anel genérico de campo do form-grid (box-shadow no :focus, styles.css e 08-modal.css)
+   desenha um QUADRADO em volta do radio ao clicar. Aqui o realce de clique já é o cartão
+   aceso (:has(input:checked)); o anel fica só para teclado (:focus-visible), redondo. */
+#acaoModal .acao-agend-op input:focus { outline: none; box-shadow: none; }
+#acaoModal .acao-agend-op input:focus-visible {
+  outline: var(--ds-border-accent) solid var(--ds-focus);
+  outline-offset: 2px;
+  border-radius: var(--ds-radius-circle);
+}
+#acaoModal .acao-agend-op strong { font-size: var(--ds-text-base); font-weight: 600; color: var(--ds-ink); }
+#acaoModal .acao-agend-desc { display: block; font-size: var(--ds-text-3xs); font-weight: 400; color: var(--ds-muted); line-height: var(--ds-leading-normal); }
+
+/* ---- Modal: "Cor no calendário" (radios nativos vestidos de bolinha; Padrão = situação) ---- */
+#acaoModal .acao-cor { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+#acaoModal .acao-cor-rot { font-size: var(--ds-text-sm); font-weight: 600; color: var(--ds-ink); }
+#acaoModal .acao-cor-ops { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+#acaoModal .acao-cor-op { position: relative; display: inline-flex; cursor: pointer; }
+/* O radio nativo fica invisível mas FOCÁVEL por cima da bolinha (nada de div clicável). */
+#acaoModal .acao-cor-op input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+/* Mata o anel quadrado genérico do form-grid no clique (mesma nota dos radios de agendamento). */
+#acaoModal .acao-cor-op input:focus { outline: none; box-shadow: none; }
+#acaoModal .acao-cor-sw {
+  width: 18px;
+  height: 18px;
+  border-radius: var(--ds-radius-circle);
+  border: var(--ds-border) solid var(--ds-line-strong);
+}
+/* Seleção por RING (forma, não só cor); foco de teclado no padrão do módulo. */
+#acaoModal .acao-cor-op input:checked + .acao-cor-sw {
+  outline: var(--ds-border-accent) solid var(--ds-primary);
+  outline-offset: 2px;
+}
+#acaoModal .acao-cor-op input:focus-visible + .acao-cor-sw {
+  outline: var(--ds-border-accent) solid var(--ds-focus);
+  outline-offset: 2px;
+}
+/* "Padrão" NÃO é uma 7ª cor: bolinha dividida superfície/linha (mesma linguagem do swatch
+   "auto" do seletor de tema) — sinaliza "segue a situação", não "cinza". */
+#acaoModal .acao-cor-sw-padrao { background: linear-gradient(135deg, var(--ds-surface) 0 50%, var(--ds-line-strong) 50% 100%); }
+#acaoModal .acao-cor-sw-azul { background: var(--ds-accent-sky); }
+#acaoModal .acao-cor-sw-verde { background: var(--ds-success); }
+#acaoModal .acao-cor-sw-ambar { background: var(--ds-warning); }
+#acaoModal .acao-cor-sw-vermelho { background: var(--ds-danger); }
+#acaoModal .acao-cor-sw-roxo { background: var(--ds-accent-violet); }
+#acaoModal .acao-cor-sw-cinza { background: var(--ds-line-strong); }
+/* Prévia = a MESMA pílula do calendário (classes reais); aqui só se contém a largura. */
+#acaoModal .acao-cor-previa { width: auto; max-width: 240px; pointer-events: none; }
+
+/* ---- Modal: ritmo vertical do formulário (seções respiram, nada "colado") ---- */
+/* Título de seção ganha margem própria acima — separa o bloco do que veio antes. */
+#acaoModal .acao-sec { margin-top: 18px; }
+#acaoModal form > .acao-sec:first-of-type { margin-top: 4px; }
+
+/* Quadro de execução: data da realização + cancelamento são os dois desfechos da mesma
+   pergunta ("o que aconteceu com esta ação?") — agrupados num container, não soltos na grade. */
+#acaoModal .acao-exec-grupo {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 14px 12px;
+  border: var(--ds-border) solid var(--ds-line);
+  border-radius: var(--ds-radius-md);
+  background: var(--ds-surface-subtle);
+}
+#acaoModal .acao-exec-linha {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+/* O checkbox espelha o CAMPO vizinho: mesma altura de controle (34px), centrado no mesmo
+   eixo do input de data — o respiro de cima compensa a linha do rótulo. Peso normal de
+   opção de formulário; a descrição fica menor e em cor secundária. */
+#acaoModal .acao-cancelada-chk { display: flex; flex-direction: column; gap: 2px; }
+#acaoModal .acao-chk-linha {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 21px;
+  height: 34px;
+  font-size: var(--ds-text-base);
+  font-weight: 500;
+  color: var(--ds-ink);
+}
+#acaoModal .acao-chk-desc { font-size: var(--ds-text-3xs); color: var(--ds-muted); line-height: var(--ds-leading-normal); }
+
+/* Bloco de evidências: separação clara mas enxuta — o divisor é o do PRÓPRIO título de
+   seção (.func-sec-tit já traz border-top; um segundo aqui duplicava a linha), só o respiro
+   é nosso. Hierarquia: título → descrição → aviso → botão (ação principal, perto da
+   descrição) → quadro de soltar → lista. */
+#acaoModal .acao-evid-bloco {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+#acaoModal .acao-evid-bloco .acao-sec { margin-top: 4px; }
+#acaoModal .acao-evid-acoes { margin-top: 2px; margin-bottom: 2px; }
+
+/* Quadro de soltar: mais alto e com o convite centrado — área confortável de arrastar,
+   mesma borda tracejada e cores do componente compartilhado (override só neste modal). */
+#acaoModal .func-docs-drop {
+  min-height: 172px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+#acaoModal .func-docs-drop .fdrop-idle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ---- Aviso "Aguardando evidência da realização" no modal ---- */
+.acao-evid-aviso {
+  padding: 8px 12px;
+  border: var(--ds-border) solid var(--ds-warning);
+  border-radius: var(--ds-radius-sm);
+  background: var(--ds-warning-soft);
+  color: var(--ds-warning-ink);
+  font-size: var(--ds-text-sm);
+  font-weight: 600;
+}
+
+/* ---- Celular (<768px): calendário compacto, pílulas viram pontinhos ---- */
+@media (max-width: 767px) {
+  /* No modal, data e cancelamento empilham — e o respiro que alinhava o checkbox com o
+     campo vizinho deixa de fazer sentido. */
+  #acaoModal .acao-exec-linha { grid-template-columns: 1fr; }
+  #acaoModal .acao-agend { grid-template-columns: 1fr; }
+  #acaoModal .acao-chk-linha { margin-top: 0; min-height: 0; }
+  .acal-dia { min-height: 52px; padding: 3px; }
+  .acal-pill { padding: 0; width: 10px; height: 10px; border-radius: var(--ds-radius-circle); }
+  .acal-pill-txt, .acal-glifo { display: none; }
+  .acal-st-programada { background: var(--ds-line-strong); }
+  .acal-st-andamento { background: var(--ds-info); }
+  .acal-st-realizada { background: var(--ds-success); }
+  .acal-st-atrasada { background: var(--ds-danger); }
+  .acal-st-cancelada { background: var(--ds-line); }
+}

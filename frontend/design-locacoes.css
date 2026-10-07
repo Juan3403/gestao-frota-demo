@@ -1,0 +1,29 @@
+/* ============================================================================
+   design-locacoes.css — camada visual do módulo LOCAÇÕES (#locacoes)
+   Mesmo desenho das demais camadas por módulo (design-epi.css, design-ti.css,
+   design-acoes-sst.css): só consome tokens do Design System (--ds-*), nada de
+   cor/raio/sombra literal (test/design-system.test.js audita) e nada de
+   !important. O grosso do módulo (lista, filtros, modais) já vive no legado
+   (styles.css) sob a ponte de tokens; aqui entram só as peças que nasceram na
+   1.55.31 — a sub-aba Faturas (histórico dos PDFs emitidos) e o link de PDF na
+   coluna de ações — para o styles.css continuar sem edição.
+   Carrega DEPOIS do Design System; <768px é o design-mobile.css.
+   ============================================================================ */
+
+@media (min-width: 768px) {
+
+/* Ação de linha como LINK (abrir o PDF guardado): mesma caixa do botão .loc-acao. */
+body.design-v2 #locacoes a.loc-acao { text-decoration: none; }
+
+/* Check "Enviada": caixa + rótulo lado a lado; abaixo, em letra menor, quando e quem marcou.
+   Verde só depois de marcada — pendente fica na tinta comum, sem alarme. */
+body.design-v2 #locacoes .loc-fat-check {
+  display: inline-flex; align-items: center; gap: var(--ds-space-2);
+  cursor: pointer; font-weight: var(--ds-weight-semibold); color: var(--ds-ink);
+}
+body.design-v2 #locacoes .loc-fat-check input { margin: 0; accent-color: var(--ds-success); cursor: pointer; }
+body.design-v2 #locacoes .loc-fat-check input:disabled { cursor: default; }
+body.design-v2 #locacoes tr.loc-fat-enviada .loc-fat-check { color: var(--ds-success); }
+body.design-v2 #locacoes .loc-fat-quando { display: block; margin-top: 2px; color: var(--ds-muted); font-size: var(--ds-text-2xs); }
+
+}

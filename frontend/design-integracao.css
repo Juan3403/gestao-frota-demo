@@ -1,0 +1,508 @@
+/* ============================================================================
+   design-integracao.css · camada visual do módulo INTEGRAÇÃO (#integracao)
+   Mesmo desenho das demais camadas por módulo (design-locacoes.css, design-epi.css):
+   só consome tokens do Design System (--ds-*), nada de cor/raio/sombra literal
+   (test/design-system.test.js audita) e nada de !important. O grosso do módulo
+   (catálogo, tabela do Acompanhamento, editor de prova) continua no legado
+   (styles.css) sob a ponte de tokens; aqui entram só as peças da 1.55.35 em diante:
+     · bloco "Vídeo" do modal do treinamento (#treinoModal, anexado ao body, por
+       isso o escopo é `body.design-v2 .modal-overlay`): origem arquivo/Drive,
+       vídeo atual, prévia, barra de progresso do envio e avisos do arquivo;
+     · etiqueta de origem no card do catálogo ("Vídeo · 12 min" / "Drive (sem trava)");
+     · situação do vídeo e ações da linha no Acompanhamento;
+     · Parte A: tabela do Acompanhamento em 7 colunas (cabe em 1366 px com o menu fixado),
+       barra de seleção "Excluir selecionados", ações do card do catálogo (Enviar/Acompanhar) e
+       o modal "Links do treinamento" (resultado do envio em lote);
+     · redesenho do Acompanhamento (1.55.45): indicadores que filtram, progresso em 5 etapas,
+       legenda, e o conteúdo do painel lateral do convite (a casca .modal-lateral é do
+       08-modal.css, genérica; o que vai dentro dela é daqui).
+   Carrega DEPOIS do Design System; <768px é o design-mobile.css (não mexer).
+   ============================================================================ */
+
+@media (min-width: 768px) {
+
+/* ---------- Modal do treinamento: bloco "Vídeo" ---------- */
+body.design-v2 .modal-overlay .treino-video {
+  display: flex; flex-direction: column; gap: var(--ds-space-4);
+  padding: var(--ds-space-6);
+  border: var(--ds-border) solid var(--ds-line); border-radius: var(--ds-radius-lg);
+  background: var(--ds-surface);
+}
+body.design-v2 .modal-overlay .treino-video [hidden] { display: none; }
+body.design-v2 .modal-overlay .treino-video-head {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--ds-space-4);
+}
+body.design-v2 .modal-overlay .treino-video-opcoes {
+  display: flex; flex-wrap: wrap; gap: var(--ds-space-3) var(--ds-space-7);
+}
+/* `.form-grid label` do legado empilha (flex-direction: column) e `.form-grid input` estica a
+   100% com altura de campo: aqui a opção é rádio + texto na mesma linha. */
+body.design-v2 .modal-overlay .form-grid .treino-video-opcao {
+  display: inline-flex; flex-direction: row; align-items: center; gap: var(--ds-space-3);
+  margin: 0; font-size: var(--ds-text-sm); font-weight: var(--ds-weight-medium); color: var(--ds-ink);
+  cursor: pointer;
+}
+body.design-v2 .modal-overlay .form-grid .treino-video-opcao input {
+  flex: 0 0 auto; width: auto; min-height: 0; margin: 0; padding: 0;
+  accent-color: var(--ds-primary); cursor: pointer;
+}
+/* Opção indisponível (armazenamento desligado): some o cursor de clique, texto apagado. */
+body.design-v2 .modal-overlay .treino-video-opcao:has(input:disabled) { color: var(--ds-muted); cursor: default; }
+body.design-v2 .modal-overlay .treino-video-motivo { margin: 0; color: var(--ds-muted); font-size: var(--ds-text-xs); }
+body.design-v2 .modal-overlay .treino-video-painel { display: flex; flex-direction: column; gap: var(--ds-space-4); }
+body.design-v2 .modal-overlay .treino-video-painel[hidden] { display: none; }
+body.design-v2 .modal-overlay .treino-video-escolha {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--ds-space-3) var(--ds-space-5);
+}
+body.design-v2 .modal-overlay .treino-video-escolha .dica { flex: 1 1 240px; margin: 0; }
+
+/* Vídeo atual (ou recém-enviado): ícone · nome + metadados · ações. */
+body.design-v2 .modal-overlay .treino-video-atual {
+  display: flex; align-items: center; gap: var(--ds-space-5);
+  padding: var(--ds-space-4) var(--ds-space-5);
+  border: var(--ds-border) solid var(--ds-line); border-radius: var(--ds-radius-sm);
+  background: var(--ds-surface-subtle);
+}
+body.design-v2 .modal-overlay .treino-video-ico { display: grid; place-items: center; flex: 0 0 auto; color: var(--ds-muted); }
+body.design-v2 .modal-overlay .treino-video-info { display: flex; flex-direction: column; gap: var(--ds-space-1); flex: 1 1 auto; min-width: 0; }
+body.design-v2 .modal-overlay .treino-video-nome {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: var(--ds-text-sm); font-weight: var(--ds-weight-semibold); color: var(--ds-ink);
+}
+body.design-v2 .modal-overlay .treino-video-meta { font-size: var(--ds-text-xs); color: var(--ds-muted); font-variant-numeric: tabular-nums; }
+body.design-v2 .modal-overlay .treino-video-acoes { display: flex; flex: 0 0 auto; gap: var(--ds-space-3); }
+body.design-v2 .modal-overlay .treino-video-nota { margin: 0; }
+/* Prévia pequena (é o RH: pode ter os controles do navegador). */
+body.design-v2 .modal-overlay .treino-video-previa {
+  display: block; width: 100%; max-width: 420px; max-height: 240px;
+  border-radius: var(--ds-radius-sm); background: var(--ds-shell-bg);
+}
+body.design-v2 .modal-overlay .treino-video-previa[hidden] { display: none; }
+body.design-v2 .modal-overlay .treino-video-removido {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--ds-space-3) var(--ds-space-4);
+  margin: 0; font-size: var(--ds-text-sm); color: var(--ds-muted);
+}
+
+/* Progresso do envio: trilho + barra (sem animar largura: a barra só acompanha o dado). */
+body.design-v2 .modal-overlay .treino-video-prog { display: flex; flex-direction: column; gap: var(--ds-space-3); }
+body.design-v2 .modal-overlay .treino-video-prog-trilho {
+  height: 6px; overflow: hidden;
+  border-radius: var(--ds-radius-pill); background: var(--ds-line);
+}
+body.design-v2 .modal-overlay .treino-video-prog-barra { height: 100%; width: 0; background: var(--ds-primary); }
+body.design-v2 .modal-overlay .treino-video-prog.gravando .treino-video-prog-barra { background: var(--ds-success); }
+body.design-v2 .modal-overlay .treino-video-prog.esperando .treino-video-prog-barra { background: var(--ds-warning); }
+body.design-v2 .modal-overlay .treino-video-prog-linha {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--ds-space-4);
+}
+body.design-v2 .modal-overlay .treino-video-prog-txt {
+  min-width: 0; font-size: var(--ds-text-xs); color: var(--ds-ink); font-variant-numeric: tabular-nums;
+}
+
+/* Avisos do arquivo (HEVC, não otimizado para web): não bloqueiam, só orientam. */
+body.design-v2 .modal-overlay .treino-video-avisos {
+  display: flex; flex-direction: column; gap: var(--ds-space-2);
+  margin: 0; padding: var(--ds-space-4) var(--ds-space-5) var(--ds-space-4) var(--ds-space-8);
+  border-radius: var(--ds-radius-sm); background: var(--ds-warning-soft);
+  color: var(--ds-warning-ink); font-size: var(--ds-text-xs);
+}
+body.design-v2 .modal-overlay .treino-video-avisos[hidden] { display: none; }
+
+/* ---------- Catálogo: etiqueta de origem do vídeo no card ---------- */
+body.design-v2 #integracao .treino-origem { display: inline-flex; align-items: center; gap: var(--ds-space-2); }
+body.design-v2 #integracao .treino-origem svg { flex: 0 0 auto; }
+body.design-v2 #integracao .treino-origem.com-video { color: var(--ds-ink); }
+/* Drive = o que falta migrar para o vídeo travado: tinta de aviso, sem fundo (não é alarme). */
+body.design-v2 #integracao .treino-origem.so-drive { color: var(--ds-warning-ink); }
+
+/* ==========================================================================
+   Reenviar link (1.55.35) e exclusão (1.55.40): Acompanhamento em 7 colunas, seleção múltipla, modais de link
+   ========================================================================== */
+
+/* ---------- Catálogo: metadados e ações do card ---------- */
+body.design-v2 #integracao .treino-meta { display: inline-flex; align-items: center; gap: var(--ds-space-2); }
+body.design-v2 #integracao .treino-meta svg { flex: 0 0 auto; }
+/* Card mais largo (1.55.42): o `.cards` legado usa colunas de 190 px, estreitas demais para
+   "Enviar" + "Acompanhar" + editar/excluir numa linha só (os dois botões quebravam um em cima do
+   outro e os ícones ficavam soltos). 340 px cabe a linha inteira: botões à esquerda, ícones à direita. */
+body.design-v2 #integracao #intgCards { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); }
+body.design-v2 #integracao .treino-card-acoes {
+  display: flex; flex-wrap: nowrap; align-items: center; justify-content: space-between;
+  gap: var(--ds-space-3); padding-top: var(--ds-space-2);
+}
+body.design-v2 #integracao .treino-card-acoes-btns { display: flex; flex-wrap: nowrap; gap: var(--ds-space-3); }
+body.design-v2 #integracao .treino-card-acoes-btns .btn {
+  display: inline-flex; align-items: center; gap: var(--ds-space-3);
+  height: var(--ds-control-h-sm); min-height: var(--ds-control-h-sm); padding-block: 0; white-space: nowrap;
+}
+/* Editar/excluir: quadrados com borda na MESMA altura dos botões ao lado (não mais ícones soltos). */
+body.design-v2 #integracao .treino-card-acoes-icones { display: flex; gap: var(--ds-space-2); flex: 0 0 auto; }
+body.design-v2 #integracao .treino-card-acoes-icones button {
+  width: var(--ds-control-h-sm); height: var(--ds-control-h-sm); padding: 0;
+  display: grid; place-items: center;
+  border: var(--ds-border) solid var(--ds-line); border-radius: var(--ds-radius-sm);
+  background: var(--ds-surface); color: var(--ds-muted); cursor: pointer;
+}
+body.design-v2 #integracao .treino-card-acoes-icones .treino-edit:hover {
+  border-color: var(--ds-primary); color: var(--ds-primary); background: var(--ds-info-soft);
+}
+body.design-v2 #integracao .treino-card-acoes-icones .treino-del:hover {
+  border-color: var(--ds-danger); color: var(--ds-danger); background: var(--ds-danger-soft);
+}
+body.design-v2 #integracao .treino-card-acoes-icones button:focus-visible { outline: var(--ds-border-tab) solid var(--ds-focus); outline-offset: var(--ds-space-1); }
+
+/* ---------- Acompanhamento: tabela de 7 colunas (redesenho 1.55.45) ----------
+   Colaborador · Treinamento · Progresso · Prazo · Última atividade · Nota · Ações.
+   table-layout fixo: as colunas de dado curto têm largura certa e Colaborador/Treinamento
+   dividem o resto (quebram linha em vez de empurrar a tabela). Soma das fixas = 656 px com
+   4 ações: cabe nos ~1000 px úteis de 1366 px com o menu lateral fixado, sem rolagem lateral
+   e sem coluna sticky (a camada sticky já deu artefato no Chromium aqui). */
+body.design-v2 #integracao .acmp-tabela { table-layout: fixed; width: 100%; font-size: var(--ds-text-base); }
+body.design-v2 #integracao .acmp-tabela .acmp-c-prog { width: 164px; }
+body.design-v2 #integracao .acmp-tabela .acmp-c-prazo { width: 118px; }
+body.design-v2 #integracao .acmp-tabela .acmp-c-ativ { width: 150px; }
+body.design-v2 #integracao .acmp-tabela .acmp-c-nota { width: 92px; }
+/* Tabela larga (tela grande ou menu solto): as colunas curtas crescem junto com a tabela para
+   "Prova liberada pelo RH", "24/09 08:22 · por Dev Demonstração" e "válido até 24/09/2028" caberem
+   numa linha. Sem isso todo o espaço extra ia para Colaborador/Treinamento e as linhas ficavam com
+   3 ou 4 linhas de texto. A régua é a largura da PRÓPRIA tabela (container query no wrap), não a
+   da tela: o menu lateral fixado ou solto muda ~220 px e a conta já sai certa nos dois casos.
+   Degraus (fixas + 132 px de ações): 1150 px → sobram 386 px para nome e treinamento; 1400 → 522;
+   1650 → 698. */
+body.design-v2 #integracao .acmp-tabela-wrap { container-type: inline-size; }
+/* Tabela ESTREITA (tablet em pé, 768 a ~1000 px com o menu): as fixas somam 656 px e, com table-layout
+   fixo, Colaborador e Treinamento chegavam a 0 px (o nome virava uma coluna de letras). Abaixo de
+   1000 px a tabela mantém 1000 px e rola dentro do wrap (overflow-x: auto do .acmp-tabela-wrap). */
+@container (max-width: 999px) {
+  body.design-v2 #integracao .acmp-tabela { min-width: 1000px; }
+}
+@container (min-width: 1150px) {
+  body.design-v2 #integracao .acmp-tabela .acmp-c-prog { width: 200px; }
+  body.design-v2 #integracao .acmp-tabela .acmp-c-prazo { width: 136px; }
+  body.design-v2 #integracao .acmp-tabela .acmp-c-ativ { width: 200px; }
+  body.design-v2 #integracao .acmp-tabela .acmp-c-nota { width: 96px; }
+}
+@container (min-width: 1400px) {
+  body.design-v2 #integracao .acmp-tabela .acmp-c-prog { width: 236px; }
+  body.design-v2 #integracao .acmp-tabela .acmp-c-prazo { width: 156px; }
+  body.design-v2 #integracao .acmp-tabela .acmp-c-ativ { width: 250px; }
+  body.design-v2 #integracao .acmp-tabela .acmp-c-nota { width: 104px; }
+}
+@container (min-width: 1650px) {
+  body.design-v2 #integracao .acmp-tabela .acmp-c-prog { width: 250px; }
+  body.design-v2 #integracao .acmp-tabela .acmp-c-prazo { width: 170px; }
+  body.design-v2 #integracao .acmp-tabela .acmp-c-ativ { width: 290px; }
+  body.design-v2 #integracao .acmp-tabela .acmp-c-nota { width: 110px; }
+}
+/* Ações: N botões de --ds-action-h (22 px) + 6 px entre eles + o padding da célula. */
+body.design-v2 #integracao .acmp-tabela.acmp-acoes-2 .acmp-c-acoes { width: 80px; }
+body.design-v2 #integracao .acmp-tabela.acmp-acoes-3 .acmp-c-acoes { width: 104px; }
+body.design-v2 #integracao .acmp-tabela.acmp-acoes-4 .acmp-c-acoes { width: 132px; }
+body.design-v2 #integracao .acmp-tabela th {
+  padding: var(--ds-space-4) var(--ds-space-5);
+  font-family: var(--body); /* sentence case na fonte base (DESIGN.md §1): nada do mono do legado */
+  background: var(--ds-surface-subtle);
+  font-size: var(--ds-text-xs); font-weight: var(--ds-weight-semibold);
+  letter-spacing: 0; text-transform: none; color: var(--ds-muted);
+  border-bottom: var(--ds-border) solid var(--ds-line);
+}
+body.design-v2 #integracao .acmp-tabela td {
+  padding: var(--ds-space-4) var(--ds-space-5);
+  vertical-align: top; white-space: normal; overflow-wrap: anywhere;
+  border-bottom: var(--ds-border) solid var(--ds-line);
+  color: var(--ds-ink); font-variant-numeric: tabular-nums;
+  background: transparent; /* sem a zebra legada do tema escuro (body.dark tbody tr:nth-child(even) td) */
+}
+body.design-v2 #integracao .acmp-tabela tbody tr:last-child td { border-bottom: 0; }
+body.design-v2 #integracao .acmp-tabela tbody tr:hover td { background: var(--ds-surface-hover); }
+body.design-v2 #integracao .acmp-tabela tbody tr.acmp-selecionavel { cursor: pointer; }
+/* Linha marcada: o véu de seleção escurece o fundo e o cinza das sublinhas caía para 4,4:1 (abaixo
+   do AA) e o anel pendente para 2,5:1; sobem um degrau enquanto a linha está marcada. */
+body.design-v2 #integracao .acmp-tabela tbody tr.sel-on :is(.acmp-sub, .acmp-origem, .acmp-estado.neutro) { color: var(--ds-ink); }
+body.design-v2 #integracao .acmp-tabela tbody tr.sel-on .acmp-passo.falta { border-color: var(--ds-muted); }
+body.design-v2 #integracao .acmp-tabela td.acoes { vertical-align: top; white-space: nowrap; }
+/* Nome = botão que abre o modal do link: parece texto de tabela, acende no hover/foco. */
+body.design-v2 #integracao .acmp-nome-btn {
+  display: inline; margin: 0; padding: 0; border: 0; background: none;
+  font: inherit; font-weight: var(--ds-weight-semibold); color: var(--ds-ink);
+  text-align: left; overflow-wrap: anywhere; cursor: pointer;
+}
+body.design-v2 #integracao .acmp-nome-btn:hover { color: var(--ds-primary); text-decoration: underline; }
+body.design-v2 #integracao .acmp-nome-btn:focus-visible { outline: var(--ds-border-tab) solid var(--ds-focus); outline-offset: var(--ds-space-1); }
+body.design-v2 #integracao .acmp-cel { display: flex; flex-direction: column; gap: var(--ds-space-1); }
+body.design-v2 #integracao .acmp-tabela .num .acmp-cel { align-items: flex-end; }
+body.design-v2 #integracao .acmp-sub {
+  display: block; margin-top: var(--ds-space-1);
+  font-size: var(--ds-text-2xs); color: var(--ds-muted); line-height: var(--ds-leading-normal);
+}
+body.design-v2 #integracao .acmp-cel .acmp-sub { margin-top: 0; }
+body.design-v2 #integracao .acmp-nao { color: var(--ds-muted); }
+/* Ícones de leitura (link, certificado, liberar, novo convite) acendem em azul; a lixeira (.del)
+   já acende em perigo pelo 05-components. */
+body.design-v2 #integracao .acoes :is(.acmp-link, .acmp-cert, .acmp-liberar, .acmp-repetir):hover {
+  border-color: var(--ds-primary); color: var(--ds-primary); background: var(--ds-info-soft);
+}
+body.design-v2 #integracao .acoes button:focus-visible { outline: var(--ds-border-tab) solid var(--ds-focus); outline-offset: var(--ds-space-1); }
+/* Coluna Ações centralizada (título e ícones), 1.55.42. */
+body.design-v2 #integracao .acmp-tabela th.acmp-th-acoes,
+body.design-v2 #integracao .acmp-tabela td.acoes { text-align: center; }
+/* Certificado ainda indisponível (sem aprovação): fica no lugar, apagado e sem ação. A borda
+   tracejada diz "não disponível" sem depender de cor; o hover não acende (vem depois da regra
+   de hover dos ícones de leitura, mesma especificidade). */
+body.design-v2 #integracao .acoes .acmp-cert-off,
+body.design-v2 #integracao .acoes .acmp-cert-off:hover {
+  border-style: dashed; border-color: var(--ds-line);
+  color: var(--ds-muted); background: var(--ds-surface-subtle); cursor: not-allowed;
+}
+
+/* ---------- Acompanhamento: barra de seleção ---------- */
+body.design-v2 #integracao .sel-bar .btn { display: inline-flex; align-items: center; gap: var(--ds-space-3); }
+body.design-v2 #integracao .sel-bar .sel-bar-perigo { color: var(--ds-danger); }
+body.design-v2 #integracao .sel-bar .sel-bar-perigo:hover {
+  border-color: var(--ds-danger); color: var(--ds-danger); background: var(--ds-danger-soft);
+}
+
+/* ---------- Modais de link (anexados ao body) ---------- */
+body.design-v2 .modal-overlay .trn-link-corpo { padding: var(--ds-space-8); }
+body.design-v2 .modal-overlay .trn-link-quem {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: var(--ds-space-5); margin: 0;
+}
+body.design-v2 .modal-overlay .trn-link-nome { display: flex; flex-direction: column; gap: var(--ds-space-1); min-width: 0; }
+body.design-v2 .modal-overlay .trn-link-nome strong { color: var(--ds-ink); font-weight: var(--ds-weight-semibold); }
+body.design-v2 .modal-overlay .trn-link-nome span { color: var(--ds-muted); font-size: var(--ds-text-sm); }
+/* Mesma forma da família de pílulas do DS (05-components §9); a paleta segue a do módulo. */
+body.design-v2 .modal-overlay .treino-status {
+  flex: 0 0 auto; padding: var(--ds-space-1) var(--ds-space-4);
+  border-radius: var(--ds-radius-sm);
+  font-size: var(--ds-text-xs); font-weight: var(--ds-weight-medium); line-height: var(--ds-leading-normal);
+}
+/* Cor do selo em pastel por token (1.55.45). O legado (styles.css) pinta texto BRANCO sobre a cor
+   cheia, que no tema escuro dava 1,8:1 ("Em andamento" sobre âmbar) e contrariava o DESIGN.md §5
+   (tags de status em pastel). Contraste daqui: claro 7,5 / 5,4 / 5,8:1; escuro 8,9 / 8,5 / 7,3:1. */
+body.design-v2 .modal-overlay .treino-status.t-pendente { background: var(--ds-warning-soft); color: var(--ds-warning-ink); }
+body.design-v2 .modal-overlay .treino-status.t-aprovado { background: var(--ds-success-soft); color: var(--ds-success); }
+body.design-v2 .modal-overlay .treino-status.t-reprovado { background: var(--ds-danger-soft); color: var(--ds-danger); }
+body.design-v2 .modal-overlay .trn-link-url.vencido { color: var(--ds-muted); text-decoration: line-through; }
+body.design-v2 .modal-overlay .trn-validade { margin: 0; font-size: var(--ds-text-sm); color: var(--ds-ink); }
+body.design-v2 .modal-overlay .trn-validade.vencido { color: var(--ds-danger); font-weight: var(--ds-weight-medium); }
+body.design-v2 .modal-overlay .trn-hist { margin: 0; font-size: var(--ds-text-xs); color: var(--ds-muted); }
+body.design-v2 .modal-overlay .trn-envio { display: flex; flex-wrap: wrap; gap: var(--ds-space-3); }
+body.design-v2 .modal-overlay .trn-envio .btn { text-decoration: none; }
+/* Envio desligado (link vencido): sem href e aria-disabled; mesmo apagado do botão desabilitado. */
+body.design-v2 .modal-overlay .trn-envio a[aria-disabled="true"],
+body.design-v2 .modal-overlay .trn-envio .btn:disabled {
+  border-color: var(--ds-line); background: var(--ds-surface-subtle); color: var(--ds-muted);
+  opacity: .55; cursor: not-allowed; pointer-events: none;
+}
+body.design-v2 .modal-overlay .trn-regerar-linha {
+  display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--ds-space-5);
+  padding-top: var(--ds-space-6); border-top: var(--ds-border) solid var(--ds-line);
+}
+body.design-v2 .modal-overlay .form-grid .trn-regerar-linha .trn-lote-dias { flex-direction: column; margin: 0; }
+body.design-v2 .modal-overlay .form-grid .trn-regerar-linha .trn-lote-dias input { width: 88px; }
+body.design-v2 .modal-overlay .trn-regerar-linha .btn { display: inline-flex; align-items: center; gap: var(--ds-space-3); }
+body.design-v2 .modal-overlay .trn-regerar-nota { margin: 0; }
+
+/* Resultado do envio em lote: "Links novos" · "Já tinham link ativo" · "Não enviados". */
+body.design-v2 .modal-overlay .trn-res { gap: var(--ds-space-7); }
+body.design-v2 .modal-overlay .trn-res-barra { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-space-6); }
+body.design-v2 .modal-overlay .trn-res-barra .btn { display: inline-flex; align-items: center; gap: var(--ds-space-3); flex: 0 0 auto; }
+body.design-v2 .modal-overlay .trn-res-resumo { display: flex; flex-direction: column; gap: var(--ds-space-1); margin: 0; min-width: 0; }
+body.design-v2 .modal-overlay .trn-res-resumo b { color: var(--ds-ink); font-weight: var(--ds-weight-semibold); }
+body.design-v2 .modal-overlay .trn-res-resumo span { color: var(--ds-muted); font-size: var(--ds-text-sm); }
+body.design-v2 .modal-overlay .trn-res-secao { display: flex; flex-direction: column; gap: var(--ds-space-4); }
+body.design-v2 .modal-overlay .trn-res-secao h3 {
+  margin: 0; font-family: var(--body); font-size: var(--ds-text-sm); font-weight: var(--ds-weight-semibold); color: var(--ds-ink);
+}
+body.design-v2 .modal-overlay .trn-res-dica { margin: 0; font-size: var(--ds-text-xs); color: var(--ds-muted); }
+body.design-v2 .modal-overlay .trn-res-lista { display: flex; flex-direction: column; gap: var(--ds-space-4); }
+body.design-v2 .modal-overlay .trn-res-linha {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--ds-space-5);
+  padding: var(--ds-space-5) var(--ds-space-6);
+  border: var(--ds-border) solid var(--ds-line); border-radius: var(--ds-radius-md);
+  background: var(--ds-surface);
+}
+body.design-v2 .modal-overlay .trn-res-info { flex: 1 1 260px; display: flex; flex-direction: column; gap: var(--ds-space-2); min-width: 0; }
+body.design-v2 .modal-overlay .trn-res-topo { display: flex; align-items: baseline; justify-content: space-between; gap: var(--ds-space-5); }
+body.design-v2 .modal-overlay .trn-res-topo b { color: var(--ds-ink); font-size: var(--ds-text-md); font-weight: var(--ds-weight-semibold); }
+body.design-v2 .modal-overlay .trn-res-validade { flex: 0 0 auto; font-size: var(--ds-text-xs); color: var(--ds-muted); font-variant-numeric: tabular-nums; }
+body.design-v2 .modal-overlay .trn-res-url {
+  padding: var(--ds-space-3) var(--ds-space-4);
+  border: var(--ds-border) solid var(--ds-line); border-radius: var(--ds-radius-sm);
+  background: var(--ds-surface-subtle); color: var(--ds-muted); font-size: var(--ds-text-xs);
+}
+body.design-v2 .modal-overlay .trn-res-acoes { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ds-space-3); }
+body.design-v2 .modal-overlay .trn-res-acoes .btn { display: inline-flex; align-items: center; gap: var(--ds-space-3); }
+body.design-v2 .modal-overlay .trn-res-nao { display: flex; flex-direction: column; gap: var(--ds-space-2); margin: 0; padding: 0; list-style: none; }
+body.design-v2 .modal-overlay .trn-res-nao li { display: flex; flex-wrap: wrap; gap: var(--ds-space-3); font-size: var(--ds-text-sm); color: var(--ds-ink); }
+body.design-v2 .modal-overlay .trn-res-nao li span { color: var(--ds-muted); }
+
+/* ==========================================================================
+   Acompanhamento redesenhado (1.55.45): indicadores, progresso em 5 etapas, legenda e o
+   painel lateral do convite (.modal-lateral do 08-modal.css; o conteúdo é daqui)
+   ========================================================================== */
+
+/* Indicadores: 6 colunas (o .v2-kpis do DS deixa a contagem de colunas para o módulo). */
+body.design-v2 #integracao .acmp-kpis { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+/* Respiro entre o alternador Catálogo/Acompanhamento e o que vem embaixo (indicadores ou a barra
+   de busca): sem ele os dois encostavam (0 px). Mesmo degrau do espaço abaixo dos indicadores. */
+body.design-v2 #integracao #intgVis { margin-bottom: var(--ds-space-6); }
+/* Alternador Catálogo/Acompanhamento com ícone em desenho (saíram os emojis). */
+body.design-v2 #integracao .func-vis-btn { display: inline-flex; align-items: center; gap: var(--ds-space-3); }
+body.design-v2 #integracao .func-vis-btn svg { flex: 0 0 auto; }
+/* Toolbar: "Enviar treinamento" com o ícone alinhado ao texto. */
+body.design-v2 #integracao #btnAcmpEnviar { display: inline-flex; align-items: center; gap: var(--ds-space-3); }
+
+/* Marcador de etapa. Vale na tabela, na legenda e no painel (que mora no <body>, fora de
+   #integracao). Cada estado muda a FORMA além da cor, para não depender só dela:
+   feito = cheio · atual = anel escuro com halo · falta = contorno · falhou = QUADRADO ·
+   sem-trava (Drive) = contorno TRACEJADO · liberado (prova liberada pelo RH) = LOSANGO. */
+body.design-v2 :is(#integracao, .modal-overlay) .acmp-passo {
+  display: inline-block; flex: 0 0 auto;
+  width: 12px; height: 12px; box-sizing: border-box;
+  border: var(--ds-border-tab) solid var(--ds-line-strong); border-radius: 50%;
+  background: transparent;
+}
+body.design-v2 :is(#integracao, .modal-overlay) .acmp-passo.feito { background: var(--ds-success); border-color: var(--ds-success); }
+/* O halo em --ds-line-strong separa a etapa ATUAL do anel pendente (só --ds-line ficava quase
+   invisível: 1,4:1). */
+body.design-v2 :is(#integracao, .modal-overlay) .acmp-passo.atual {
+  background: var(--ds-surface); border-color: var(--ds-ink);
+  box-shadow: 0 0 0 var(--ds-border-tab) var(--ds-line-strong);
+}
+body.design-v2 :is(#integracao, .modal-overlay) .acmp-passo.falhou {
+  background: var(--ds-danger); border-color: var(--ds-danger); border-radius: var(--ds-radius-xs);
+}
+/* Tracejado FINO: com 2 px, 12 px de círculo viravam três traços soltos que pareciam um "⊃". */
+body.design-v2 :is(#integracao, .modal-overlay) .acmp-passo:is(.sem-trava, .sem-info) { border-width: var(--ds-border); border-style: dashed; border-color: var(--ds-muted); }
+body.design-v2 :is(#integracao, .modal-overlay) .acmp-passo.liberado {
+  background: var(--ds-warning); border-color: var(--ds-warning); border-radius: var(--ds-radius-xs);
+  transform: rotate(45deg) scale(.85);
+}
+
+/* Progresso da linha: marcadores ligados por trilhos (verde até onde a pessoa chegou) + frase. */
+body.design-v2 #integracao .acmp-prog { display: flex; align-items: center; min-height: 16px; }
+body.design-v2 #integracao .acmp-trilho { flex: 0 0 auto; width: 14px; height: 2px; background: var(--ds-line); }
+body.design-v2 #integracao .acmp-trilho.feito { background: var(--ds-success); }
+body.design-v2 #integracao .acmp-estado {
+  display: block; margin-top: var(--ds-space-3);
+  font-size: var(--ds-text-xs); font-weight: var(--ds-weight-medium); line-height: var(--ds-leading-normal);
+  color: var(--ds-ink);
+}
+body.design-v2 #integracao .acmp-estado.neutro { color: var(--ds-muted); }
+body.design-v2 #integracao .acmp-estado.ok { color: var(--ds-success); }
+body.design-v2 #integracao .acmp-estado.aviso { color: var(--ds-warning-ink); }
+body.design-v2 #integracao .acmp-estado.perigo { color: var(--ds-danger); }
+
+/* Tons das células (Prazo, Nota) e do painel: a cor acompanha a palavra, nunca a substitui. */
+body.design-v2 :is(#integracao, .modal-overlay) .acmp-tom-ok { color: var(--ds-success); font-weight: var(--ds-weight-medium); }
+body.design-v2 :is(#integracao, .modal-overlay) .acmp-tom-aviso { color: var(--ds-warning-ink); font-weight: var(--ds-weight-medium); }
+body.design-v2 :is(#integracao, .modal-overlay) .acmp-tom-perigo { color: var(--ds-danger); font-weight: var(--ds-weight-medium); }
+body.design-v2 #integracao .acmp-nota { font-family: var(--mono); }
+/* Origem do vídeo embaixo do treinamento ("Vídeo travado" / "Drive, sem trava"). */
+body.design-v2 :is(#integracao, .modal-overlay) .acmp-origem {
+  display: inline-flex; align-items: center; gap: var(--ds-space-2);
+  font-size: var(--ds-text-2xs); color: var(--ds-muted);
+}
+body.design-v2 :is(#integracao, .modal-overlay) .acmp-origem svg { flex: 0 0 auto; }
+
+/* Legenda dos marcadores, embaixo da tabela. */
+body.design-v2 #integracao .acmp-legenda {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--ds-space-3) var(--ds-space-7);
+  margin: var(--ds-space-5) 0 0;
+  font-size: var(--ds-text-2xs); color: var(--ds-muted);
+}
+body.design-v2 #integracao .acmp-legenda > span { display: inline-flex; align-items: center; gap: var(--ds-space-3); }
+body.design-v2 #integracao .acmp-legenda .acmp-passo { width: 10px; height: 10px; }
+body.design-v2 #integracao .acmp-legenda .acmp-legenda-tit { font-weight: var(--ds-weight-semibold); color: var(--ds-ink); }
+body.design-v2 #integracao .acmp-legenda .acmp-legenda-ordem { margin-left: auto; }
+/* Lista vazia com filtro: mensagem + "Limpar filtros". */
+body.design-v2 #integracao .acmp-vazio { display: flex; flex-direction: column; align-items: center; gap: var(--ds-space-5); }
+
+/* ---------- Painel do convite (conteúdo) ---------- */
+body.design-v2 .modal-overlay .trn-det-corpo { display: flex; flex-direction: column; gap: var(--ds-space-8); padding: var(--ds-space-7); }
+body.design-v2 .modal-overlay .trn-det-cab { display: flex; flex-direction: column; gap: var(--ds-space-4); }
+body.design-v2 .modal-overlay .trn-det-sub { font-size: var(--ds-text-sm); color: var(--ds-muted); font-variant-numeric: tabular-nums; }
+body.design-v2 .modal-overlay .trn-det-selos { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ds-space-3) var(--ds-space-5); }
+body.design-v2 .modal-overlay .trn-det-secao { display: flex; flex-direction: column; gap: var(--ds-space-5); }
+body.design-v2 .modal-overlay .trn-det-secao h3 {
+  margin: 0; font-family: var(--body); font-size: var(--ds-text-md); font-weight: var(--ds-weight-semibold); color: var(--ds-ink);
+}
+/* O link reaproveita os campos do .form-grid, em coluna única e sem o padding de modal. */
+body.design-v2 .modal-overlay .form-grid.trn-det-link { grid-template-columns: minmax(0, 1fr); padding: 0; }
+
+/* Linha do tempo das 5 etapas: marcador + texto; o trilho vertical fica verde até a etapa
+   alcançada (o :has olha se a etapa de baixo tem .alcancada, a mesma regra dos trilhos da
+   tabela: acmpEtapas().alcancadas). */
+body.design-v2 .modal-overlay .trn-det-linha { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+body.design-v2 .modal-overlay .trn-det-etapa {
+  position: relative;
+  display: grid; grid-template-columns: 12px minmax(0, 1fr); column-gap: var(--ds-space-6);
+  padding-bottom: var(--ds-space-7);
+}
+body.design-v2 .modal-overlay .trn-det-etapa:last-child { padding-bottom: 0; }
+body.design-v2 .modal-overlay .trn-det-etapa:not(:last-child)::before {
+  content: ''; position: absolute; left: 5px; top: 19px; bottom: 3px; width: 2px;
+  background: var(--ds-line);
+}
+body.design-v2 .modal-overlay .trn-det-etapa:has(+ .trn-det-etapa.alcancada)::before { background: var(--ds-success); }
+body.design-v2 .modal-overlay .trn-det-etapa > .acmp-passo { margin-top: 3px; }
+body.design-v2 .modal-overlay .trn-det-etapa-txt { display: flex; flex-direction: column; align-items: flex-start; gap: var(--ds-space-2); min-width: 0; }
+body.design-v2 .modal-overlay .trn-det-etapa-txt strong { font-size: var(--ds-text-sm); font-weight: var(--ds-weight-semibold); color: var(--ds-ink); }
+body.design-v2 .modal-overlay .trn-det-etapa.falta .trn-det-etapa-txt strong { color: var(--ds-muted); }
+body.design-v2 .modal-overlay .trn-det-info {
+  margin: 0;
+  font-size: var(--ds-text-xs); color: var(--ds-muted); line-height: var(--ds-leading-normal); font-variant-numeric: tabular-nums;
+}
+body.design-v2 .modal-overlay .trn-det-etapa-txt .btn { display: inline-flex; align-items: center; gap: var(--ds-space-3); margin-top: var(--ds-space-2); }
+/* Certificado antes da aprovação: no lugar, apagado e tracejado (mesma leitura do ícone da tabela). */
+body.design-v2 .modal-overlay .trn-det-etapa-txt .trn-det-cert[aria-disabled="true"],
+body.design-v2 .modal-overlay .trn-det-etapa-txt .trn-det-cert[aria-disabled="true"]:hover {
+  border-style: dashed; border-color: var(--ds-line); color: var(--ds-muted); background: var(--ds-surface-subtle); cursor: not-allowed;
+}
+/* Cada tentativa da prova: "1ª tentativa: 40% em …" · reprovado/aprovado. */
+body.design-v2 .modal-overlay .trn-det-provas { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ds-space-2); width: 100%; }
+body.design-v2 .modal-overlay .trn-det-provas li {
+  display: flex; justify-content: space-between; gap: var(--ds-space-5);
+  font-size: var(--ds-text-xs); color: var(--ds-ink); font-variant-numeric: tabular-nums;
+}
+body.design-v2 .modal-overlay .trn-det-provas b { font-family: var(--mono); font-weight: var(--ds-weight-semibold); }
+/* Comentários dentro do painel: a lista acompanha a rolagem do próprio painel (sem a caixa de
+   rolagem de 60vh que ela tem fora dele) e o título recebe foco quando o painel abre nela. */
+body.design-v2 .modal-overlay.modal-lateral .acmp-coment-lista { max-height: none; overflow: visible; }
+body.design-v2 .modal-overlay .trn-det-secao h3:focus { outline: none; }
+body.design-v2 .modal-overlay .trn-det-secao h3:focus-visible { outline: var(--ds-border-tab) solid var(--ds-focus); outline-offset: var(--ds-space-2); }
+/* Rodapé: "Excluir convite" à esquerda, em perigo; Fechar à direita. */
+body.design-v2 .modal-overlay .modal-foot .trn-det-excluir { margin-right: auto; display: inline-flex; align-items: center; gap: var(--ds-space-3); color: var(--ds-danger); }
+body.design-v2 .modal-overlay .modal-foot .trn-det-excluir:hover { border-color: var(--ds-danger); color: var(--ds-danger); background: var(--ds-danger-soft); }
+
+}
+
+/* ---------- Comentários do colaborador sobre o vídeo (1.55.43) ----------
+   Sub-linha da coluna Situação (mesmo desenho do .acmp-video, mas clicável) e o
+   modal de leitura, que é anexado ao body (fora do #integracao). */
+body.design-v2 #integracao .acmp-coment {
+  appearance: none; background: none; border: 0; padding: 0; cursor: pointer;
+  display: flex; align-items: center; gap: var(--ds-space-2);
+  margin-top: var(--ds-space-2);
+  font: inherit; font-size: var(--ds-text-2xs); color: var(--ds-muted);
+  text-align: left; font-variant-numeric: tabular-nums;
+}
+body.design-v2 #integracao .acmp-coment svg { flex: 0 0 auto; }
+body.design-v2 #integracao .acmp-coment { align-items: flex-start; }
+body.design-v2 #integracao .acmp-coment svg { margin-top: 1px; }
+body.design-v2 #integracao .acmp-coment-txt-linha { display: flex; flex-wrap: wrap; column-gap: var(--ds-space-3); }
+body.design-v2 #integracao .acmp-coment-txt-linha > span { white-space: nowrap; text-decoration: underline; text-underline-offset: 2px; }
+body.design-v2 #integracao .acmp-coment.tem-problema { color: var(--ds-danger); font-weight: var(--ds-weight-medium); }
+body.design-v2 #integracao .acmp-coment:hover { color: var(--ds-ink); }
+body.design-v2 #integracao .acmp-coment:focus-visible { outline: 2px solid var(--ds-focus); outline-offset: 2px; border-radius: var(--ds-radius-sm); }
+.acmp-coment-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ds-space-4); max-height: 60vh; overflow-y: auto; }
+.acmp-coment-item { border: 1px solid var(--ds-line); border-radius: var(--ds-radius-sm); padding: var(--ds-space-4) var(--ds-space-6); }
+.acmp-coment-cab { display: flex; align-items: center; justify-content: space-between; gap: var(--ds-space-4); margin-bottom: var(--ds-space-2); }
+.acmp-coment-txt { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.5; }
+body.design-v2 #integracao .acmp-coment-txt-linha > span + span::before { content: '· '; }
+/* Nome do colaborador no Acompanhamento é um <button> (abre o link): sem este reset ele aparece
+   com a borda "outset" do navegador abaixo de 768 px, onde a regra equivalente de cima (que vive
+   dentro do @media) não vale. Só zera a aparência de botão; o layout do celular segue no
+   design-mobile.css. */
+#integracao .acmp-nome-btn { appearance: none; margin: 0; padding: 0; border: 0; background: none; font: inherit; font-weight: 600; color: inherit; text-align: left; overflow-wrap: anywhere; cursor: pointer; }

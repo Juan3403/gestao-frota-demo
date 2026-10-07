@@ -1,0 +1,378 @@
+/* ============================================================================
+   02-themes.css — TOKENS SEMÂNTICOS + ponte com o legado
+
+   DOIS temas oficiais, e só dois:
+       body.tema-claro     body.tema-escuro
+
+   O `app.js` garante que TODO tema aplicado cai em exatamente um dos dois
+   marcadores (`aplicarTema` liga `tema-escuro` quando o fundo é escuro e
+   `tema-claro` caso contrário). Os temas legados do styles.css — comando,
+   cinza, sepia, sul, preto, oceano, roxo, lavanda, auto — continuam existindo e
+   continuam pintando o resto do app; aqui eles apenas herdam o conjunto de
+   tokens claro ou escuro conforme o marcador.
+
+   ALTO CONTRASTE: não tem tokens aqui, de propósito — continua sendo servido
+   pelo styles.css (intacto), que reforça borda e contraste por cima.
+   ⚠️ Ele NÃO desliga mais o Design System: desde a 1.51.23 `sincronizarAltoContraste()`
+   (app.js) acrescenta `alto-contraste`/`alto-contraste-escuro` SOBRE o tema claro ou
+   escuro, e os dois convivem. Este comentário dizia o contrário até a auditoria de
+   ago/2026 — não é exceção do DS, ver docs/DESIGN.md, seção 11.4.
+
+   REGRA QUE NÃO PODE SER QUEBRADA: componente nunca escreve cor. Escreve
+   var(--ds-surface), var(--ds-ink), var(--ds-line). É isso que faz o tema
+   escuro não duplicar uma linha de CSS de componente.
+   ============================================================================ */
+
+/* ============================================================
+   1. TEMA CLARO — a paleta validada no piloto da Frota
+   ============================================================ */
+body.tema-claro {
+  --ds-canvas: var(--ds-mineral-50);
+  --ds-surface: var(--ds-white);
+  --ds-surface-subtle: var(--ds-mineral-100);
+  --ds-surface-hover: var(--ds-mineral-150);
+
+  --ds-ink: var(--ds-mineral-900);
+  --ds-ink-strong: var(--ds-mineral-700);
+  --ds-muted: var(--ds-mineral-600);
+
+  /* DOIS tons de divisória de propósito: o decorativo (--ds-line) dá 1,3:1
+     sobre branco e reprovaria o mínimo de 3:1 da WCAG 1.4.11 para LIMITE DE
+     CAMPO. Borda de input/botão usa --ds-line-strong. */
+  --ds-line: var(--ds-mineral-200);
+  --ds-line-strong: var(--ds-mineral-500);
+  --ds-scroll-thumb: var(--ds-mineral-300);
+
+  --ds-primary: var(--ds-blue-900);
+  --ds-primary-hover: var(--ds-blue-800);
+  --ds-on-primary: var(--ds-white);
+  --ds-focus: var(--ds-blue-600);
+
+  --ds-success: var(--ds-green-700);
+  --ds-success-soft: var(--ds-green-100);
+  --ds-warning: var(--ds-amber-800);
+  --ds-warning-soft: var(--ds-amber-50);
+  --ds-warning-ink: var(--ds-amber-900);
+  --ds-warning-ink-soft: var(--ds-amber-700);
+  --ds-warning-surface-hover: var(--ds-amber-100);
+  --ds-danger: var(--ds-red-700);
+  --ds-danger-soft: var(--ds-red-100);
+  --ds-info: var(--ds-blue-600);
+  --ds-info-soft: var(--ds-blue-100);
+  --ds-accent-violet: var(--ds-violet-700);
+  --ds-accent-violet-soft: var(--ds-violet-100);
+  --ds-accent-sky: var(--ds-sky-700);
+  --ds-accent-sky-soft: var(--ds-sky-100);
+
+  /* ---------- SELEÇÃO DE LINHA ----------
+     É um VÉU TRANSLÚCIDO, e essa é a decisão inteira. Ele é desenhado por
+     `box-shadow: inset` (ver styles.css, bloco "Linha selecionada"), então COMPÕE
+     sobre o fundo que a linha já tem: a superfície, a zebra de um tema legado, a
+     faixa âmbar/vermelha de alerta. Duas coisas saem de graça: (1) a seleção para
+     de depender de quem ganha a briga de especificidade do `background` — era ela
+     que a apagava nas linhas PARES, porque styles.css tem uma regra de zebra em
+     (0,5,4) que vencia TODAS as regras de seleção; (2) uma linha de alerta
+     selecionada continua âmbar E fica selecionada, em vez de um sinal apagar o outro.
+
+     O azul aqui é --ds-focus e NÃO o institucional: #1e3a5f diluído a 20% em branco
+     dá #d2d8df, um cinza que lê como "desabilitado". #175cd3 a 20% dá #d1def6 —
+     1,36:1 sobre a superfície e 1,19:1 sobre o hover. O --ds-info-soft que ocupava
+     este papel dava 1,01:1 CONTRA O HOVER: indistinguível sem enxergar matiz. */
+  --ds-selected-veil: color-mix(in srgb, var(--ds-focus) 20%, transparent);
+  --ds-selected-veil-hover: color-mix(in srgb, var(--ds-focus) 30%, transparent);
+  /* Barra de 3px na 1ª célula: o sinal que NÃO depende de cor. A WCAG 1.4.11 pede
+     3:1 para indicador não-textual e nenhum realce de superfície chega lá sozinho —
+     a barra dá 8,49:1 sobre a linha selecionada. */
+  --ds-selected-edge: var(--ds-primary);
+
+  /* Véu atrás do modal. É o grafite do shell, não um azul-ardósia próprio: o
+     legado usava rgba(15,23,42,.5), uma cor que não existe em nenhum outro
+     lugar do sistema. */
+  --ds-backdrop: color-mix(in srgb, var(--ds-graphite-950) 55%, transparent);
+}
+
+/* ============================================================
+   2. TEMA ESCURO — mesmos papéis, outros valores. Zero CSS de componente.
+   ============================================================ */
+body.tema-escuro {
+  --ds-canvas: var(--ds-graphite-950);
+  --ds-surface: var(--ds-graphite-850);
+  --ds-surface-subtle: var(--ds-graphite-700);
+  --ds-surface-hover: var(--ds-graphite-700);
+
+  --ds-ink: var(--ds-graphite-100);
+  --ds-ink-strong: var(--ds-graphite-150);
+  --ds-muted: var(--ds-graphite-250);
+
+  --ds-line: var(--ds-graphite-500);
+  --ds-line-strong: var(--ds-graphite-380);
+  --ds-scroll-thumb: var(--ds-graphite-400);
+
+  /* O azul institucional (#1e3a5f) SOME sobre fundo escuro: no escuro a
+     primária vira o tom claro — a mesma decisão que a sidebar grafite já
+     tomava no piloto. E por isso o texto SOBRE a primária inverte. */
+  --ds-primary: var(--ds-blue-300);
+  --ds-primary-hover: var(--ds-blue-200);
+  --ds-on-primary: var(--ds-graphite-950);
+  --ds-focus: var(--ds-blue-400);
+
+  --ds-success: var(--ds-green-400);
+  --ds-success-soft: var(--ds-green-950);
+  --ds-warning: var(--ds-amber-400);
+  --ds-warning-soft: var(--ds-amber-950);
+  --ds-warning-ink: var(--ds-amber-400);
+  --ds-warning-ink-soft: var(--ds-amber-400);
+  --ds-warning-surface-hover: var(--ds-graphite-700);
+  --ds-danger: var(--ds-red-400);
+  --ds-danger-soft: var(--ds-red-950);
+  --ds-info: var(--ds-blue-400);
+  --ds-info-soft: var(--ds-blue-950);
+  --ds-accent-violet: var(--ds-violet-400);
+  --ds-accent-violet-soft: var(--ds-violet-950);
+  --ds-accent-sky: var(--ds-sky-400);
+  --ds-accent-sky-soft: var(--ds-sky-950);
+
+  /* Seleção — ver a nota no bloco claro. No escuro a primária JÁ é o azul claro
+     (#9cc0f0) e é a mais luminosa das duas, então é ela quem tinge: 20% sobre a
+     superfície dá #314153 = 1,56:1 sobre #16212c e 1,43:1 sobre o hover (#1c2836).
+     O --ds-info-soft que ocupava este papel dava 1,008:1 — e, por ser MAIS ESCURO
+     que a superfície, invertia a hierarquia: passar o mouse acendia a linha e
+     selecionar apagava. */
+  --ds-selected-veil: color-mix(in srgb, var(--ds-primary) 20%, transparent);
+  --ds-selected-veil-hover: color-mix(in srgb, var(--ds-primary) 30%, transparent);
+  --ds-selected-edge: var(--ds-primary);
+
+  /* No escuro o véu precisa ser mais denso: a diferença entre a superfície do
+     modal e o fundo já é menor, e 55% deixaria a tela de trás competindo. */
+  --ds-backdrop: color-mix(in srgb, var(--ds-graphite-950) 72%, transparent);
+}
+
+/* ============================================================
+   3. SHELL — igual nos dois temas
+   A sidebar grafite é a âncora do desenho: ela não clareia no tema claro nem
+   escurece mais no escuro. Manter idêntica também preserva o contrato do teste
+   "o shell do piloto vive na Frota e não vaza para Multas", que mede o grafite.
+   ============================================================ */
+body.tema-claro,
+body.tema-escuro {
+  --ds-shell-bg: var(--ds-graphite-900);
+  --ds-shell-bg-2: var(--ds-graphite-800);
+  --ds-shell-bg-active: var(--ds-graphite-750);
+  --ds-shell-tile: var(--ds-graphite-650);
+  --ds-shell-tile-hover: var(--ds-graphite-550);
+  --ds-shell-tile-line: var(--ds-graphite-450);
+  --ds-shell-line: var(--ds-graphite-600);
+  --ds-shell-ink: var(--ds-graphite-50);
+  --ds-shell-ink-2: var(--ds-graphite-150);
+  --ds-shell-muted: var(--ds-graphite-300);
+  --ds-shell-muted-2: var(--ds-graphite-350);
+  --ds-shell-accent: var(--ds-blue-300);
+  --ds-shell-accent-halo: color-mix(in srgb, var(--ds-blue-300) 12%, transparent);
+
+  /* Toast é superfície escura nos dois temas (flutua sobre a tela, não pertence
+     à superfície do conteúdo). */
+  --ds-toast-bg: var(--ds-toast-neutral);
+  --ds-toast-ok: var(--ds-green-700);
+  --ds-toast-erro: var(--ds-red-700);
+}
+
+/* ============================================================================
+   4. PONTE COM O LEGADO
+
+   Aqui está o truque que torna a migração barata: os componentes ANTIGOS
+   (pílulas, multiselect, botões, tabela — ~74% do styles.css) leem os tokens
+   antigos. Reapontando esses tokens para os semânticos DENTRO do escopo do
+   Design System, eles se vestem sozinhos, sem reescrever regra por regra e sem
+   um único `!important`.
+
+   ⚠️ A ponte é ESCOPADA de propósito. Reapontar --panel/--ink no `:root` global
+   repintaria o sistema inteiro de uma vez — o oposto de uma migração
+   incremental. Ela vale só onde o DS está ativo:
+       body.design-v2 .ds-modulo      → conteúdo de um módulo migrado
+       body.ds-shell                  → shell, quando a view ativa é migrada
+       body.design-v2 .modal-overlay  → QUALQUER modal do app.
+
+   ⚠️ Sobre o último: a ponte começou em `#modal` (Adicionar/Editar veículo, o
+   primeiro modal migrado) e generalizou para a classe na auditoria visual de
+   ago/2026. O motivo é que "migrar modal por ID" nunca ia terminar: são ~68
+   overlays, e enquanto isso cada um deles abria por cima de uma tela já vestida
+   pelo Design System com a tipografia de display, o raio de 18px e a sombra
+   pesada do legado — a mistura de dois produtos que a consolidação tinha ido
+   consertar. Como a ponte só REAPONTA variáveis que o legado já consumia
+   (--panel/--ink/--line/--radius...), um modal que ainda não foi olhado um a um
+   não quebra: ele apenas passa a ler os valores certos.
+
+   ⚠️ E vale só a partir de 768px, como no piloto: o celular fica intocado.
+   ============================================================================ */
+@media (min-width: 768px) {
+
+  body.design-v2 .ds-modulo,
+  body.design-v2 .modal-overlay,
+  body.ds-shell .topbar,
+  body.ds-shell .pill-menu-portaled,
+  body.ds-shell .msel-menu-flutuante {
+    --bg: var(--ds-surface-subtle);
+    --panel: var(--ds-surface);
+    --ink: var(--ds-ink);
+    --muted: var(--ds-muted);
+    --faint: var(--ds-muted);
+    --label: var(--ds-muted);
+    --line: var(--ds-line);
+    --row-hover: var(--ds-surface-hover);
+    --brand: var(--ds-primary);
+    --brand-dark: var(--ds-primary-hover);
+    --brand-2: var(--ds-focus);
+    --brand-halo: color-mix(in srgb, var(--ds-focus) 20%, transparent);
+    /* Seleção de linha, borda de CONTROLE e tinta sobre a marca: os componentes
+       vivem no styles.css (precisam valer fora de .ds-modulo e abaixo de 768px),
+       a ponte só entrega o valor certo aqui dentro. Mesmo contrato de --panel/--ink. */
+    --sel-veil: var(--ds-selected-veil);
+    --sel-veil-hover: var(--ds-selected-veil-hover);
+    --sel-edge: var(--ds-selected-edge);
+    --line-strong: var(--ds-line-strong);
+    --on-brand: var(--ds-on-primary);
+    --green: var(--ds-success);
+    --amber: var(--ds-warning);
+    --red: var(--ds-danger);
+    --red-soft: var(--ds-danger-soft);
+    --amber-soft: var(--ds-warning-soft);
+    /* superfície chapada: sombra só em flutuante (menu/modal/toast) */
+    --shadow: var(--ds-shadow-none);
+    --elev: var(--ds-shadow-float);
+    --elev-inset: none;
+    --glass-bg: var(--ds-surface);
+    --glass-border: var(--ds-line);
+    --glass-blur: 0px;
+    --radius: var(--ds-radius-lg);
+    --r-card: var(--ds-radius-lg);
+    --r-control: var(--ds-radius-sm);
+    /* uma família só na interface: --display passa a apontar para o corpo, o que
+       tira o Bricolage Grotesque da área migrada sem tocar nas outras telas */
+    --display: var(--body);
+  }
+
+  /* A sidebar é superfície escura e por isso tem a sua própria ponte: o azul
+     institucional seria invisível ali. */
+  body.ds-shell .sidebar {
+    --panel: var(--ds-shell-bg);
+    --glass-bg: var(--ds-shell-bg);
+    --glass-border: var(--ds-shell-line);
+    --glass-blur: 0px;
+    --bg: var(--ds-shell-bg-2);
+    --ink: var(--ds-shell-ink);
+    --muted: var(--ds-shell-muted);
+    --faint: var(--ds-shell-muted-2);
+    --label: var(--ds-shell-muted-2);
+    --line: var(--ds-shell-line);
+    --brand: var(--ds-shell-accent);
+    --brand-halo: var(--ds-shell-accent-halo);
+  }
+
+  /* Alto contraste CONVIVE com o Design System. Num módulo migrado quem pinta a
+     superfície é o DS — `body.design-v2 .ds-modulo .tabela-wrap` tem 3 classes e
+     vence as 2 de `body.alto-contraste-escuro .tabela-wrap` —, logo o véu certo
+     aqui é o do DS, só que mais forte, que é o que o modo pede: 32% dá 2,10:1
+     sobre a superfície escura. Especificidade (0,2,1), igual à da ponte; ganha
+     por vir depois no arquivo. */
+  body.alto-contraste .ds-modulo,
+  body.alto-contraste-escuro .ds-modulo {
+    --sel-veil: color-mix(in srgb, var(--ds-primary) 32%, transparent);
+    --sel-veil-hover: color-mix(in srgb, var(--ds-primary) 42%, transparent);
+  }
+
+}
+
+/* ============================================================================
+   5. PONTE MOBILE (<768px) — tokens semânticos da camada design-mobile.css
+
+   O celular tem semânticos próprios (--m-*) porque o modelo aprovado usa o
+   azul institucional como primária (no desktop a marca é grafite) e badges
+   pastel que os módulos do desktop não compartilham. Mesmo contrato dos
+   temas acima: o componente (design-mobile.css) nunca escreve cor; o tema
+   redefine a variável. Alto contraste continua por cima, intocado.
+   ============================================================================ */
+@media (max-width: 767px) {
+
+  body.tema-claro {
+    --m-primary: var(--ds-navy-800);
+    --m-on-primary: var(--ds-white);
+    --m-chip-bg: var(--ds-blue-100);
+    --m-chip-line: var(--ds-blue-200);
+    --m-tile-icone-bg: var(--ds-blue-100);
+    --m-badge-ok-bg: var(--ds-green-100);      --m-badge-ok-ink: var(--ds-green-700);
+    --m-badge-oficina-bg: var(--ds-orange-100); --m-badge-oficina-ink: var(--ds-orange-800);
+    --m-badge-slate-bg: var(--ds-slate-100);   --m-badge-slate-ink: var(--ds-slate-800);
+    --m-badge-danger-bg: var(--ds-red-100);    --m-badge-danger-ink: var(--ds-red-700);
+    --m-badge-amber-bg: var(--ds-amber-50);    --m-badge-amber-ink: var(--ds-amber-800);
+    --m-soft-pendente: var(--ds-red-50);
+    --m-soft-andamento: var(--ds-amber-25);
+    --m-trilha: var(--ds-mineral-50);
+  }
+
+  body.tema-escuro {
+    /* o azul institucional some no escuro; a primária vira o tom claro, como
+       na regra da seção 2 acima */
+    --m-primary: var(--ds-blue-300);
+    --m-on-primary: var(--ds-graphite-950);
+    --m-chip-bg: var(--ds-graphite-700);
+    --m-chip-line: var(--ds-graphite-500);
+    --m-tile-icone-bg: var(--ds-graphite-700);
+    --m-badge-ok-bg: var(--ds-green-950);      --m-badge-ok-ink: var(--ds-green-400);
+    --m-badge-oficina-bg: var(--ds-amber-950); --m-badge-oficina-ink: var(--ds-amber-400);
+    --m-badge-slate-bg: var(--ds-graphite-700); --m-badge-slate-ink: var(--ds-graphite-250);
+    --m-badge-danger-bg: var(--ds-red-950);    --m-badge-danger-ink: var(--ds-red-400);
+    --m-badge-amber-bg: var(--ds-amber-950);   --m-badge-amber-ink: var(--ds-amber-400);
+    --m-soft-pendente: var(--ds-red-950);
+    --m-soft-andamento: var(--ds-amber-950);
+    --m-trilha: var(--ds-graphite-700);
+  }
+
+  body.tema-claro,
+  body.tema-escuro {
+    /* ladrilho grafite (logo, item ativo da nav): âncora igual nos dois temas */
+    --m-tile: var(--ds-shell-tile);
+    --m-tile-line: var(--ds-shell-tile-line);
+    --m-nav-badge: var(--ds-red-600);
+    --m-veu: var(--ds-backdrop);
+
+    /* PONTE LEGADA DO CELULAR: a mesma lista da ponte desktop (seção 4 acima),
+       aplicada ao body inteiro — no celular não existe área "não migrada", e sem
+       isto as vars legadas caíam na paleta azulada antiga do styles.css (era o
+       "fundo diferente do site" reportado em ago/2026). --grid fica transparente:
+       a grade blueprint 44px do .main-area (styles.css) é proibida no desenho. */
+    --bg: var(--ds-surface-subtle);
+    --panel: var(--ds-surface);
+    --ink: var(--ds-ink);
+    --muted: var(--ds-muted);
+    --faint: var(--ds-muted);
+    --label: var(--ds-muted);
+    --line: var(--ds-line);
+    --row-hover: var(--ds-surface-hover);
+    --brand: var(--ds-primary);
+    --brand-dark: var(--ds-primary-hover);
+    --brand-2: var(--ds-focus);
+    --brand-halo: color-mix(in srgb, var(--ds-focus) 20%, transparent);
+    --sel-veil: var(--ds-selected-veil);
+    --sel-veil-hover: var(--ds-selected-veil-hover);
+    --sel-edge: var(--ds-selected-edge);
+    --line-strong: var(--ds-line-strong);
+    --on-brand: var(--ds-on-primary);
+    --green: var(--ds-success);
+    --amber: var(--ds-warning);
+    --red: var(--ds-danger);
+    --red-soft: var(--ds-danger-soft);
+    --amber-soft: var(--ds-warning-soft);
+    --grid: transparent;
+    --shadow: var(--ds-shadow-none);
+    --elev: var(--ds-shadow-float);
+    --elev-inset: none;
+    --glass-bg: var(--ds-surface);
+    --glass-border: var(--ds-line);
+    --glass-blur: 0px;
+    --radius: var(--ds-radius-lg);
+    --r-card: var(--ds-radius-lg);
+    --r-control: var(--ds-radius-sm);
+    --display: var(--body);
+  }
+
+}

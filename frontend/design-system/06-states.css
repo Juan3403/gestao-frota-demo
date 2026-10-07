@@ -1,0 +1,149 @@
+/* ============================================================================
+   06-states.css — ESTADOS E FEEDBACK
+
+   Quatro estados MUTUAMENTE EXCLUSIVOS: carregando · ok · vazio · erro.
+
+   ⚠️ A regra de fundo, que vale para todo módulo que migrar:
+   ZERO É UM DADO; "não consegui consultar" NÃO É. O caminho do vazio e o do
+   erro não podem ser o mesmo — foi o que fez a mesma falha aparecer quatro
+   vezes na tela (faixa + indicadores zerados + "nenhum registro" + "0 de 0").
+
+   ⚠️ E o outro par que não pode se misturar:
+   erro de CARGA fala pela FAIXA persistente (fica até resolver, com "Tentar de
+   novo"); erro de AÇÃO do usuário fala pelo TOAST (some sozinho). Um erro, um
+   canal.
+
+   O CSS aqui só desenha. A máquina de estados é do app.js.
+   ============================================================================ */
+
+@media (min-width: 768px) {
+
+/* ============================================================
+   1. CARREGANDO (esqueleto)
+   Substitui a tela em branco. `aria-hidden` fica no JS: o esqueleto é
+   decoração, quem anuncia o resultado é a região viva.
+   ============================================================ */
+body.design-v2 .ds-modulo .v2-skel { display: table-row; }
+body.design-v2 .ds-modulo .v2-skel td {
+  padding: var(--ds-space-3) var(--ds-space-6);
+  border-bottom: var(--ds-border) solid var(--ds-line);
+}
+body.design-v2 .ds-modulo .v2-skel-barra {
+  display: block; height: var(--ds-space-5);
+  border-radius: var(--ds-radius-xs);
+  background: linear-gradient(90deg,
+    var(--ds-surface-subtle) 25%,
+    var(--ds-canvas) 37%,
+    var(--ds-surface-subtle) 63%);
+  background-size: 400% 100%;
+  animation: v2Skel 1.3s ease-in-out infinite;
+}
+@keyframes v2Skel { from { background-position: 100% 50%; } to { background-position: 0 50%; } }
+@media (prefers-reduced-motion: reduce) {
+  body.design-v2 .ds-modulo .v2-skel-barra { animation: none; background: var(--ds-surface-subtle); }
+}
+
+/* ============================================================
+   2. VAZIO CONFIRMADO
+   Só aparece depois que os dados chegaram e confirmaram que a lista está mesmo
+   vazia. O componente já distingue "vazio de verdade" de "vazio por filtro" —
+   ver estadoVazio() no app.js.
+   ============================================================ */
+body.design-v2 .ds-modulo .vazio { color: var(--ds-muted); }
+/* o selo "sem registros" em mono uppercase sai */
+body.design-v2 .ds-modulo .vazio::before { content: none; }
+/* `estadoVazio()` monta o botão com `.btn.btn-primary.empty-acao`. Sem esta
+   regra ele sairia com o primário legado — gradiente, sombra colorida e
+   varredura — no meio de uma tela chapada. */
+body.design-v2 .ds-modulo .vazio .empty-acao {
+  background: var(--ds-primary);
+  border-color: var(--ds-primary);
+  color: var(--ds-on-primary);
+  border-radius: var(--ds-radius-sm);
+  box-shadow: var(--ds-shadow-none);
+  font-size: var(--ds-text-base);
+  font-weight: var(--ds-weight-medium);
+}
+body.design-v2 .ds-modulo .vazio .empty-acao:hover {
+  background: var(--ds-primary-hover);
+  border-color: var(--ds-primary-hover);
+  transform: none; box-shadow: var(--ds-shadow-none); filter: none;
+}
+body.design-v2 .ds-modulo .vazio .empty-acao::after { content: none; }
+
+/* `.empresa-vazio` (achado ao migrar Senhas) foi AVALIADO e REJEITADO como componente novo: o
+   CSS legado (`border:1px dashed var(--line); border-radius:var(--radius); color:var(--muted);
+   h3{color:var(--ink)}`) já usa só variáveis que a ponte com o legado (02-themes.css) REMAPEIA
+   dentro de `.ds-modulo` — logo já sai no visual certo sem nenhuma linha de CSS aqui. Escrever
+   uma regra própria repetindo os mesmos tokens seria duplicar CSS que já funciona. Usado, com a
+   mesma estrutura, em Senhas, Documentos e na sub-aba Termos da própria Multas (já migrada). */
+
+/* ============================================================
+   3. ERRO DE CARGA (faixa persistente)
+   ============================================================ */
+body.design-v2 .ds-modulo .v2-erro.v2-on {
+  display: flex; align-items: center; gap: var(--ds-space-6); flex-wrap: wrap;
+  margin-bottom: var(--ds-space-6);
+  padding: var(--ds-space-6) 14px;
+  border: var(--ds-border) solid color-mix(in srgb, var(--ds-danger) 32%, var(--ds-line));
+  border-left: var(--ds-border-accent) solid var(--ds-danger);
+  background: var(--ds-danger-soft);
+  border-radius: var(--ds-radius-lg);
+  font-size: var(--ds-text-md);
+  color: var(--ds-ink);
+}
+body.design-v2 .ds-modulo .v2-erro .v2-erro-tit { font-weight: var(--ds-weight-semibold); color: var(--ds-danger); }
+body.design-v2 .ds-modulo .v2-erro .btn {
+  height: var(--ds-control-h-sm); padding: 0 var(--ds-space-6);
+  border-radius: var(--ds-radius-sm); font-size: var(--ds-text-sm);
+}
+/* Durante o "Tentar de novo" a faixa deixa de acusar erro e vira progresso — o
+   botão continua lá (desabilitado) porque é ele que segura o foco do teclado. */
+body.design-v2 .ds-modulo .v2-erro.v2-tentando {
+  border-color: var(--ds-line);
+  border-left-color: var(--ds-muted);
+  background: var(--ds-surface-subtle);
+}
+body.design-v2 .ds-modulo .v2-erro.v2-tentando .v2-erro-tit { color: var(--ds-ink); }
+/* `aria-disabled` — e NÃO `disabled`: a propriedade nativa tira o foco do
+   elemento e o teclado cairia no <body> no meio da espera. A trava real contra
+   requisição dupla é do app.js. */
+body.design-v2 .ds-modulo .v2-erro .btn[aria-disabled="true"] { opacity: .6; cursor: default; }
+body.design-v2 .ds-modulo .v2-erro .btn[aria-disabled="true"]:hover {
+  background: var(--ds-surface); border-color: var(--ds-line-strong); color: var(--ds-ink);
+}
+
+/* ============================================================
+   4. DADOS INDISPONÍVEIS (erro sem nenhum conjunto válido)
+   O valor vira "—" e o RÓTULO fica: é ele que dá sentido ao traço. Sem
+   vermelho — quem explica o erro é a faixa, uma vez só.
+   ============================================================ */
+body.design-v2 .ds-modulo .v2-kpi-indisp .v2-kpi-val { color: var(--ds-muted); font-weight: var(--ds-weight-regular); }
+body.design-v2 .ds-modulo .v2-kpi-indisp .v2-kpi-rot { color: var(--ds-muted); }
+/* Linha neutra no corpo da tabela: mantém o cabeçalho e a moldura, sem afirmar
+   "nenhum registro". Sem `role="alert"` e sem um segundo botão. */
+body.design-v2 .ds-modulo .v2-indisp td {
+  height: 84px; text-align: center;
+  color: var(--ds-muted); font-size: var(--ds-text-base);
+  border-bottom: 0; background: transparent;
+}
+
+/* ============================================================
+   5. TOAST (erro de AÇÃO e confirmações)
+   Superfície escura nos dois temas: ele flutua sobre a tela e não pertence à
+   superfície do conteúdo. Escopado no shell — nos módulos não migrados o toast
+   continua o de sempre.
+   ============================================================ */
+body.ds-shell .toast {
+  border-radius: var(--ds-radius-sm);
+  padding: var(--ds-space-5) var(--ds-space-7);
+  font-size: var(--ds-text-md);
+  font-weight: var(--ds-weight-medium);
+  background: var(--ds-toast-bg);
+  box-shadow: var(--ds-shadow-toast);
+}
+body.ds-shell .toast.ok { background: var(--ds-toast-ok); }
+body.ds-shell .toast.erro { background: var(--ds-toast-erro); }
+body.ds-shell .toast-acao { border-radius: var(--ds-radius-sm); font-weight: var(--ds-weight-semibold); }
+
+}

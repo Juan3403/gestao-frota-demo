@@ -1,0 +1,56 @@
+#!/bin/sh
+# ============================================================================
+#  commit-msg — trava de versão/changelog
+#  Impede que código servido vá ao ar sem (1) subir a versão no package.json e
+#  (2) acrescentar a entrada nova no topo do CHANGELOG (backend/server.js).
+#
+#  Ativar UMA vez por máquina (funciona no GitHub Desktop e no git de terminal):
+#      git config core.hooksPath .githooks
+#
+#  Escape consciente (refator/correção SEM novidade visível ao usuário):
+#      inclua  [sem-versao]  na mensagem do commit.
+# ============================================================================
+
+MSGFILE="$1"
+MSG=$(cat "$MSGFILE" 2>/dev/null)
+
+# Merges e skips explícitos passam direto.
+case "$MSG" in
+  "Merge "*|*"[sem-versao]"*|*"[skip-version]"*) exit 0 ;;
+esac
+
+# Só cobra quando o código SERVIDO mudou (backend/server.js ou frontend/*.js|html|css).
+APP=$(git diff --cached --name-only | grep -E '^(backend/server\.js|frontend/.*\.(js|html|css))$')
+[ -z "$APP" ] && exit 0
+
+err() { printf '%s\n' "$1" >&2; }
+
+# Lê a versão da cópia EM STAGING (o que está sendo commitado), não do disco.
+pkg_new=$(git show :package.json 2>/dev/null | grep -m1 '"version"' | sed -E 's/.*"version"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/')
+pkg_old=$(git show HEAD:package.json 2>/dev/null | grep -m1 '"version"' | sed -E 's/.*"version"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/')
+chlog_top=$(git show :backend/server.js 2>/dev/null | grep -m1 -E "versao:[[:space:]]*'" | sed -E "s/.*versao:[[:space:]]*'([^']+)'.*/\1/")
+
+erro=0
+
+if [ -n "$pkg_old" ] && [ "$pkg_new" = "$pkg_old" ]; then
+  err ""
+  err "⛔ Commit barrado: o código mudou, mas a VERSÃO não subiu."
+  err "   package.json continua em $pkg_new."
+  err ""
+  err "   Faça:"
+  err "     1) suba o patch em package.json   (ex.: $pkg_new → próximo patch)"
+  err "     2) acrescente a entrada nova no TOPO do array CHANGELOG (backend/server.js, ~linha 169)"
+  err ""
+  err "   Refator/correção sem novidade visível? Inclua [sem-versao] na mensagem do commit."
+  erro=1
+fi
+
+if [ -n "$chlog_top" ] && [ "$pkg_new" != "$chlog_top" ]; then
+  err ""
+  err "⛔ Commit barrado: versão e CHANGELOG fora de sincronia."
+  err "   package.json = $pkg_new   •   topo do CHANGELOG = $chlog_top"
+  err "   Acrescente { versao: '$pkg_new', data: 'dd/mm/aaaa', mudancas: [...] } no TOPO do CHANGELOG (backend/server.js)."
+  erro=1
+fi
+
+exit $erro

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<meta name="author" content="Gestão RM">
+<title>Conferir documento – Gestão RM</title>
+<meta name="description" content="Confira a autenticidade de um recibo de entrega de material ou de uma ficha de EPI assinada eletronicamente." />
+<link rel="icon" type="image/png" sizes="64x64" href="/favicon-64.png" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* Tela pública auto-contida: os valores abaixo são cópia literal de
+     design-system/01-tokens.css + 02-themes.css (mesmo padrão do login —
+     a página não carrega o DS; ver docs/DESIGN.md §11.4). */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f3f5f2; --panel: #ffffff; --panel-subtle: #e9ede9;
+    --ink: #17211b; --muted: #5c685f; --line: #d4dad5; --line-strong: #808d85;
+    --brand: #31363e; --brand-hover: #4a5058; --on-brand: #ffffff; --focus: #565d66;
+    --green: #1f6f4a; --red: #b42318; --amber: #8a5700;
+    --radius: 8px;
+  }
+  body {
+    font-family: 'Hanken Grotesk', system-ui, sans-serif; background: var(--bg); color: var(--ink);
+    min-height: 100vh; padding: clamp(16px, 5vw, 48px) clamp(14px, 4vw, 24px);
+    display: flex; flex-direction: column; align-items: center; gap: 18px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .marca { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: -.01em; }
+  .marca span { font-size: clamp(17px, 4vw, 20px); }
+  .marca small { display: block; font-size: 10px; font-weight: 600; letter-spacing: .16em; color: var(--muted); text-transform: uppercase; }
+  .caixa {
+    width: 100%; max-width: 620px; background: var(--panel); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: clamp(18px, 4vw, 30px);
+  }
+  h1 { font-size: clamp(19px, 4.6vw, 24px); letter-spacing: -.02em; margin-bottom: 6px; }
+  .sub { color: var(--muted); font-size: 14px; line-height: 1.55; margin-bottom: 20px; }
+  form { display: flex; gap: 9px; flex-wrap: wrap; }
+  input {
+    flex: 1 1 220px; min-height: 44px; padding: 0 15px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 16px;
+    letter-spacing: .09em; text-transform: uppercase; text-align: center; font-weight: 500;
+    border: 1px solid var(--line-strong); border-radius: 4px; background: var(--panel); color: var(--ink);
+    transition: border-color .12s ease, box-shadow .12s ease;
+  }
+  input:focus { outline: none; }
+  input:focus-visible {
+    border-color: var(--focus);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 22%, transparent);
+  }
+  button {
+    flex: 0 0 auto; min-height: 44px; padding: 0 26px; font: inherit; font-weight: 600; font-size: 14px;
+    border: 0; border-radius: 4px; background: var(--brand); color: var(--on-brand); cursor: pointer;
+    transition: background .12s ease;
+  }
+  button:hover { background: var(--brand-hover); }
+  button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  button:disabled { opacity: .55; cursor: default; }
+
+  .selo { display: flex; align-items: center; gap: 13px; padding: 15px 17px; border-radius: var(--radius); margin-bottom: 20px; }
+  .selo-ico { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; flex: 0 0 auto; color: #fff; font-size: 21px; font-weight: 700; }
+  .selo-txt strong { display: block; font-size: 16px; margin-bottom: 2px; }
+  .selo-txt span { font-size: 13px; color: var(--muted); line-height: 1.5; }
+  .selo.ok { background: color-mix(in srgb, var(--green) 9%, var(--panel)); border: 1px solid color-mix(in srgb, var(--green) 30%, var(--line)); }
+  .selo.ok .selo-ico { background: var(--green); }
+  .selo.alerta { background: color-mix(in srgb, var(--amber) 11%, var(--panel)); border: 1px solid color-mix(in srgb, var(--amber) 34%, var(--line)); }
+  .selo.alerta .selo-ico { background: var(--amber); }
+  .selo.erro { background: color-mix(in srgb, var(--red) 8%, var(--panel)); border: 1px solid color-mix(in srgb, var(--red) 28%, var(--line)); }
+  .selo.erro .selo-ico { background: var(--red); }
+
+  .campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px 20px; margin-bottom: 20px; }
+  .campo-rot { font-size: 10px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); margin-bottom: 3px; }
+  .campo-val { font-size: 15px; font-weight: 600; overflow-wrap: anywhere; }
+  .secao-tit { font-size: 11px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); margin: 22px 0 10px; padding-top: 16px; border-top: 1px solid var(--line); }
+  .itens { display: flex; flex-direction: column; gap: 7px; }
+  .item { display: flex; justify-content: space-between; gap: 12px; padding: 10px 13px; background: var(--panel-subtle); border-radius: 4px; font-size: 14px; }
+  .item b { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .item span.tipo { color: var(--muted); font-size: 12px; display: block; }
+  .impressao { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; color: var(--muted); overflow-wrap: anywhere; }
+  .rodape { font-size: 12px; color: var(--muted); text-align: center; max-width: 620px; line-height: 1.6; }
+  .rodape a { color: var(--focus); }
+  [hidden] { display: none !important; }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e1013; --panel: #17191d; --panel-subtle: #1e2125;
+      --ink: #e8eaed; --muted: #a6acb3; --line: #282c32; --line-strong: #6e7780;
+      --brand: #bfc4ca; --brand-hover: #d5d9dd; --on-brand: #0e1013; --focus: #a6acb3;
+      --green: #5fd39b; --red: #f78c82; --amber: #f0b859;
+    }
+    .selo-ico { color: var(--bg); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="marca">
+    <img src="/icon-192.png" alt="" width="34" height="34" style="border-radius:8px" />
+    <div><span>Gestão RM</span><small>Conferência de documento</small></div>
+  </div>
+
+  <div class="caixa">
+    <h1>Este documento é autêntico?</h1>
+    <p class="sub">Digite o código impresso no documento (recibo de entrega de material ou ficha de EPI) ou aponte a câmera para o QR, e confira quem assinou, quando, e se o conteúdo continua o mesmo desde a assinatura.</p>
+    <form id="formVerificar">
+      <input id="codigo" maxlength="20" placeholder="XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false" aria-label="Código de verificação do documento" />
+      <button type="submit" id="btnVerificar">Conferir</button>
+    </form>
+  </div>
+
+  <div class="caixa" id="resultado" hidden></div>
+
+  <p class="rodape">Esta página confirma apenas a autenticidade da assinatura eletrônica de um documento emitido pelo sistema. Em caso de dúvida, procure o setor responsável.</p>
+
+  <script src="/verificar.js"></script>
+</body>
+</html>

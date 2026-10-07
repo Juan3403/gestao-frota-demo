@@ -1,0 +1,31 @@
+/* ============================================================================
+   design-ti.css — CAMADA DO MÓDULO INVENTÁRIO DE TI
+
+   Mesma ponte do design-epi.css, mesmo motivo: os apelidos do módulo
+   (`--ti-ok`/`--ti-warn`/`--ti-bad`/`--ti-mudo`, styles.css) são resolvidos no
+   `<body>` a partir de `var(--green)`/`var(--amber)`/`var(--red)`/`var(--muted)`
+   — e ficam ACIMA de `.ds-modulo` na árvore. A ponte do Design System
+   (02-themes.css) só redefine essas variáveis DENTRO de
+   `body.design-v2 .ds-modulo`; ela nunca alcança o `<body>`. Sem este arquivo,
+   as pílulas de domínio da aba (`.ti-sit`/`.ti-prazo`/`.ti-termo`, que leem
+   `var(--ti-*)`) ficariam presas na paleta do tema legado enquanto botões,
+   tabela e msel do mesmo módulo já trocaram para a do Design System.
+
+   `--ti-info` fica de fora de propósito: é hex fixo no legado (não deriva de
+   token de tema) — cor de domínio intencionalmente fixa, como nos outros módulos.
+
+   Escopado por ID pelo mesmo raciocínio do design-epi.css: `#ti` sozinho já
+   vence o `body { --ti-*: ... }` do legado (ID > elemento) e não vaza o
+   redefinido para outro módulo. Carrega DEPOIS do Design System.
+   ============================================================================ */
+
+@media (min-width: 768px) {
+
+body.design-v2 #ti {
+  --ti-ok: var(--ds-success);
+  --ti-warn: var(--ds-warning);
+  --ti-bad: var(--ds-danger);
+  --ti-mudo: var(--ds-muted);
+}
+
+}

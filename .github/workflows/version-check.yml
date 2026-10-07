@@ -1,0 +1,20 @@
+name: Versão & changelog
+# Rede de segurança: barra (❌ vermelho no commit/PR) quando o código vai ao ar
+# sem subir a versão no package.json + entrada no CHANGELOG. Espelha o hook local.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  versao:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Conferir bump de versão e CHANGELOG
+        env:
+          BEFORE: ${{ github.event.before }}
+          BASE_REF: ${{ github.base_ref }}
+        run: bash scripts/check-version.sh

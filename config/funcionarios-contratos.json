@@ -1,0 +1,58 @@
+{
+  "contratosFuncionarios": [
+    {
+      "sigla": "SUL",
+      "nome": "SUL EMPREENDIMENTOS",
+      "razao": "SUL SERVIÇOS ESPECIALIZADOS PARA CONSTRUÇÃO LTDA",
+      "contratos": [
+        {
+          "numero": "4600009101",
+          "nome": "MANUTENÇÃO CIVIL - BAHIA",
+          "frentes": ["PAULO AFONSO"]
+        },
+        {
+          "numero": "4500009202",
+          "nome": "MANUTENÇÃO CIVIL - SEDE",
+          "frentes": [""]
+        },
+        {
+          "numero": "4500009303",
+          "nome": "MANUTENÇÃO CIVIL - AL.PE",
+          "frentes": ["PE", "AL"]
+        },
+        {
+          "numero": "4500009404",
+          "nome": "MANUTENÇÃO DE LINHA - REISOLAMENTO",
+          "frentes": ["CAMPINA GRANDE", "NATAL"]
+        },
+        {
+          "numero": "ESCRITORIO-SUL",
+          "nome": "ESCRITÓRIO",
+          "frentes": [""]
+        }
+      ]
+    },
+    {
+      "sigla": "NTE",
+      "nome": "NORTE ENGENHARIA",
+      "razao": "NORTE CONSTRUTORA LTDA",
+      "contratos": [
+        {
+          "numero": "4600009505",
+          "nome": "ORION SERVIÇOS DE EXECUÇÃO DE OBRAS DE CONSTRUÇÃO CIVIL",
+          "frentes": [""]
+        },
+        {
+          "numero": "4600009606",
+          "nome": "ATLAS CONSTRUÇÃO PREDIAL",
+          "frentes": [""]
+        },
+        {
+          "numero": "ESCRITORIO-NTE",
+          "nome": "ESCRITÓRIO",
+          "frentes": [""]
+        }
+      ]
+    }
+  ]
+}

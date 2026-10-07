@@ -1,0 +1,96 @@
+/* ============================================================================
+   design-veiculo-modal.css — RESÍDUOS DO MODAL "Adicionar/Editar veículo" (#modal)
+
+   Primeiro modal do app trazido para o Design System (auditoria: ago/2026).
+   Na migração de #funcModal/#multaModal/#almoxModal (docs/DESIGN.md §11.7) a
+   maior parte do que só `#modal` tinha se mostrou padrão genérico de "modal de
+   formulário grande" — campo mais alto, calculados com destaque, painel de
+   histórico, largura reduzida com `.com-historico` — e subiu para
+   `design-system/08-modal.css` (casca comum + variante opt-in
+   `.modal-confortavel`) e `09-superficies.css` (raio/cor). Este arquivo
+   sobrevive com **dois resíduos**, não um — cada um por um motivo diferente,
+   registrados os dois pra não sumir de vista de novo:
+
+   1. `.veic-doc-box` (§1 abaixo) — como linha administrativa, não card. NÃO
+      promovido porque é um componente que só existe no domínio veículo (FIPE
+      vinculado, CRLV). Candidato a desaparecer quando o item de eliminar
+      `.veic-doc-box` (consolidar com `.prog-doc-*`, já reusado por
+      Fornecedores/EPI/Desmobilização/Programas) for feito — aí a pergunta
+      "linha ou card" deixa de existir, porque a classe deixa de existir.
+
+   2. `#inpFipe` (§2 abaixo) — campo de FIPE do veículo, calculado mas ainda
+      EDITÁVEL (sincroniza pelo botão "⟳ FIPE"), então não é `.calc`/`:disabled`
+      e não é pego pelo tratamento genérico de campo calculado. Fica de fora
+      desta entrega por CORTE DE ESCOPO (não é decisão de design, não é
+      exceção de identidade) — ainda é a última referência por ID do arquivo,
+      pendente de virar classe numa entrada futura.
+
+   Carrega DEPOIS de `08-modal.css`/`09-superficies.css`, por especificidade de
+   ID — mesmo motivo de sempre: o que aqui diverge do genérico é escopado só a
+   `#modal`, nunca solto.
+
+   Só ≥768px, como o resto do Design System — mobile intocado. Nenhuma cor
+   literal, nenhum !important — mesma disciplina do resto do DS.
+   ============================================================================ */
+
+@media (min-width: 768px) {
+
+/* ============================================================
+   1. .veic-doc-box (Valor FIPE vinculado, CRLV) — de card para componente
+   administrativo em linha: título / descrição / ação à direita, separados por
+   régua horizontal, sem fundo nem raio de card. `09-superficies.css §3` ainda
+   trata `.veic-doc-box` como painel (`--ds-radius-lg`) para quem mais usa a
+   classe fora daqui — as duas respostas convivem só porque este arquivo
+   carrega depois e ganha por especificidade de ID.
+   ============================================================ */
+body.design-v2 #modal .veic-doc-box {
+  padding: var(--ds-space-6) 0;
+  border: 0;
+  border-bottom: var(--ds-border) solid var(--ds-line);
+  border-radius: 0;
+  background: transparent;
+}
+body.design-v2 #modal .veic-doc-box:last-of-type { border-bottom: 0; }
+body.design-v2 #modal .veic-doc-label {
+  font-size: var(--ds-text-xs);
+  font-weight: var(--ds-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--ds-muted);
+}
+body.design-v2 #modal .veic-doc-nome { font-size: var(--ds-text-base); color: var(--ds-ink); }
+body.design-v2 #modal .veic-doc-acoes .btn {
+  height: var(--ds-control-h-sm);
+  border-radius: var(--ds-radius-sm);
+  font-size: var(--ds-text-sm);
+}
+body.design-v2 #modal .fipe-vinc { border-top-color: var(--ds-line); }
+body.design-v2 #modal .fipe-vinc select {
+  border-radius: var(--ds-radius-sm);
+  border-color: var(--ds-line-strong);
+  background: var(--ds-surface);
+  color: var(--ds-ink);
+}
+
+/* ============================================================
+   2. #inpFipe — não é "campo desabilitado": é INFORMAÇÃO (mesma família visual
+   dos valores calculados de Ricardo/Marcelo — fundo informativo + barra de
+   acento + tipografia maior), mesmo continuando editável (sincroniza sozinho
+   pelo botão "⟳ FIPE" — a maior parte do tempo é lido, não digitado).
+   ============================================================ */
+body.design-v2 #modal .form-grid #inpFipe {
+  background: var(--ds-info-soft);
+  border-color: var(--ds-line);
+  border-left: var(--ds-border-accent) solid var(--ds-info);
+  color: var(--ds-ink-strong);
+  font-size: var(--ds-text-lg);
+  font-weight: var(--ds-weight-bold);
+  font-variant-numeric: tabular-nums;
+}
+/* O FIPE continua interativo — o acento não pode ler como "travado". */
+body.design-v2 #modal .form-grid #inpFipe:focus {
+  border-left-color: var(--ds-info);
+  border-color: var(--ds-focus);
+}
+
+}

@@ -1,0 +1,81 @@
+/* ============================================================
+   10. REDIMENSIONAMENTO DE COLUNAS (estilo Excel)
+   Par do bloco global no app.js ("REDIMENSIONAMENTO DE COLUNAS"):
+   o JS marca `.ds-col-borda` no <th> quando o mouse está na zona
+   da divisória, liga `.ds-tabela-redim` na tabela ao primeiro
+   arraste e `.ds-redimensionando` no <body> durante o gesto.
+   Nada aqui cita módulo — vale para QUALQUER `.tabela-wrap`.
+   Só desktop: no celular as tabelas viram cartões
+   (design-mobile.css) e não existe divisória para arrastar.
+   ============================================================ */
+@media (min-width: 768px) {
+  /* Divisórias de coluna estilo planilha: uma linha vertical PERMANENTE na
+     borda direita de cada th folha do cabeçalho (só no cabeçalho — o tbody não
+     ganha grade). É ela a área de arraste: a zona funcional (COLW_ZONA_PX, 8px
+     no app.js, dos DOIS lados da linha) é maior que a linha de propósito — não
+     precisa acertar o pixel. Hierarquia: discreta sempre → primária translúcida
+     no hover (`.ds-col-borda`) → primária cheia durante o arraste
+     (`.ds-col-redimensionando`, acesa mesmo com o mouse longe do th).
+     th[colspan] (agrupador) fica de fora. O `position: relative` vai em
+     `:where()` (especificidade zero) para NÃO atropelar th sticky que vive em
+     .tabela-wrap (ex.: prévia de importação de Fornecedores) — sticky também é
+     "positioned", então o ::after ancora nele do mesmo jeito. */
+  :where(.tabela-wrap thead th:not([colspan])) { position: relative; }
+  .tabela-wrap thead th:not([colspan])::after {
+    content: "";
+    position: absolute;
+    right: 0; top: 0; bottom: 0;
+    width: var(--ds-border);
+    background: var(--ds-line-strong);
+    pointer-events: none;
+  }
+  .tabela-wrap thead th.ds-col-borda::after {
+    width: 2px;
+    background: var(--ds-primary);
+    opacity: 0.55;
+  }
+  body.ds-redimensionando .tabela-wrap th.ds-col-redimensionando::after {
+    width: 3px;
+    background: var(--ds-primary);
+    opacity: 0.9;
+  }
+  /* cursor da zona — também aplicado inline pelo JS: um seletor legado por #id
+     (ex.: cabeçalho ordenável da Contabilidade) venceria a classe, e !important
+     é proibido no projeto */
+  .tabela-wrap th.ds-col-borda { cursor: col-resize; }
+
+  /* durante o arraste: cursor estável na página toda e sem seleção
+     de texto acidental (o mouse varre células com conteúdo) */
+  body.ds-redimensionando { cursor: col-resize; user-select: none; }
+  body.ds-redimensionando .tabela-wrap th { cursor: col-resize; }
+
+  /* Tabela com largura manual. `fixed` faz a <col> mandar na largura (o td
+     acompanha o th). A LARGURA da tabela é gravada em px pelo JS (soma dos
+     <col> — sincronizarLarguraColw): `width:auto` clampa no container e
+     espreme as larguras pedidas, e `width:max-content` faz o Chromium medir o
+     CONTEÚDO das células mesmo em fixed e inflar colunas encolhidas — os dois
+     testados e descartados. `min-width:100%` fica de guarda: quando falta
+     largura explícita (coluna recém-restaurada), estica até encher o wrapper. */
+  .ds-tabela-redim { table-layout: fixed; min-width: 100%; }
+
+  /* conteúdo não estoura a largura escolhida (clipa como no Excel) */
+  .ds-tabela-redim th,
+  .ds-tabela-redim td { overflow: hidden; text-overflow: ellipsis; }
+
+  /* Botão "restaurar largura das colunas" na toolbar — mesma régua do
+     controle de densidade ao lado (05-components §5). Só aparece
+     ([hidden] via JS) quando a section tem largura salva. */
+  body.design-v2 .ds-modulo .v2-colw-reset {
+    appearance: none; cursor: pointer; font: inherit;
+    flex: 0 0 auto; width: 32px; height: var(--ds-control-h);
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--ds-surface); color: var(--ds-muted);
+    border: var(--ds-border) solid var(--ds-line-strong);
+    border-radius: var(--ds-radius-sm);
+  }
+  body.design-v2 .ds-modulo .v2-colw-reset:hover {
+    background: var(--ds-surface-subtle);
+    color: var(--ds-ink);
+  }
+  body.design-v2 .ds-modulo .v2-colw-reset[hidden] { display: none; }
+}

@@ -1,0 +1,1292 @@
+/* ============================================================================
+   design-mobile.css — camada MOBILE (<768px), modelo aprovado de ago/2026.
+
+   O celular deixa de ser o desktop espremido: sidebar some, navegação numa
+   barra inferior fixa (Início / Frota / [+] / Multas / Perfil), demais áreas
+   num sheet aberto pela topbar, listas em CARTÕES (via data-label emitido
+   pelos renders), toolbar em UMA linha (busca + Filtros + ⋯) e KPIs em faixa
+   contínua. O lugar do meio da barra é a AÇÃO da tela (#mnavAdd), não uma aba:
+   substituiu o antigo botão flutuante, que cobria os cartões.
+
+   REGRAS DA CAMADA:
+   - Tudo dentro de UM @media (max-width: 767px); >=768px é o Design System,
+     intocado. A única regra fora da media query é o display:none dos elementos
+     exclusivos do celular.
+   - Este arquivo ENTRA no test/design-system.test.js: nenhuma cor literal
+     (semânticos --m-* no 02-themes.css §5; superfícies pelas vars legadas
+     --panel/--ink/--muted/--line, que os temas já redefinem), nenhum
+     !important, raio/sombra/espessura só por token.
+   - Não edita styles.css nem muda nada >=768px; só sobrepõe.
+   - Arquivo listado no SHELL do sw.js (regra do próprio sw.js).
+   ============================================================================ */
+
+/* Elementos que SÓ existem no celular: invisíveis no desktop, sempre. */
+#mnav, #msheet, #mdots, #btnChangelogTop, #btnAreasTop, #mFrotaDashBars, #mMultasKpis, .resumo-celular,
+#veicMSub, #veicMTabs, #veicMEtapas, #veicMVoltar, #veicMAvancar,
+#multaMSub, #multaMTabs, #multaMEtapas, #multaMVoltar, #multaMAvancar { display: none; }
+/* Itens que o JS injeta no menu "⋯" só para o celular (Selecionar todos / Desfazer): no
+   desktop esses controles continuam visíveis na própria toolbar, e o menu os duplicava —
+   sincronizarKebabMobile() cria sempre, quem decide onde aparecem é esta regra.
+   ⚠️ A classe sozinha (0,1,0) PERDE para `body.design-v2 .v2-kebab-menu.aberto :is(.btn, button)`
+   (05-components.css:525, 0,4,1), que transforma todo botão do menu em item flex. Como
+   `!important` é proibido nesta camada, o caminho é igualar o contexto e dobrar a classe. */
+body.design-v2 .v2-kebab-menu.aberto .m-kebab-item.m-kebab-item { display: none; }
+
+@media (max-width: 767px) {
+
+  /* ===== 1. Shell: sidebar some, conteúdo em coluna única ===== */
+  /* o swipe de sub-aba não pode disparar o "voltar" por arrasto do navegador
+     (a bolha branca com seta azul do Chrome) */
+  html, body { overscroll-behavior-x: none; }
+  #sidebar, .sidebar { display: none; }
+  .app-shell { display: block; }
+  /* fundo CHAPADO: anula a grade blueprint 44px do .main-area legado (styles.css) */
+  .main-area { width: 100%; background-color: var(--bg); background-image: none; }
+  /* O rodapé reserva a barra (69px) + a saliência da pastilha central. Só isso quando a
+     tela não tem sub-abas: reservar espaço para bolinhas que não existem deixava um vão
+     morto embaixo da lista. Onde as bolinhas aparecem, o `:has` devolve a altura delas. */
+  main { padding: 14px 14px 88px; }
+  body.tem-mdots main { padding-bottom: 128px; }
+  main > .view { display: none; }
+  main > .view.active { display: block; }
+  .view { overflow-x: hidden; }
+  .view.active > * + * { margin-top: 12px; }
+  .page-linha { display: none; }
+
+  /* ===== 2. Topbar: sticky, ladrilho do logo + título/subtítulo + 2 ghosts ===== */
+  .topbar {
+    position: sticky; top: 0; z-index: 60;
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px;
+    background: var(--panel);
+    border-bottom: var(--ds-border) solid var(--line);
+    box-shadow: none; border-radius: 0;
+  }
+  .page-head { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
+  /* Ladrilho do logo (grafite nos dois temas); o SVG da aba sai, o glifo entra por máscara */
+  #pageIcone {
+    width: 38px; height: 38px; flex: 0 0 auto;
+    border-radius: var(--ds-radius-lg);
+    background: var(--m-tile);
+    border: var(--ds-border) solid var(--m-tile-line);
+    display: grid; place-items: center;
+  }
+  #pageIcone svg { display: none; }
+  #pageIcone::before {
+    content: ''; width: 24px; height: 24px; display: block;
+    background: var(--ds-white);
+    -webkit-mask: url(/img/logo-rm.png) center / contain no-repeat;
+            mask: url(/img/logo-rm.png) center / contain no-repeat;
+  }
+  .page-head-txt { min-width: 0; }
+  .page-title {
+    margin: 0; font-size: 18px; font-weight: var(--ds-weight-bold); letter-spacing: -.025em;
+    line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    color: var(--ink);
+  }
+  .page-sub {
+    font-size: 11.5px; color: var(--muted);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  /* Só o histórico; o resto (hub, tema, ferramentas) não pertence ao modelo.
+     SAIR saiu daqui: ação sensível não fica exposta na navegação principal — mora na
+     tela de Perfil (o botão segue no DOM, oculto, porque o menu delega o clique a ele). */
+  .topbar-actions { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+  #btnVoltarHub, .topbar-actions .tema-wrap, .topbar-actions .ferramentas-wrap,
+  .topbar .topbar-actions #btnSair { display: none; }
+  .topbar-actions .hist-wrap > .btn.icone-only, .topbar .topbar-actions #btnAreasTop {
+    width: 36px; height: 36px; padding: 0;
+    border-radius: var(--ds-radius-sm);
+    border: var(--ds-border) solid var(--line-strong, var(--ds-mineral-500));
+    background: var(--panel); color: var(--muted);
+    display: grid; place-items: center;
+    box-shadow: none; transform: none;
+    cursor: pointer; font-family: inherit;
+  }
+  /* aberto = mesmo destaque do disclosure do DS (o sheet está em cena) */
+  .topbar .topbar-actions #btnAreasTop[aria-expanded="true"] { background: var(--m-tile); color: var(--ds-white); border-color: var(--m-tile); }
+
+  /* ===== 3. Barra de navegação inferior (só ícones) ===== */
+  #mnav {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 70;
+    display: grid; grid-template-columns: repeat(5, 1fr);
+    background: var(--panel);
+    border-top: var(--ds-border) solid var(--line);
+    padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
+  }
+  .mnav-btn {
+    position: relative; display: flex; align-items: center; justify-content: center;
+    border: none; background: none; cursor: pointer; min-height: 44px; padding: 4px 0;
+    color: var(--muted); font-family: inherit;
+  }
+  .mnav-btn > span:not(.mnav-tile):not(.mnav-badge) { display: none; } /* sem rótulo */
+  /* aba trancada por permissão: some da barra sem desalinhar as outras 4 colunas */
+  .mnav-btn.indisponivel { visibility: hidden; }
+  .mnav-tile {
+    width: 42px; height: 28px; border-radius: var(--ds-radius-lg);
+    display: grid; place-items: center; color: var(--muted);
+    transition: background var(--ds-transition-fast), color var(--ds-transition-fast);
+  }
+  .mnav-btn.ativo .mnav-tile { background: var(--m-tile); color: var(--ds-white); }
+  .mnav-badge {
+    position: absolute; top: 0; right: calc(50% - 22px);
+    min-width: 17px; height: 17px; border-radius: var(--ds-radius-pill); padding: 0 4px;
+    background: var(--m-nav-badge); color: var(--ds-white);
+    font-family: 'JetBrains Mono', monospace; font-size: 9.5px; font-weight: var(--ds-weight-bold);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .mnav-badge[hidden] { display: none; }
+  /* Botão central = AÇÃO principal (adicionar), não aba: pastilha redonda maior, cheia,
+     na cor de marca e elevada acima da borda — o anel na cor do painel recorta a
+     saliência, mantendo o botão preso à barra em vez de flutuar solto sobre a lista.
+     Como é ação e não estado, ele nunca recebe `.ativo`: só a aba em cena acende. */
+  #mnavAdd .mnav-tile {
+    width: 54px; height: 54px; border-radius: var(--ds-radius-pill);
+    background: var(--m-primary); color: var(--m-on-primary);
+    margin-top: -32px;
+    border: var(--ds-border-accent) solid var(--panel);
+    box-shadow: var(--ds-shadow-float);
+  }
+  #mnavAdd .mnav-tile svg { width: 24px; height: 24px; }
+  #mnavAdd:active .mnav-tile { transform: scale(.94); }
+  /* Sem cadastro nesta tela (ou sem permissão de editar): apagado, mas ainda clicável —
+     o toque explica o motivo num toast, o que é melhor que um botão mudo. */
+  #mnavAdd.sem-acao .mnav-tile { background: var(--m-trilha); color: var(--muted); box-shadow: var(--ds-shadow-none); }
+  /* Perfil: avatar pequeno (26px) dentro de um alvo de toque cheio — o tile ocupa a
+     célula inteira e a altura mínima do botão, então o dedo acerta bem além do avatar. */
+  #mnavPerfil .mnav-tile { width: 100%; height: 44px; }
+  .mnav-avatar .avatar-user {
+    width: 26px; height: 26px; border-radius: var(--ds-radius-pill);
+    display: grid; place-items: center; overflow: hidden; font-size: 10px;
+  }
+  .mnav-avatar .avatar-user img { width: 100%; height: 100%; object-fit: cover; }
+  #mnavPerfil[aria-expanded="true"] .avatar-user { box-shadow: 0 0 0 2px var(--m-tile); }
+  /* O menu do usuário (o mesmo do desktop) precisa caber na tela e ficar acima da barra */
+  .user-menu.fixado { max-width: calc(100vw - 16px); z-index: 90; }
+
+  /* ===== Tela de Perfil (o #userMenu em modo tela cheia, aberto pelo botão da barra) =====
+     Mesmo conteúdo e mesma delegação de cliques do menu do desktop; aqui ele ocupa a tela
+     inteira, com alvos de toque maiores e grupos com respiro.
+     ⚠️ z-index ABAIXO do #mnav (70) — foi o que recortava o botão central: com 90 e
+     `bottom: 60px`, esta superfície opaca terminava 17px ACIMA da borda da barra e pintava
+     por cima da saliência da pastilha (que sobe 32px). O botão nunca mudou de tamanho nem
+     de lugar; ele estava coberto. A barra é a camada mais alta do celular em QUALQUER
+     tela — quem abre por cima do conteúdo fica abaixo dela.
+     Com isso o painel pode ir até `bottom: 0`: a barra (opaca) cobre o pé, e o
+     padding-bottom reserva barra + saliência para o último item (Sair) não sumir. */
+  .user-menu.fixado.tela-perfil {
+    left: 0; right: 0; top: 0; bottom: 0;
+    z-index: 66;
+    width: auto; min-width: 0; max-width: none; max-height: none;
+    border: none; border-radius: 0; box-shadow: var(--ds-shadow-none);
+    background: var(--bg);
+    /* 108 = barra (69) + a saliência da pastilha (32) + respiro; o env() acompanha o Home
+       Indicator, que também estica a barra. Apertado demais e o "Sair" acaba atrás dela. */
+    padding: 12px 14px calc(108px + env(safe-area-inset-bottom));
+    gap: 4px;
+    animation: msheetUp .22s cubic-bezier(.2, .8, .3, 1);
+  }
+  .user-menu.tela-perfil .um-topo {
+    padding: 14px 12px 16px; gap: 14px;
+    background: var(--panel); border: var(--ds-border) solid var(--line);
+    border-radius: var(--ds-radius-lg); margin-bottom: 8px;
+  }
+  .user-menu.tela-perfil .um-topo .avatar-user { width: 56px; height: 56px; font-size: 18px; }
+  .user-menu.tela-perfil .um-topo-nome { font-size: 16.5px; }
+  .user-menu.tela-perfil .um-topo-sub { font-size: 13px; }
+  .user-menu.tela-perfil button {
+    min-height: 50px; font-size: 14.5px; gap: 12px;
+    padding: 10px 12px; border-radius: var(--ds-radius-lg);
+    background: var(--panel); border: var(--ds-border) solid var(--line);
+  }
+  .user-menu.tela-perfil button svg { width: 18px; height: 18px; }
+  .user-menu.tela-perfil .um-grupo { padding: 14px 4px 6px; font-size: 10.5px; }
+  .user-menu.tela-perfil .um-sep { display: none; } /* os grupos rotulados já separam */
+  .user-menu.tela-perfil .um-estado { font-size: 12.5px; }
+  .user-menu.tela-perfil .um-sair { margin-top: 10px; }
+  .user-menu.tela-perfil .um-tema { min-height: 46px; }
+
+  /* ===== 4. Sheet "Mais" (todas as áreas) ===== */
+  #msheet { display: block; }
+  #msheet[hidden] { display: none; }
+  .msheet-fundo { position: fixed; inset: 0; z-index: 80; background: var(--m-veu); border: 0; padding: 0; }
+  .msheet-painel {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 81;
+    background: var(--panel); color: var(--ink);
+    border-radius: var(--ds-radius-lg) var(--ds-radius-lg) 0 0;
+    padding: 14px 16px calc(20px + env(safe-area-inset-bottom));
+    box-shadow: var(--ds-shadow-float);
+    animation: msheetUp .22s cubic-bezier(.2, .8, .3, 1);
+    max-height: 76vh; overflow-y: auto;
+  }
+  @keyframes msheetUp { from { transform: translateY(24px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .msheet-alca { width: 38px; height: 4px; border-radius: var(--ds-radius-pill); background: var(--line); margin: 0 auto 14px; }
+  .msheet-titulo { font-size: 12.5px; font-weight: var(--ds-weight-semibold); color: var(--muted); margin-bottom: 10px; }
+  .msheet-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .msheet-item {
+    display: flex; flex-direction: column; align-items: center; gap: 7px;
+    background: var(--panel); border: var(--ds-border) solid var(--line);
+    border-radius: var(--ds-radius-lg); padding: 14px 6px; min-height: 44px; cursor: pointer;
+    font-family: inherit; color: var(--ink);
+  }
+  .msheet-item:active { transform: scale(.96); }
+  .msheet-item svg { width: 22px; height: 22px; color: var(--m-primary); }
+  .msheet-item span { font-size: 11.5px; font-weight: var(--ds-weight-semibold); text-align: center; line-height: 1.25; }
+  .msheet-item.ativo { border-color: var(--m-tile-line); background: var(--panel); }
+
+  /* ===== 5. Ação principal: o botão do meio da barra (o flutuante foi removido) =====
+     O #mfab cobria a informação dos cartões e disputava espaço com as bolinhas de
+     sub-aba; quem cadastra agora é #mnavAdd (seção 3). Os botões "adicionar" das
+     toolbars continuam escondidos no celular — a ação é uma só, e mora na barra. */
+  #btnAdicionar, #btnAddMulta, #btnAddRast, #btnAddMnt, #btnAddAbt, #btnAddForn, #btnAddContr { display: none; }
+
+  /* Feedback do swipe de sub-aba: a tela entrante desliza do lado de onde o dedo
+     veio (classe posta SÓ pelo gesto, em instalarSwipeSubtabs — re-render normal
+     de lista continua sem animação, regra do DESIGN.md §9) */
+  @keyframes mSwipeEsq { from { transform: translateX(16px); opacity: .5; } to { transform: none; opacity: 1; } }
+  @keyframes mSwipeDir { from { transform: translateX(-16px); opacity: .5; } to { transform: none; opacity: 1; } }
+  .subview.m-swipe-esq { animation: mSwipeEsq .2s ease; }
+  .subview.m-swipe-dir { animation: mSwipeDir .2s ease; }
+
+  /* ===== 6. Sub-abas: o trilho SOME no celular; as bolinhas #mdots assumem
+     (renderDotsSubtabs no app.js). O swipe e o título da topbar dizem onde
+     você está; tocar numa bolinha troca de sub-aba. ===== */
+  .subtabs { display: none; }
+  /* Acima da pastilha central, que sobe 32px além da barra — a 64px as bolinhas ficavam
+     atrás do "+". Alinhadas à direita para não brigarem com ele no eixo do centro.
+     A 70px encostavam na barra (1px de folga, medido): 84px dá o mesmo respiro que as
+     faixas da tela usam entre si e desgruda o indicador da navegação. */
+  #mdots {
+    position: fixed; right: 14px; z-index: 65;
+    bottom: calc(84px + env(safe-area-inset-bottom));
+    display: flex; align-items: center; gap: 4px;
+    background: var(--panel);
+    border: var(--ds-border) solid var(--line);
+    border-radius: var(--ds-radius-pill);
+    padding: 4px 8px;
+  }
+  #mdots[hidden] { display: none; }
+  .mdot {
+    width: 19px; height: 24px; padding: 0; border: none; background: none; cursor: pointer;
+    display: grid; place-items: center; /* alvo de toque maior que a bolinha */
+  }
+  .mdot::before {
+    content: ''; width: 7px; height: 7px;
+    border-radius: var(--ds-radius-pill);
+    background: var(--line-strong, var(--ds-mineral-500));
+    transition: width var(--ds-transition-fast), background var(--ds-transition-fast);
+  }
+  .mdot.ativo::before { width: 18px; background: var(--m-primary); }
+
+  /* ===== 7. Toolbar: UMA linha (busca + Filtros + ⋯) =====
+     Sem a caixa do legado (fundo branco + borda + padding 4/18/14 que desalinhava
+     a busca 3px acima dos botões): a linha é só os controles, na mesma régua. */
+  .toolbar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+    background: none; border: none; border-radius: 0; padding: 0; margin: 0; box-shadow: none;
+  }
+  .toolbar > * { margin: 0; align-self: center; }
+  /* o legado estica a busca (align-self mais específico); aqui ela volta ao centro */
+  .view .toolbar > .busca, .view .toolbar > input[type="search"] { align-self: center; margin: 0; }
+  .toolbar > .busca, .toolbar input[type="search"] {
+    flex: 1 1 160px; min-width: 0; height: 42px;
+    border-radius: var(--ds-radius-sm);
+    border: var(--ds-border) solid var(--line-strong, var(--ds-mineral-500));
+    background: var(--panel); color: var(--ink);
+    /* lupa dentro do campo (nome de cor no SVG de propósito: hex não entra nesta camada) */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='gray' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: 12px center; background-size: 16px;
+    padding-left: 36px;
+  }
+  /* 03-base.css esconde o DOM exclusivo do DS fora de >=768px; no celular o
+     botão de Filtros e o ⋯ voltam (o painel/menu abre como sheet/flutuante) */
+  .v2-filtros-btn, .v2-kebab-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    height: 42px; min-width: 42px; padding: 0 12px;
+    border-radius: var(--ds-radius-sm);
+    border: var(--ds-border) solid var(--line-strong, var(--ds-mineral-500));
+    background: var(--panel); color: var(--ink);
+    font-size: 13px; font-weight: var(--ds-weight-semibold);
+    box-shadow: none; transform: none;
+    flex: 0 0 auto; box-sizing: border-box;
+  }
+  .v2-kebab-btn { width: 42px; padding: 0; }
+  /* Filtros + ⋯ formam um grupo único (segmented): cantos internos retos e o ⋯
+     encosta no Filtros anulando o gap da toolbar e sobrepondo 1px de borda */
+  .v2-filtros-btn { border-radius: var(--ds-radius-sm) 0 0 var(--ds-radius-sm); }
+  .toolbar .v2-kebab-btn { border-radius: 0 var(--ds-radius-sm) var(--ds-radius-sm) 0; margin-left: -9px; }
+  .v2-filtros-cont {
+    min-width: 18px; height: 18px; padding: 0 5px;
+    border-radius: var(--ds-radius-pill);
+    background: var(--m-primary); color: var(--m-on-primary);
+    font-size: 11px; font-weight: var(--ds-weight-bold);
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .v2-filtros-cont[hidden] { display: none; }
+  .toolbar-mais { display: contents; }
+  .v2-kebab-menu { display: none; }
+  .v2-kebab-menu.aberto {
+    display: flex; flex-direction: column; align-items: stretch; gap: 4px;
+    background: var(--panel); color: var(--ink);
+    border: var(--ds-border) solid var(--line);
+    border-radius: var(--ds-radius-lg);
+    box-shadow: var(--ds-shadow-float);
+    padding: 8px; min-width: 200px; z-index: 90;
+  }
+  .v2-kebab-menu.aberto .btn {
+    justify-content: flex-start; text-align: left; width: 100%;
+    border: none; background: transparent; color: var(--ink);
+    border-radius: var(--ds-radius-sm); min-height: 40px;
+  }
+  /* fila de chips de filtro ativo (o 03-base a esconde fora do DS) */
+  .v2-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .v2-chips:empty { display: none; }
+  .v2-erro { display: block; }
+  /* Selecionar todos e Desfazer saem da linha: viram itens do ⋯ (sincronizarKebabMobile) */
+  .toolbar label.sel-todos, #btnDesfazer { display: none; }
+  /* Contratos ainda tem utilitários inline (sem ⋯): saem da linha no celular */
+  #btnExportContr, #btnImportContr, #btnCompletarSeriesContr { display: none; }
+  /* no celular eles voltam (mesma especificidade dobrada da regra acima, ver comentário lá) */
+  body.design-v2 .v2-kebab-menu.aberto .m-kebab-item.m-kebab-item { display: flex; text-align: left; }
+  body.design-v2 .v2-kebab-menu.aberto .m-kebab-item.m-kebab-item[hidden] { display: none; }
+
+  /* Painel de filtros com botão (aria-controls): fechado some, aberto vira SHEET */
+  .toolbar .filtros[id] { display: none; }
+  .v2-filtros-tit { display: block; font-size: 14px; font-weight: var(--ds-weight-bold); color: var(--ink); }
+  .filtros.aberto[id] {
+    position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 82;
+    display: flex; flex-direction: column; align-items: stretch; gap: 10px;
+    background: var(--panel);
+    border: var(--ds-border) solid var(--line);
+    border-radius: var(--ds-radius-lg) var(--ds-radius-lg) 0 0;
+    box-shadow: var(--ds-shadow-float);
+    padding: 16px 16px calc(20px + env(safe-area-inset-bottom));
+    max-height: 76vh; overflow-y: auto;
+    animation: msheetUp .22s cubic-bezier(.2, .8, .3, 1);
+    width: auto; max-width: none;
+  }
+  .filtros.aberto[id] .msel { width: 100%; }
+  .filtros.aberto[id] .msel .msel-btn { width: 100%; max-width: none; }
+  .filtros.aberto[id] > .btn { min-height: 44px; }
+  /* Filtros inline (sem botão: Contratos, Vistorias, Notas): fileira rolável */
+  .toolbar .filtros:not([id]) {
+    display: flex; flex-wrap: nowrap; flex: 1 1 100%; gap: 8px; overflow-x: auto;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: 2px;
+  }
+  .toolbar .filtros:not([id])::-webkit-scrollbar { display: none; }
+  .toolbar .filtros:not([id]) .msel { flex: 0 0 auto; }
+
+  /* ===== 8. Faixa de KPIs: grade contínua com divisórias de 1px ===== */
+  .v2-kpis, .cards.v2-kpis {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+    background: var(--line);
+    border: var(--ds-border) solid var(--line);
+    border-radius: var(--ds-radius-lg); overflow: hidden;
+    padding: 0; margin: 0 0 12px;
+  }
+  /* número em cima, rótulo embaixo (fotos do modelo) — sem tocar no markup */
+  .v2-kpi, .cards.v2-kpis .card {
+    background: var(--panel); border: none; border-radius: 0;
+    padding: 12px; margin: 0; box-shadow: none; min-width: 0;
+    display: flex; flex-direction: column-reverse; justify-content: flex-end;
+  }
+  .v2-kpi-rot, .cards.v2-kpis .rotulo { display: block; font-size: 11px; color: var(--muted); font-weight: var(--ds-weight-semibold); }
+  .v2-kpi-val, .cards.v2-kpis .valor {
+    display: block; font-family: inherit; font-size: 20px; font-weight: var(--ds-weight-bold);
+    font-variant-numeric: tabular-nums; color: var(--ink); line-height: 1.2; margin-bottom: 2px;
+  }
+  .v2-kpi-nota { display: none; }
+  /* cor de estado SÓ no número */
+  .v2-kpi.positivo .v2-kpi-val { color: var(--m-badge-ok-ink); }
+  .v2-kpi.aviso .v2-kpi-val { color: var(--m-badge-amber-ink); }
+  .v2-kpi.risco .v2-kpi-val { color: var(--m-badge-danger-ink); }
+
+  /* Multas: os KPIs do desktop saem; entra a faixa própria A pagar · Vencidas · Pago
+     (#mMultasKpis, preenchida no fim do renderMultas) */
+  #cardsMultas { display: none; }
+  #mMultasKpis {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px;
+    background: var(--line); border: var(--ds-border) solid var(--line);
+    border-radius: var(--ds-radius-lg); overflow: hidden; margin-bottom: 12px;
+  }
+  #mMultasKpis .m-kpi { background: var(--panel); padding: 12px; min-width: 0; }
+  #mMultasKpis .m-kpi b {
+    display: block; font-size: 19px; font-weight: var(--ds-weight-bold);
+    font-variant-numeric: tabular-nums; line-height: 1.2; color: var(--ink);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  #mMultasKpis .m-kpi span { display: block; font-size: 11px; color: var(--muted); font-weight: var(--ds-weight-semibold); margin-top: 2px; }
+  #mMultasKpis .m-kpi b.risco { color: var(--m-badge-danger-ink); }
+  #mMultasKpis .m-kpi b.aviso { color: var(--m-badge-amber-ink); }
+  #mMultasKpis .m-kpi b.positivo { color: var(--m-badge-ok-ink); }
+  /* Frota (lista): a foto vai direto das sub-abas para a busca */
+  #frotaKpis { display: none; }
+  /* resumo: o texto compacto do modelo entra, o completo sai */
+  .resumo-desktop { display: none; }
+  .resumo-celular { display: inline; }
+  /* Frota, sub-aba Dashboard: 2×2 (FIPE total · Em atividade · Na oficina · Alienados) */
+  #cards { grid-template-columns: repeat(2, 1fr); }
+  #cards > :nth-child(1), #cards > :nth-child(4), #cards > :nth-child(7), #cards > :nth-child(8) { display: none; }
+  #cards > :nth-child(6) { order: 1; }
+  #cards > :nth-child(2) { order: 2; }
+  #cards > :nth-child(3) { order: 3; }
+  #cards > :nth-child(5) { order: 4; }
+  /* Manutenção: Custo total · % corretiva */
+  #cardsManutencao { grid-template-columns: repeat(2, 1fr); }
+  #cardsManutencao > :nth-child(1), #cardsManutencao > :nth-child(2), #cardsManutencao > :nth-child(4) { display: none; }
+  /* Abastecimento: Total gasto · km/l (modo combustível) */
+  #cardsAbastecimento, #cardsAbtVeiculo { grid-template-columns: repeat(2, 1fr); }
+  #cardsAbastecimento > :nth-child(n+2):not(:nth-child(6)),
+  #cardsAbtVeiculo > :nth-child(n+2):not(:nth-child(6)) { display: none; }
+  /* Contratos: Saldo devedor · Total pago */
+  #cardsContratos { grid-template-columns: repeat(2, 1fr); }
+  #cardsContratos > :nth-child(1), #cardsContratos > :nth-child(4), #cardsContratos > :nth-child(5) { display: none; }
+
+  /* ===== 9. Linhas de resumo e alertas: uma linha discreta ===== */
+  .resumo-linha, .v2-rodape { font-size: 12px; color: var(--muted); }
+  .resumo-linha b { color: var(--ink); font-weight: var(--ds-weight-bold); font-variant-numeric: tabular-nums; }
+  .ds-alert {
+    display: flex; align-items: center; gap: 8px; padding: 6px 10px;
+    border: var(--ds-border) solid var(--line); border-radius: var(--ds-radius-lg);
+    background: var(--panel); box-shadow: none;
+  }
+  .ds-alert-icon svg, .ds-alert svg { max-width: 18px; max-height: 18px; }
+  .ds-alert-content { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+  .ds-alert-content p { margin: 0; font-size: 12px; color: var(--muted); }
+  .ds-alert-title { font-size: 13px; font-weight: var(--ds-weight-semibold); color: var(--ink); }
+  .ds-alert-cta { flex: 0 0 auto; font-size: 12.5px; font-weight: var(--ds-weight-bold); color: var(--m-primary); }
+  .ds-alert-title { font-size: 12.5px; }
+  .ds-alert-warning { background: var(--m-soft-andamento); }
+  .ds-alert-warning .ds-alert-icon { color: var(--m-badge-amber-ink); }
+  /* botão "Ver N ..." das faixas: ghost pequeno, alinhado à direita */
+  .ds-alert-action, .v2-ofi-ver {
+    flex: 0 0 auto; align-self: center;
+    min-height: 28px; padding: 2px 8px;
+    border: var(--ds-border) solid var(--line-strong, var(--ds-mineral-500));
+    border-radius: var(--ds-radius-sm);
+    background: var(--panel); color: var(--ink);
+    font-family: inherit; font-size: 12px; font-weight: var(--ds-weight-semibold);
+    white-space: nowrap; cursor: pointer;
+  }
+  /* lista expandida da faixa: uma linha por item, placa em mono + descrição + detalhe */
+  .ds-alert-lista, .v2-ofi-lista { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .ds-alert-lista[hidden], .v2-ofi-lista[hidden] { display: none; }
+  .ds-alert-linha, .v2-ofi-linha {
+    width: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px;
+    background: var(--panel); border: var(--ds-border) solid var(--line);
+    border-radius: var(--ds-radius-lg); padding: 10px 12px;
+    font-family: inherit; text-align: left; cursor: pointer; color: var(--ink);
+  }
+  .ds-alert-linha-id, .v2-ofi-placa {
+    font-family: 'JetBrains Mono', monospace; font-weight: var(--ds-weight-bold);
+    font-size: 12px; letter-spacing: var(--ds-tracking-plate);
+    background: var(--m-chip-bg); border: var(--ds-border) solid var(--m-chip-line);
+    border-radius: var(--ds-radius-sm); padding: 2px 6px;
+  }
+  .ds-alert-linha-desc, .v2-ofi-modelo { font-size: 13px; font-weight: var(--ds-weight-semibold); min-width: 0; }
+  .ds-alert-linha-info, .v2-ofi-prev { flex: 1 1 100%; font-size: 11.5px; color: var(--muted); }
+  .ds-alert-vencido .ds-alert-linha-info, .v2-ofi-linha.vencido .v2-ofi-prev { color: var(--m-badge-danger-ink); font-weight: var(--ds-weight-semibold); }
+
+  /* Faixa de oficina da Frota: mesma anatomia da .ds-alert, montada à mão (v2-ofi-*) */
+  #frotaOficinaAlertas .v2-ofi-resumo {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--m-soft-andamento); border: var(--ds-border) solid var(--line);
+    border-radius: var(--ds-radius-lg); padding: 6px 10px;
+  }
+  .v2-ofi-ico { flex: 0 0 auto; color: var(--m-badge-amber-ink); }
+  .v2-ofi-num { flex: 1; min-width: 0; font-size: 12px; font-weight: var(--ds-weight-semibold); color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .v2-ofi-escopo { display: none; } /* "Entre todos os veículos cadastrados" é verbo do desktop */
+
+  /* Card de backup do Início: mesmo desenho dos atalhos (tile de ícone + título +
+     descrição + "Abrir →"), em vez dos spans soltos do alerta genérico */
+  #inicioBackupCard {
+    align-items: center; gap: 12px; padding: 14px;
+    width: 100%; font: inherit; text-align: left; cursor: pointer;
+    border-radius: var(--ds-radius-lg);
+  }
+  #inicioBackupCard .ds-alert-icon {
+    width: 36px; height: 36px; flex: 0 0 auto;
+    border-radius: var(--ds-radius-lg);
+    background: var(--m-tile-icone-bg); color: var(--m-primary);
+    display: grid; place-items: center;
+  }
+  #inicioBackupCard .ds-alert-icon svg { width: 18px; height: 18px; }
+  #inicioBackupCard:active { transform: scale(.98); }
+  /* variante de alerta (backup atrasado): tinge como os cards de multa em andamento */
+  #inicioBackupCard.ds-alert-warning { background: var(--m-soft-andamento); }
+  #inicioBackupCard.ds-alert-warning .ds-alert-icon { background: var(--m-badge-amber-bg); color: var(--m-badge-amber-ink); }
+  #inicioBackupCard.ds-alert-warning .ds-alert-content p { color: var(--m-badge-amber-ink); font-weight: var(--ds-weight-semibold); }
+
+  /* ===== 9.9 Respiro do topo da Frota (busca · alerta · resumo · lista) =====
+     Esses quatro blocos são irmãos diretos do #frota-lista e nasciam GRUDADOS: a régua
+     `.view.active > * + *` só alcança filhos diretos da view, e eles estão um nível abaixo
+     (dentro da subview). Medido antes: 0px entre a toolbar e o alerta, e 0px entre o alerta
+     e o resumo. Aqui cada degrau é declarado no elemento que o recebe — e não por
+     `* + *` — porque #frotaChips e #frotaErro ficam no DOM vazios e de altura zero: uma
+     regra genérica lhes daria margem e abriria um vão fantasma quando não há nada a dizer.
+     Escala de 8: 8px entre as faixas de comando/aviso e 16px antes do primeiro cartão. */
+  #frota-lista #frotaOficinaAlertas:not([hidden]) { margin-top: 8px; }
+  #frota-lista #resumoLinha:not(:empty) { margin-top: 8px; margin-bottom: 0; }
+  #frota-lista .tabela-wrap { margin-top: 16px; }
+  #tabela, #tabelaMultas, #tabelaRast, #tabelaMnt, #tabelaAbt, #tabelaContr { border-spacing: 0; }
+  /* A moldura do .tabela-wrap (fundo branco + borda + raio, styles.css:384) é a caixa da
+     TABELA do desktop. Onde a tabela virou cartão ela vira uma superfície branca por baixo
+     de cartões brancos — e a borda de 1px ainda empurrava a lista 1px para dentro, saindo
+     do prumo da busca, do alerta e do resumo. Some só nessas listas; as abas que seguem
+     com tabela rolante mantêm a moldura (e o overflow continua em todas). */
+  .tabela-wrap:has(> #tabela), .tabela-wrap:has(> #tabelaMultas), .tabela-wrap:has(> #tabelaRast),
+  .tabela-wrap:has(> #tabelaMnt), .tabela-wrap:has(> #tabelaAbt), .tabela-wrap:has(> #tabelaContr) {
+    background: transparent; border: 0; border-radius: 0;
+  }
+
+  /* ===== 10. Cartões de lista (tabelas com data-label) =====
+     Conforto de leitura: rolando a lista, um toque demorado começava a selecionar texto
+     sem querer. O texto do cartão não é selecionável, e o que a pessoa realmente copia
+     (a PLACA, para procurar em outro sistema) segue selecionável na exceção abaixo. Não
+     afeta leitor de tela.
+     ⚠️ Isto NÃO é o que causava os blocos cinza atrás dos campos — aquilo era o véu de
+     linha selecionada pintando célula por célula; a correção está em "Cartão SELECIONADO",
+     mais abaixo. Mantido aqui só pelo conforto, não como conserto. */
+  #tabela tr, #tabelaMultas tr, #tabelaRast tr, #tabelaMnt tr, #tabelaAbt tr, #tabelaContr tr {
+    -webkit-user-select: none; user-select: none;
+    /* tira o flash cinza/azul que Android e iOS desenham por cima do que se toca */
+    -webkit-tap-highlight-color: transparent;
+  }
+  #tabela .placa-btn, #tabela .placa-chip,
+  #tabelaMultas .placa-btn, #tabelaMultas .placa-chip,
+  #tabelaRast .cod-rast, #tabelaMnt .placa-btn, #tabelaMnt .placa-chip,
+  #tabelaAbt .placa-btn, #tabelaAbt .placa-chip, #tabelaContr .placa-btn, #tabelaContr .placa-chip {
+    -webkit-user-select: text; user-select: text;
+  }
+  #tabela, #tabelaMultas, #tabelaRast, #tabelaMnt, #tabelaAbt, #tabelaContr { min-width: 0; border-collapse: separate; }
+  #tabela thead, #tabelaMultas thead, #tabelaRast thead, #tabelaMnt thead, #tabelaAbt thead, #tabelaContr thead { display: none; }
+  #tabela, #tabela tbody, #tabelaMultas, #tabelaMultas tbody, #tabelaRast, #tabelaRast tbody,
+  #tabelaMnt, #tabelaMnt tbody, #tabelaAbt, #tabelaAbt tbody, #tabelaContr, #tabelaContr tbody { display: block; width: 100%; }
+  #tabela tr, #tabelaMultas tr, #tabelaRast tr, #tabelaMnt tr, #tabelaAbt tr, #tabelaContr tr {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px;
+    background: var(--panel);
+    border: var(--ds-border) solid var(--line);
+    border-radius: var(--ds-radius-lg); padding: 14px; margin-bottom: 10px;
+    box-shadow: none;
+  }
+  #tabela td, #tabelaMultas td, #tabelaRast td, #tabelaMnt td, #tabelaAbt td, #tabelaContr td {
+    display: block; border: none; padding: 0; background: none; text-align: left; height: auto;
+  }
+  #tabela td.cel-sec, #tabelaMultas td.cel-sec, #tabelaRast td.cel-sec,
+  #tabelaMnt td.cel-sec, #tabelaAbt td.cel-sec, #tabelaContr td.cel-sec { display: none; }
+  /* ===== Cartão SELECIONADO: o véu é do cartão, não de cada campo =====
+     `tbody tr.sel-on td` (styles.css:2348) pinta o véu CÉLULA POR CÉLULA. No desktop as
+     células ficam lado a lado e o resultado é uma faixa contínua sobre a linha; aqui cada
+     td virou um bloco solto dentro do cartão flex, então o MESMO véu aparecia como
+     retângulos cinza atrás do modelo, do "Valor FIPE" e do "Gravame" — inclusive atrás dos
+     rótulos ::before — enquanto a placa e o badge escapavam por terem fundo próprio. Era
+     esse o "fundo cinza ao selecionar/tocar" (o toque no cartão marca a linha).
+     Aqui as células voltam a ser limpas e o cartão continua BRANCO em qualquer estado: o
+     "está selecionado" passa a ser dito pelo contorno + a barra de 3px na borda esquerda
+     (dois sinais, e a barra não depende de cor — WCAG 1.4.11), sem véu por cima de nada. */
+  #tabela tr.sel-on td, #tabelaMultas tr.sel-on td, #tabelaRast tr.sel-on td,
+  #tabelaMnt tr.sel-on td, #tabelaAbt tr.sel-on td, #tabelaContr tr.sel-on td { box-shadow: var(--ds-shadow-none); }
+  #tabela tr.sel-on, #tabelaMultas tr.sel-on, #tabelaRast tr.sel-on,
+  #tabelaMnt tr.sel-on, #tabelaAbt tr.sel-on, #tabelaContr tr.sel-on {
+    outline: 2px solid var(--m-tile-line); outline-offset: -2px;
+    box-shadow: inset 3px 0 0 var(--sel-edge);
+  }
+  /* Cartão limpo como no modelo: as ações (lápis/lixeira) ficam para o desktop */
+  #tabela td.acoes, #tabelaMultas td.acoes, #tabelaRast td.acoes,
+  #tabelaMnt td.acoes, #tabelaAbt td.acoes, #tabelaContr td.acoes { display: none; }
+  /* rótulo 11px sentence case em cima do valor */
+  #tabela td[data-label]::before, #tabelaMnt td[data-label]::before,
+  #tabelaAbt td[data-label]::before, #tabelaContr td[data-label]::before {
+    content: attr(data-label);
+    display: block; font-size: var(--ds-text-3xs); font-weight: var(--ds-weight-semibold); color: var(--muted);
+  }
+
+  /* Chip de placa e código (JetBrains Mono) */
+  .placa-btn, .placa-chip {
+    font-family: 'JetBrains Mono', monospace; font-weight: var(--ds-weight-bold);
+    font-size: var(--ds-text-base); letter-spacing: var(--ds-tracking-plate);
+    background: var(--m-chip-bg); color: var(--ink);
+    border: var(--ds-border) solid var(--m-chip-line);
+    border-radius: var(--ds-radius-sm); padding: 4px 8px;
+  }
+  /* no escuro o legado pinta o texto do chip de escuro (fundo claro no desktop);
+     aqui o fundo é o --m-chip-bg escuro, então a tinta volta a ser a do tema */
+  body.tema-escuro .placa-btn, body.tema-escuro .placa-chip,
+  body.tema-escuro .placa-chip:hover { color: var(--ink); }
+
+  /* Divisória interna dos cartões: UMA linha de ponta a ponta (pseudo-item do
+     flex), em vez de border-top por célula — que deixava buracos nos gaps */
+  #tabela tr::before, #tabelaMultas tr::before, #tabelaMnt tr::before, #tabelaContr tr::before {
+    content: ''; order: 4; flex: 1 1 100%; height: 0;
+    border-top: var(--ds-border) solid var(--line); margin: 0;
+  }
+
+  /* --- Frota: placa · modelo · badge | divisória | FIPE + Gravame ---
+     Hierarquia em três degraus, para leitura rápida de cima para baixo:
+     1º identidade (placa + modelo), 2º estado (badge), 3º números com rótulo
+     apagado por cima do valor forte. Os rótulos são apoio, nunca protagonistas. */
+  #tabela td[data-label="Placa"] { order: 1; display: flex; align-items: center; min-height: 28px; }
+  #tabela td[data-label="Placa"]::before { display: none; }
+  #tabela td.cel-sub {
+    order: 2; flex: 1 1 auto; min-width: 0;
+    font-weight: var(--ds-weight-bold); font-size: var(--ds-text-lg); line-height: 1.25;
+    letter-spacing: -.01em; color: var(--ink);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: none;
+  }
+  #tabela td.cel-sub::before { display: none; }
+  #tabela td[data-label="Status"] { order: 3; margin-left: auto; display: flex; align-items: center; min-height: 28px; }
+  #tabela td[data-label="Status"]::before { display: none; }
+  #tabela td[data-label="Valor FIPE"], #tabela td[data-label="Gravame"] {
+    flex: 1 1 calc(50% - 10px);
+  }
+  /* rótulo do rodapé: menor, sem peso e mais apagado que o valor que ele nomeia */
+  #tabela td[data-label="Valor FIPE"]::before, #tabela td[data-label="Gravame"]::before {
+    font-size: 10.5px; font-weight: var(--ds-weight-medium); color: var(--label);
+    line-height: 1.4;
+  }
+  #tabela td[data-label="Valor FIPE"] {
+    order: 5;
+    font-size: var(--ds-text-lg); font-weight: var(--ds-weight-bold); font-variant-numeric: tabular-nums;
+    letter-spacing: -.01em; color: var(--ink);
+  }
+  #tabela td[data-label="Gravame"] { order: 6; font-size: var(--ds-text-base); font-weight: var(--ds-weight-semibold); color: var(--ink); }
+  #tabela td[data-label="Centro de Custo"] { display: none; }
+  /* ALERTA ÚNICO no cartão: quem avisa "está na oficina" é a etiqueta de status, e só ela.
+     Saem os dois sinais que diziam a mesma coisa em paralelo:
+     - o pontinho colorido com brilho que o tema escuro põe ANTES do texto da etiqueta
+       (styles.css:704) — no cartão a própria etiqueta já é a cor do estado;
+     - o vermelho da bolinha da placa, que marca OUTRA coisa (o veículo tem observação)
+       e por ser da mesma família de alerta era lida como segundo aviso de oficina. */
+  body.tema-escuro #tabela .pill-trigger::before { display: none; }
+  #tabela .placa-btn.tem-obs::after { background: var(--label); box-shadow: none; }
+  /* Contagem uma vez só: a linha de resumo do topo já diz "N veículos · FIPE total"; o
+     rodapé "Mostrando N de M" repetia a mesma informação embaixo da lista. */
+  #frotaRodape { display: none; }
+
+  /* --- Pílulas dentro dos cartões: sem chevron; badge flat ou texto puro --- */
+  #tabela td[data-label] .pill-trigger svg, #tabelaMultas td[data-label] .pill-trigger svg,
+  #tabelaMnt td[data-label] .pill-trigger svg, #tabelaContr td[data-label] .pill-trigger svg { display: none; }
+  /* Gravame (Frota) e Responsável (Multas): texto puro, como na foto */
+  #tabela td[data-label="Gravame"] .pill-trigger,
+  #tabelaMultas td[data-label="Responsável"] .pill-trigger {
+    border: none; background: transparent; padding: 0; box-shadow: none;
+    font: inherit; color: inherit; border-radius: 0; max-width: none;
+  }
+  #tabelaMultas td[data-label="Responsável"] .pill-trigger { font-size: var(--ds-text-xs); color: var(--muted); }
+  #tabelaMultas td[data-label="Responsável"] .pill-trigger span { max-width: none; }
+  /* o resumo longo é do desktop; o modelo do celular não o tem */
+  #resumoMultas { display: none; }
+  /* Status (Frota) e Situação (Multas): badge pastel raio 4 conforme o estado */
+  #tabela td[data-label="Status"] .pill-trigger,
+  #tabelaMultas td[data-label="Situação"] .pill-trigger {
+    border: none; box-shadow: none; border-radius: var(--ds-radius-sm);
+    padding: 2px 8px; font-size: var(--ds-text-xs); font-weight: var(--ds-weight-medium); max-width: none;
+  }
+  #tabela .pill-trigger.ativ { background: var(--m-badge-ok-bg); color: var(--m-badge-ok-ink); }
+  #tabela .pill-trigger.ofic { background: var(--m-badge-oficina-bg); color: var(--m-badge-oficina-ink); }
+  #tabela .pill-trigger.parado, #tabela .pill-trigger.galpao,
+  #tabela .pill-trigger.vend { background: var(--m-badge-slate-bg); color: var(--m-badge-slate-ink); }
+  #tabelaMultas .pill-trigger.m-pendente { background: var(--m-badge-danger-bg); color: var(--m-badge-danger-ink); }
+  #tabelaMultas .pill-trigger.m-andamento { background: var(--m-badge-amber-bg); color: var(--m-badge-amber-ink); }
+  #tabelaMultas .pill-trigger.m-pago { background: var(--m-badge-ok-bg); color: var(--m-badge-ok-ink); }
+
+  /* --- Multas: borda de situação + fundo suave; rodapé data × valor --- */
+  #tabelaMultas tr { border-left: var(--ds-border-accent) solid var(--line); }
+  #tabelaMultas tr[data-sit="m-pendente"] { border-left-color: var(--m-badge-danger-ink); background: var(--m-soft-pendente); }
+  #tabelaMultas tr[data-sit="m-andamento"] { border-left-color: var(--m-badge-amber-ink); background: var(--m-soft-andamento); }
+  #tabelaMultas tr[data-sit="m-pago"] { border-left-color: var(--m-badge-ok-ink); }
+  #tabelaMultas td[data-label]::before { display: none; }
+  #tabelaMultas td[data-label="Placa"] { order: 1; }
+  #tabelaMultas td[data-label="Situação"] { order: 2; margin-left: auto; }
+  #tabelaMultas td[data-label="Descrição"] {
+    display: block; order: 3; flex: 1 1 100%;
+    font-size: var(--ds-text-md); font-weight: var(--ds-weight-semibold); line-height: 1.35;
+    white-space: normal; max-width: none;
+  }
+  /* linha do meio: responsável · data · cidade (texto 12px secundário) */
+  #tabelaMultas td[data-label="Responsável"], #tabelaMultas td[data-label="Data"],
+  #tabelaMultas td[data-label="Cidade/UF"] {
+    display: block; order: 4; font-size: var(--ds-text-xs); color: var(--muted); max-width: none; flex: 0 0 auto;
+  }
+  /* rodapé: divisória única | "Vence dd/mm/aaaa" (data-venc no <tr>) × valor */
+  #tabelaMultas tr::before { order: 5; }
+  #tabelaMultas tr[data-venc]::after {
+    content: 'Vence ' attr(data-venc);
+    order: 6; flex: 1 1 calc(50% - 10px); align-self: center;
+    font-size: var(--ds-text-xs); color: var(--muted);
+  }
+  #tabelaMultas td[data-label="Valor"] {
+    order: 7; margin-left: auto; text-align: right;
+    font-size: var(--ds-text-lg); font-weight: var(--ds-weight-bold); font-variant-numeric: tabular-nums;
+    font-family: inherit; color: var(--ink);
+  }
+  #tabelaMultas td.col-obs { display: none; }
+
+  /* --- Rastreadores: código mono + badge; placa · tipo embaixo --- */
+  #tabelaRast td[data-label]::before { display: none; }
+  #tabelaRast td[data-label="Código/ID"] { order: 1; }
+  #tabelaRast td[data-label="Código/ID"] .cod-rast { font-size: 14px; }
+  #tabelaRast td[data-label="Situação"] { order: 2; margin-left: auto; }
+  #tabelaRast td.cel-sub { order: 3; flex: 1 1 100%; font-size: var(--ds-text-xs); color: var(--muted); }
+  #tabelaRast td[data-label="Tipo"] { order: 4; }
+
+  /* --- Manutenção: placa + data + tipo; item × custo no rodapé --- */
+  #tabelaMnt td[data-label]::before { display: none; }
+  #tabelaMnt td[data-label="Placa"] { order: 1; }
+  #tabelaMnt td[data-label="Data"] { order: 2; font-size: var(--ds-text-xs); color: var(--muted); }
+  #tabelaMnt td[data-label="Tipo"] { order: 3; margin-left: auto; }
+  #tabelaMnt td[data-label="Item"] {
+    display: block; order: 5; flex: 1 1 calc(60% - 10px);
+    font-size: var(--ds-text-md); font-weight: var(--ds-weight-semibold);
+    white-space: normal; max-width: none;
+  }
+  #tabelaMnt td[data-label="Custo"] {
+    order: 6; margin-left: auto; text-align: right;
+    font-size: var(--ds-text-lg); font-weight: var(--ds-weight-bold); font-variant-numeric: tabular-nums;
+  }
+  #tabelaMnt td[data-label="Centro de custo"], #tabelaMnt td[data-label="Motorista"] { display: none; }
+
+  /* --- Abastecimento: placa + motorista/posto à esquerda, valor + litros à direita --- */
+  #tabelaAbt td[data-label]::before { display: none; }
+  #tabelaAbt td[data-label="Placa"] { order: 1; }
+  #tabelaAbt td[data-label="Data/Hora"] { order: 2; font-size: var(--ds-text-xs); color: var(--muted); }
+  #tabelaAbt td[data-label="Total R$"] {
+    order: 3; margin-left: auto; text-align: right;
+    font-size: var(--ds-text-lg); font-weight: var(--ds-weight-bold); font-variant-numeric: tabular-nums;
+  }
+  #tabelaAbt td[data-label="Motorista"] { order: 4; flex: 1 1 60%; font-size: var(--ds-text-base); font-weight: var(--ds-weight-semibold); max-width: none; }
+  #tabelaAbt td[data-label="Posto"], #tabelaAbt td[data-label="Combustível"] {
+    order: 5; font-size: var(--ds-text-2xs); color: var(--muted);
+  }
+  #tabelaAbt td[data-label="Litros"] { order: 6; margin-left: auto; font-size: var(--ds-text-3xs); color: var(--muted); font-variant-numeric: tabular-nums; }
+  #tabelaAbt td[data-label="Centro de custo"], #tabelaAbt td[data-label="R$/L"],
+  #tabelaAbt td[data-label="Km rod."], #tabelaAbt td[data-label="Km/L"] { display: none; }
+
+  /* --- Contratos: título + status; parcela × valor no rodapé --- */
+  #tabelaContr td[data-label]::before { display: none; }
+  #tabelaContr td[data-label="Banco"] { order: 1; font-size: 14px; font-weight: var(--ds-weight-bold); }
+  #tabelaContr td[data-label="Status"] { order: 2; margin-left: auto; }
+  #tabelaContr td[data-label="Descrição"] {
+    display: block; order: 3; flex: 1 1 100%;
+    font-size: var(--ds-text-2xs); color: var(--muted); white-space: normal; max-width: none;
+  }
+  #tabelaContr td[data-label="Parcela"]::before { content: 'Parcela '; display: inline; font-size: var(--ds-text-xs); color: var(--muted); font-weight: var(--ds-weight-regular); }
+  #tabelaContr td[data-label="Parcela"], #tabelaContr td[data-label="Vcto"] {
+    order: 5; font-size: var(--ds-text-xs); color: var(--muted);
+  }
+  #tabelaContr td[data-label="Vcto"]::before { content: 'Vence '; display: inline; font-size: var(--ds-text-xs); color: var(--muted); font-weight: var(--ds-weight-regular); }
+  #tabelaContr td[data-label="Valor parc."] {
+    order: 6; margin-left: auto; text-align: right;
+    font-size: var(--ds-text-xs); font-weight: var(--ds-weight-bold); font-variant-numeric: tabular-nums;
+  }
+  #tabelaContr td[data-label="Produto"], #tabelaContr td[data-label="Emp."],
+  #tabelaContr td[data-label="Grupo/Cota"], #tabelaContr td[data-label="Faltam"],
+  #tabelaContr td[data-label="Saldo quit."], #tabelaContr td[data-label="Valor pago"] { display: none; }
+
+  /* ===== 11. Início ===== */
+  .inicio-hero { text-align: center; }
+  .inicio-logo {
+    width: 64px; height: 64px; margin: 0 auto 12px;
+    border-radius: var(--ds-radius-lg);
+    background: var(--m-tile); border: var(--ds-border) solid var(--m-tile-line);
+    display: grid; place-items: center; color: var(--ds-white);
+  }
+  .inicio-logo .logo-mark { width: 40px; height: 40px; }
+  .inicio-titulo { font-size: 24px; }
+  .inicio-sub { font-size: 13.5px; }
+  .inicio-secao { font-size: 12.5px; font-weight: var(--ds-weight-semibold); color: var(--muted); }
+  #inicioSwitchBtn { display: none; } /* atalhos E contadores ficam visíveis, empilhados */
+  #inicioCards, #inicioCards[hidden] { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .inicio-card {
+    background: var(--panel); border: var(--ds-border) solid var(--line);
+    border-radius: var(--ds-radius-lg); padding: 14px; box-shadow: none; text-align: left;
+  }
+  .inicio-card .ic-card {
+    width: 36px; height: 36px; border-radius: var(--ds-radius-lg);
+    background: var(--m-tile-icone-bg); color: var(--m-primary);
+    display: grid; place-items: center; margin-bottom: 8px;
+  }
+  .inicio-card-tit { font-size: 14.5px; font-weight: var(--ds-weight-bold); }
+  .inicio-card-desc { font-size: 12px; color: var(--muted); }
+  #inicioStats, #inicioStats[hidden] {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+    background: var(--line); border: var(--ds-border) solid var(--line);
+    border-radius: var(--ds-radius-lg); overflow: hidden; margin-top: 12px;
+  }
+  .inicio-stat {
+    background: var(--panel); padding: 12px; border: none; border-radius: 0;
+    display: flex; flex-direction: column-reverse; justify-content: flex-end; /* número em cima */
+  }
+  .inicio-stat .inicio-stat-n { font-size: 20px; font-weight: var(--ds-weight-bold); font-variant-numeric: tabular-nums; line-height: 1.2; }
+  .inicio-stat .inicio-stat-l { font-size: 11px; color: var(--muted); font-weight: var(--ds-weight-semibold); }
+  .inicio-stat:nth-child(n+4) { display: none; } /* só Veículos · Multas · Rastreadores */
+
+  /* ===== 11b. Frota, sub-aba Análises: 5 colunas que cabem, paleta mineral ===== */
+  #frota-analise .painel {
+    background: var(--panel); border: var(--ds-border) solid var(--line);
+    border-radius: var(--ds-radius-lg); padding: 14px;
+    overflow-x: auto; -webkit-overflow-scrolling: touch; /* rede de segurança: rola DENTRO do painel */
+  }
+  /* "+ Antigo" e "+ Novo" são detalhe de desktop: sem elas as 5 colunas cabem inteiras */
+  #tabelaModelo th:nth-child(6), #tabelaModelo td:nth-child(6),
+  #tabelaModelo th:nth-child(7), #tabelaModelo td:nth-child(7),
+  #tabelaVersao th:nth-child(6), #tabelaVersao td:nth-child(6),
+  #tabelaVersao th:nth-child(7), #tabelaVersao td:nth-child(7) { display: none; }
+  #tabelaModelo, #tabelaVersao { font-size: 12px; font-variant-numeric: tabular-nums; }
+  #tabelaModelo th, #tabelaVersao th {
+    padding: 8px 6px; background: var(--bg); color: var(--muted);
+    border-bottom: var(--ds-border) solid var(--line);
+  }
+  #tabelaModelo td, #tabelaVersao td {
+    padding: 8px 6px; border-bottom: var(--ds-border) solid var(--line);
+    background: transparent; /* sem a zebra global do legado (proibida no desenho) */
+  }
+  #tabelaModelo tr.total td, #tabelaVersao tr.total td { background: var(--bg); font-weight: var(--ds-weight-bold); }
+  /* nome longo de modelo/versão quebra em vez de empurrar os números para fora */
+  #tabelaModelo td:first-child, #tabelaVersao td:first-child { white-space: normal; overflow-wrap: anywhere; }
+
+  /* ===== 12. Frota, sub-aba Dashboard: barras HTML no lugar dos gráficos ===== */
+  #frota-dashboard .painel, #frota-dashboard .grid-2 { display: none; }
+  #mFrotaDashBars { display: block; }
+  #mFrotaDashBars .m-dash-card {
+    background: var(--panel); border: var(--ds-border) solid var(--line);
+    border-radius: var(--ds-radius-lg); padding: 14px; margin-bottom: 12px;
+  }
+  #mFrotaDashBars h3 { margin: 0 0 10px; font-size: 13.5px; font-weight: var(--ds-weight-bold); color: var(--ink); }
+  .m-barra-emp {
+    height: 16px; border-radius: var(--ds-radius-pill); overflow: hidden;
+    background: var(--m-trilha); display: flex;
+  }
+  .m-barra-emp > span { display: block; height: 100%; background: var(--m-primary); }
+  .m-barra-leg { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 8px; font-size: 12px; color: var(--muted); }
+  .m-barra-leg i { display: inline-block; width: 10px; height: 10px; border-radius: var(--ds-radius-xs); margin-right: 5px; vertical-align: baseline; }
+  .m-leg-alien { background: var(--m-primary); }
+  .m-leg-livre { background: var(--m-trilha); border: var(--ds-border) solid var(--line); }
+  .m-cc-linha { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+  .m-cc-rot {
+    flex: 0 0 88px; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .m-cc-trilha { flex: 1; height: 8px; border-radius: var(--ds-radius-pill); background: var(--m-trilha); overflow: hidden; }
+  .m-cc-fill { display: block; height: 100%; background: var(--m-primary); }
+  .m-cc-qtd { flex: 0 0 auto; font-size: 12px; font-weight: var(--ds-weight-bold); font-variant-numeric: tabular-nums; }
+
+  /* ===== 13. Fornecedores ===== */
+  .forn-topo { display: flex; flex-wrap: wrap; gap: 8px; }
+  .forn-busca-wrap { flex: 1 1 100%; }
+  #fornBusca {
+    width: 100%; height: 42px; border-radius: var(--ds-radius-sm);
+    border: var(--ds-border) solid var(--line-strong, var(--ds-mineral-500));
+  }
+  #btnExportForn, #btnImportForn { display: none; }
+  .forn-filtros { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; flex: 1 1 100%; }
+  .forn-filtros::-webkit-scrollbar { display: none; }
+  .forn-chip {
+    flex: 0 0 auto; border-radius: var(--ds-radius-pill); padding: 8px 14px;
+    border: var(--ds-border) solid var(--line-strong, var(--ds-mineral-500));
+    background: var(--panel); color: var(--ink); font-size: 12.5px; font-weight: var(--ds-weight-semibold);
+  }
+  .forn-chip.on { background: var(--m-primary); color: var(--m-on-primary); border-color: var(--m-primary); }
+  .forn-cards { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  .forn-card {
+    background: var(--panel); border: var(--ds-border) solid var(--line);
+    border-radius: var(--ds-radius-lg); padding: 14px; box-shadow: none;
+  }
+  .forn-card-nome { font-size: 14px; font-weight: var(--ds-weight-bold); }
+  .forn-tipo { font-size: 11.5px; color: var(--muted); }
+  .forn-bloco-txt { font-size: 12.5px; color: var(--muted); }
+
+  /* ===== 14. Simulador ===== */
+  .feedback-titulo { font-size: 18px; font-weight: var(--ds-weight-bold); }
+  .feedback-sub { font-size: 13px; color: var(--muted); }
+  .sim-form {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    background: var(--panel); border: var(--ds-border) solid var(--line);
+    border-radius: var(--ds-radius-lg); padding: 14px;
+  }
+  .sim-form > * { grid-column: 1 / -1; min-width: 0; }
+  .sim-form > label:has(input[name="valor"]), .sim-form > label:has(input[name="entrada"]),
+  .sim-form > label:has(input[name="parcela"]), .sim-form > label:has(input[name="n"]),
+  .sim-form > label:has(input[name="carta"]), .sim-form > label:has(input[name="txadm"]) { grid-column: span 1; }
+  .sim-form input, .sim-form select {
+    width: 100%; height: 42px; border-radius: var(--ds-radius-sm);
+    border: var(--ds-border) solid var(--line-strong, var(--ds-mineral-500));
+  }
+  .sim-acoes .btn-primary, .sim-form button[type="submit"] {
+    width: 100%; height: 46px; border-radius: var(--ds-radius-md);
+    background: var(--m-primary); color: var(--m-on-primary);
+    font-weight: var(--ds-weight-bold); box-shadow: none;
+  }
+  .sim-vazio {
+    display: block; text-align: center; color: var(--muted); font-size: 12.5px;
+    border: var(--ds-border) dashed var(--line-strong, var(--ds-mineral-500));
+    border-radius: var(--ds-radius-lg); padding: 20px 14px; background: var(--panel);
+  }
+
+  /* ===== 15. Miudezas ===== */
+  .tabela-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  /* ===== Resumo da seleção (a barra "N selecionados · FIPE total") =====
+     No desktop ela é `position: sticky; bottom: 12px`. No celular o sticky simplesmente NÃO
+     funciona: a `.view` tem `overflow-x: hidden` (regra desta camada, contra vazamento
+     lateral) e o navegador resolve isso como `overflow: hidden auto` — o que faz da view um
+     contêiner de rolagem e passa a ser ELE a referência do sticky, não a janela. Medido: a
+     barra ia parar em bottom 921 numa tela de 844, ou seja, fora da tela, com os botões
+     "Exportar selecionados" e "Limpar seleção" inalcançáveis.
+     `fixed` é imune a ancestral com overflow. Fica ACIMA da barra de navegação (69px) com
+     respiro, e ABAIXO dela no empilhamento (z-index 68 < 70), como toda camada de página. */
+  .sel-bar:not([hidden]) {
+    position: fixed; left: 14px; right: 14px; width: auto;
+    bottom: calc(80px + env(safe-area-inset-bottom));
+    z-index: 68; margin: 0;
+  }
+  /* Com as bolinhas de sub-aba em cena ela sobe acima delas: as bolinhas ocupam de 84px a
+     118px do rodapé, então 126px deixa o mesmo respiro de 8px que separa as demais faixas. */
+  body.tem-mdots .sel-bar:not([hidden]) { bottom: calc(126px + env(safe-area-inset-bottom)); }
+  /* O rodapé da lista reserva a altura REAL da barra (medida por sincronizarAlturaSelBar no
+     app.js, que a escreve em --sel-bar-h): sem isso o último cartão ficava embaixo dela. */
+  body.tem-sel-bar main { padding-bottom: calc(92px + var(--sel-bar-h, 0px)); }
+  body.tem-sel-bar.tem-mdots main { padding-bottom: calc(138px + var(--sel-bar-h, 0px)); }
+  .toast { bottom: calc(72px + env(safe-area-inset-bottom)); }
+
+  /* ===== 15.1 Paginação: faixas empilhadas e centradas =====
+     No desktop é UMA linha (tamanho à esquerda, navegação à direita) e continua assim —
+     nada daqui vaza para >=768px. Espremida no celular, essa mesma linha quebrava torta:
+     o "Mostrando…" enfiado entre os botões e o "Próxima ›" caindo sozinho embaixo.
+     Aqui vira uma pilha:
+
+         Mostrar [50] por página
+         Mostrando 1 a 8 de 8 resultados
+         1 … 41 42 43 … 83            (só quando há 2+ páginas)
+         «   ‹ Anterior   Próxima ›   »
+
+     Por que só CSS: o bloco .paginacao se repete em 9 abas do index.html e o JS
+     (renderNavPaginacao, app.js) injeta «, » e os números NO MEIO do .pag-nav — a ordem
+     real do DOM é [«, ‹Anterior, info, números, Próxima›, »]. Como os seis são
+     flex-items do MESMO .pag-nav, `order` + `flex-basis: 100%` reordenam a pilha sem
+     tocar em HTML nem em JS. Tirar o info do .pag-nav no markup mexeria nas 9 abas E no
+     desktop (o .paginacao é `space-between` com 2 filhos; um 3º redistribui a linha).
+
+     ⚠️ NENHUMA regra daqui escreve border-radius: `body.design-v2 .ds-modulo .btn`
+     (0,3,1) e `… .ds-modulo select` (0,2,2) do 09-superficies.css §9 valem em QUALQUER
+     largura e venceriam as classes simples deste bloco — e !important é proibido nesta
+     camada. Como só mexemos em caixa (ordem/altura/espaço), não há disputa e o raio de
+     hoje se mantém. Se um dia for preciso raio aqui: igualar o contexto
+     (`body.design-v2 .ds-modulo .paginacao .btn.small`) ou dobrar a classe. */
+  /* gap 4px (e não 8): "Mostrar [50] por página" e "Mostrando 1 a 8 de 8" falam da mesma
+     coisa — a quantidade — e ficam colados como um bloco só. O respiro maior (row-gap 8px
+     do .pag-nav) fica ENTRE esse bloco e os botões, que são outra função. */
+  .paginacao {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 4px; margin: 10px 0 2px; font-size: 13px;
+  }
+  /* "Mostrar [50] por página" numa linha só sempre que couber (mede ~200px, cabe até em
+     260px). `white-space: nowrap` impede que "por página" se parta no meio, e o
+     `flex-wrap` deixa a quebra acontecer ENTRE os pedaços, centrada — nunca em overflow:
+     o .paginacao fica FORA do .tabela-wrap nas 9 abas, então não há scroll para socorrer;
+     o que não cabe empurraria a página inteira para o lado.
+     `align-items: center` é o que alinha "Mostrar"/"por página" ao select de 44px — sem
+     ele os textos são esticados (stretch) e ficam grudados no topo da linha. */
+  .paginacao .pag-tamanho {
+    flex-wrap: wrap; justify-content: center; align-items: center;
+    white-space: nowrap; text-align: center; gap: 8px;
+    color: var(--muted); font-size: 12.5px;
+  }
+  /* largura cheia para poder centrar-se; o `flex-wrap` do legado continua sendo a rede de
+     segurança abaixo de ~300px — quando quebra, quebra CENTRADA, não torta.
+     row-gap 8px = mesmo respiro entre TODAS as faixas da pilha (ritmo consistente). */
+  .paginacao .pag-nav {
+    width: 100%; justify-content: center; align-items: center;
+    gap: 6px; row-gap: 8px;
+  }
+  /* "Mostrando 1 a 8 de 8 resultados": nasce entre "‹ Anterior" e os números; `order`
+     manda para o topo e a base de 100% garante a linha inteira. O min-width zera os
+     110px do legado, que reservavam largura à toa numa linha própria. */
+  .paginacao .pag-info {
+    order: -2; flex: 1 1 100%; min-width: 0;
+    text-align: center; line-height: 1.3;
+  }
+  /* Números (só existem com 2+ páginas): faixa PRÓPRIA entre o "Mostrando…" e os botões.
+     Na mesma linha eram eles que empurravam "Próxima ›" e "»" para baixo — o defeito que
+     originou este ajuste. Mantê-los é o que permite pular direto para uma página distante
+     no celular (com «/» e ‹/› sozinhos, sair da 42 para a 60 seriam 18 toques).
+     `flex-wrap` é anti-overflow: a janela de _pagJanela vai a 7 itens. */
+  .paginacao .pag-nums {
+    order: -1; flex: 1 1 100%; flex-wrap: wrap;
+    justify-content: center; margin: 0; gap: 6px;
+  }
+  /* Com uma página só, renderNavPaginacao grava innerHTML = '' e o span fica VAZIO —
+     mas carregando o `margin: 0 6px` do legado, 12px de buraco no meio da pilha. Some com
+     a faixa inteira. Depende de o JS gravar string vazia de verdade: um espaço ali, ou um
+     template com quebra de linha, e o :empty para de casar. */
+  .paginacao .pag-nums:empty { display: none; }
+  /* Alvo de toque de 44px de ALTURA em tudo que se toca. O .btn já é inline-flex centrado
+     (styles.css), então basta min-height. O <select> NÃO vira flex de propósito: o display
+     de um <select> é do navegador e forçá-lo dá resultado diferente em cada um. */
+  .paginacao .btn.small { min-height: 44px; }
+  /* O select é AJUSTE, não navegação: com os mesmos 44px dos botões ele competia em peso
+     com a própria paginação. 38px e tipo menor o devolvem ao segundo plano — ainda um
+     alvo confortável, porque o toque nele é raro (troca-se a densidade uma vez, não a
+     cada página). Os botões de navegar seguem em 44. */
+  .paginacao .pag-tamanho select { min-height: 38px; padding: 5px 9px; font-size: 12.5px; }
+  /* «, » e os números têm `height` FIXO no legado (32px) — aqui precisa ser `height`,
+     `min-height` não venceria. 40 de largura (não 44): com quatro caixas de 44 a fileira
+     estourava em 320px e o "»" caía sozinho. A altura, que é o que o dedo acerta, fica em
+     44 nos dois, e os 40 iguais deixam a faixa de números visualmente regular. */
+  .paginacao .pag-salto { height: 44px; min-width: 40px; padding: 0 8px; }
+  .paginacao .pag-num { height: 44px; min-width: 40px; padding: 0 8px; }
+  /* Desabilitado só APAGA: mesma caixa, mesmo lugar. Nada de display/visibility nem de
+     mudança de tamanho — o legado já usa opacity e esta linha é a trava.
+     .62 em vez dos .45 do desktop: no celular a tela costuma ser olhada no sol e com o
+     brilho baixo, e a .45 sumia — o botão continua claramente inativo, mas legível. */
+  .paginacao .btn[disabled], .paginacao .pag-salto:disabled { opacity: .62; }
+  /* Trade-off assumido: `order` muda o desenho, não o DOM — tabulando, o foco vai
+     « → ‹ Anterior → números → Próxima › → », enquanto a tela mostra os números acima dos
+     botões. Corrigir exigiria mover o nó em renderNavPaginacao (app.js), que é
+     compartilhada com o desktop; aqui a navegação é por toque, então o desenho vence. */
+
+  /* ===== 16. Densidade compacta (~10%) — todas as abas, MENOS a Frota =====
+     A Frota (lista/Dashboard/Análises) acabou de ser aprovada e fica como está;
+     o resto encolhe de leve para caber mais por tela. Alvos de toque (nav,
+     busca, Filtros, ⋯, FAB) NÃO encolhem. Regras vêm por último de propósito:
+     mesma folha, seletor igual ou mais específico vence pela ordem. */
+  main > .view:not(#frota).active > * + * { margin-top: 10px; }
+
+  /* cartões de lista fora da Frota */
+  #tabelaMultas tr, #tabelaRast tr, #tabelaMnt tr, #tabelaAbt tr, #tabelaContr tr {
+    padding: 12px; gap: 6px 10px; margin-bottom: 8px;
+  }
+  #tabelaMultas td[data-label="Descrição"], #tabelaMnt td[data-label="Item"] { font-size: 12.5px; }
+  #tabelaMultas td[data-label="Valor"], #tabelaMnt td[data-label="Custo"], #tabelaAbt td[data-label="Total R$"] { font-size: 14px; }
+  #tabelaMultas .placa-btn, #tabelaMultas .placa-chip, #tabelaMnt .placa-btn, #tabelaMnt .placa-chip,
+  #tabelaAbt .placa-btn, #tabelaAbt .placa-chip, #tabelaRast .placa-btn, #tabelaRast .placa-chip { font-size: 12px; padding: 3px 7px; }
+  #tabelaRast td[data-label="Código/ID"] .cod-rast { font-size: 13px; }
+  #tabelaMultas td[data-label="Situação"] .pill-trigger { font-size: 11.5px; }
+  #tabelaMultas td[data-label="Responsável"], #tabelaMultas td[data-label="Data"],
+  #tabelaMultas td[data-label="Cidade/UF"], #tabelaMultas tr[data-venc]::after,
+  #tabelaMnt td[data-label="Data"], #tabelaContr td[data-label="Parcela"],
+  #tabelaContr td[data-label="Vcto"], #tabelaContr td[data-label="Descrição"] { font-size: 11.5px; }
+  #tabelaContr td[data-label="Banco"] { font-size: 13px; }
+
+  /* KPIs fora da Frota */
+  main > .view:not(#frota) .v2-kpi, main > .view:not(#frota) .cards.v2-kpis .card, #mMultasKpis .m-kpi { padding: 10px; }
+  main > .view:not(#frota) .v2-kpi-val, main > .view:not(#frota) .cards.v2-kpis .valor, #mMultasKpis .m-kpi b { font-size: 18px; }
+  main > .view:not(#frota) .v2-kpi-rot, main > .view:not(#frota) .cards.v2-kpis .rotulo, #mMultasKpis .m-kpi span { font-size: 10.5px; }
+
+  /* Início */
+  .inicio-logo { width: 56px; height: 56px; }
+  .inicio-logo .logo-mark { width: 34px; height: 34px; }
+  .inicio-titulo { font-size: 22px; }
+  .inicio-sub { font-size: 12.5px; }
+  .inicio-card { padding: 12px; }
+  .inicio-card .ic-card { width: 32px; height: 32px; }
+  .inicio-card-tit { font-size: 13.5px; }
+  .inicio-card-desc { font-size: 11.5px; }
+  .inicio-stat { padding: 10px; }
+  .inicio-stat .inicio-stat-n { font-size: 18px; }
+  .inicio-stat .inicio-stat-l { font-size: 10.5px; }
+  #inicioBackupCard { padding: 12px; }
+
+  /* faixas de alerta fora da Frota (a da oficina é da Frota e não muda) */
+  main > .view:not(#frota) .ds-alert { padding: 8px 10px; }
+  main > .view:not(#frota) .ds-alert-title { font-size: 12px; }
+  main > .view:not(#frota) .ds-alert-content p { font-size: 11.5px; }
+
+  /* Fornecedores / Simulador / Contratos: superfícies mais enxutas (toque intacto) */
+  .forn-card { padding: 12px; }
+  .forn-card-nome { font-size: var(--ds-text-md); }
+  .sim-form { padding: 12px; gap: 8px; }
+  .sim-form label { font-size: var(--ds-text-sm); }
+  .feedback-titulo { font-size: 16.5px; }
+  .feedback-sub { font-size: var(--ds-text-sm); }
+
+  /* ===== 17. Modais "Editar veículo" e "Editar multa" em tela cheia (desenhos
+     aprovados no Claude Design, ago/2026: "Editar Veiculo/Multa Mobile"). Escopo
+     fechado em #modal e #multaModal de propósito — os demais modais seguem como
+     estão até ganharem desenho próprio. O DOM é o MESMO do desktop (forms lidos
+     por name); aqui é só apresentação, dirigida pelo criarWizardModal (app.js). */
+  :is(#modal, #multaModal).modal-overlay { padding: 0; place-items: stretch; }
+  :is(#modal, #multaModal) .modal, :is(#modal, #multaModal) .modal.com-historico {
+    max-width: none; width: 100%; max-height: none; height: 100dvh;
+    border-radius: 0; display: flex; flex-direction: column;
+  }
+  /* cabeçalho: véu translúcido com blur, como no mock; o véu usa o --panel do
+     tema via color-mix (sem literal de cor, regra da camada) */
+  :is(#modal, #multaModal) .modal-head {
+    padding: 14px 16px;
+    background: color-mix(in srgb, var(--panel) 88%, transparent);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  }
+  /* título + subtítulo mono empilhados, ✕ à direita (grade em vez de wrapper novo) */
+  :is(#modal, #multaModal) .modal-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 10px; }
+  :is(#modal, #multaModal) .modal-head h2 { font-size: 19px; letter-spacing: -.02em; grid-column: 1; grid-row: 1; }
+  :is(#fecharModal, #fecharMulta) { grid-column: 2; grid-row: 1 / span 2; justify-self: end; }
+  :is(#veicMSub, #multaMSub) {
+    display: block; font-family: var(--mono); font-size: var(--ds-text-3xs);
+    letter-spacing: .14em; color: var(--muted); min-width: 0;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  :is(#veicMSub, #multaMSub):empty { display: none; }
+
+  /* abas Dados / Histórico */
+  :is(#veicMTabs, #multaMTabs) { display: flex; padding: 0 16px; border-bottom: var(--ds-border) solid var(--line); background: var(--panel); }
+  :is(#modal, #multaModal) .veic-mtab {
+    flex: 1 1 0; min-height: 40px; border: 0; background: transparent; cursor: pointer;
+    font-family: var(--body); font-size: 14px; color: var(--muted);
+    border-bottom: var(--ds-border-tab) solid transparent; margin-bottom: calc(0px - var(--ds-border));
+  }
+  :is(#modal, #multaModal) .veic-mtab.ativa { color: var(--m-primary); font-weight: var(--ds-weight-bold); border-bottom-color: var(--m-primary); }
+  :is(#modal, #multaModal) .veic-mtab[hidden] { display: none; }
+
+  /* stepper: bolinha numerada/✓ + rótulo mono, trilho na base indica progresso */
+  :is(#veicMEtapas, #multaMEtapas) { display: flex; gap: 6px; padding: 14px 16px 4px; }
+  :is(#modal, #multaModal) .veic-metapa {
+    flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 5px;
+    padding: 4px 0 8px; border: 0; background: transparent; cursor: pointer;
+    border-bottom: var(--ds-border-accent) solid var(--line); color: var(--muted);
+  }
+  :is(#modal, #multaModal) .veic-metapa-dot {
+    width: 22px; height: 22px; border-radius: var(--ds-radius-circle);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: var(--ds-text-3xs); font-weight: var(--ds-weight-bold);
+    background: var(--bg); color: var(--muted);
+  }
+  :is(#modal, #multaModal) .veic-metapa-rot {
+    font-family: var(--mono); font-size: 9px; letter-spacing: .04em; text-transform: uppercase;
+    max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  :is(#modal, #multaModal) .veic-metapa.ativa { border-bottom-color: var(--m-primary); color: var(--m-primary); }
+  :is(#modal, #multaModal) .veic-metapa.ativa .veic-metapa-dot { background: var(--m-primary); color: var(--m-on-primary); }
+  :is(#modal, #multaModal) .veic-metapa.feita { border-bottom-color: color-mix(in srgb, var(--m-primary) 40%, var(--line)); color: var(--ink); }
+  :is(#modal, #multaModal) .veic-metapa.feita .veic-metapa-dot { background: var(--m-badge-ok-bg); color: var(--m-badge-ok-ink); }
+
+  /* o wizard em si: com data-etapa-atual no form, só o grupo da etapa aparece.
+     O :not([hidden]) preserva os condicionais (oficina, obs do Detran); sem o
+     atributo (JS falhou no boot), NADA é escondido — o form continua utilizável. */
+  :is(#formVeiculo, #formMulta)[data-etapa-atual] > [data-etapa] { display: none; }
+  :is(#formVeiculo, #formMulta)[data-etapa-atual="1"] > [data-etapa="1"]:not([hidden]),
+  :is(#formVeiculo, #formMulta)[data-etapa-atual="2"] > [data-etapa="2"]:not([hidden]),
+  :is(#formVeiculo, #formMulta)[data-etapa-atual="3"] > [data-etapa="3"]:not([hidden]),
+  :is(#formVeiculo, #formMulta)[data-etapa-atual="4"] > [data-etapa="4"]:not([hidden]) { display: flex; }
+  /* grupos que não são label: preservam a direção de coluna que o desktop já dá */
+  #formMulta > .detran-bloco[data-etapa] { flex-direction: column; }
+
+  /* rodapé por etapa: Cancelar só na 1ª, Voltar da 2ª em diante, Avançar até a
+     3ª, Salvar só na última (a lista do topo do arquivo esconde os botões
+     móveis no desktop; aqui o contexto do wizard os traz de volta) */
+  :is(#formVeiculo, #formMulta):is([data-etapa-atual="2"], [data-etapa-atual="3"], [data-etapa-atual="4"]) :is(#veicMVoltar, #multaMVoltar) { display: inline-flex; align-items: center; justify-content: center; }
+  :is(#formVeiculo, #formMulta):not([data-etapa-atual="1"]) :is(#cancelar, #cancelarMulta) { display: none; }
+  :is(#formVeiculo, #formMulta):is([data-etapa-atual="1"], [data-etapa-atual="2"], [data-etapa-atual="3"]) :is(#veicMAvancar, #multaMAvancar) { display: inline-flex; align-items: center; justify-content: center; }
+  :is(#formVeiculo, #formMulta):is([data-etapa-atual="1"], [data-etapa-atual="2"], [data-etapa-atual="3"]) .modal-foot .btn-primary[type="submit"] { display: none; }
+
+  /* aba Histórico: o painel toma a tela; o form e o stepper saem de cena.
+     Sem .veic-hist o painel fica fora do caminho mesmo quando o desktop o
+     deixou visível (aberto pela placa). */
+  :is(#modal, #multaModal) .modal:not(.veic-hist) :is(#modalHistPanel, #multaHistPanel) { display: none; }
+  :is(#modal, #multaModal) .modal.veic-hist :is(#formVeiculo, #formMulta),
+  :is(#modal, #multaModal) .modal.veic-hist :is(#veicMEtapas, #multaMEtapas) { display: none; }
+  :is(#modal, #multaModal) .modal.veic-hist :is(#modalHistPanel, #multaHistPanel) { display: flex; flex: 1 1 auto; min-height: 0; border-top: 0; }
+  :is(#modal, #multaModal) .modal-split { flex-direction: column; flex: 1 1 auto; min-height: 0; display: flex; }
+  :is(#modal, #multaModal) .modal-split > form { width: 100%; }
+
+  /* grade de DUAS colunas minmax(0,1fr): overflow horizontal impossível por
+     construção (o minmax deixa a coluna encolher abaixo do conteúdo) */
+  :is(#modal, #multaModal) .form-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 12px; padding: 16px;
+    /* etapas curtas não podem esticar as linhas até o rodapé */
+    align-content: start; flex: 1 1 auto;
+  }
+  :is(#modal, #multaModal) .form-grid :is(.full, .veic-doc-box) { grid-column: 1 / -1; }
+  /* campos que pedem a linha inteira em cada mock (identificadores longos) */
+  #formVeiculo label:has(input[name="placa"]), #formVeiculo label:has(input[name="dono"]),
+  #formVeiculo label:has(input[name="renavam"]), #formVeiculo label:has(input[name="chassi"]),
+  #formVeiculo label:has(input[name="valorFipe"]), #formVeiculo label:has(select[name="status"]),
+  #formVeiculo label:has(input[name="licencVenc"]) { grid-column: 1 / -1; }
+  #formMulta label:has(:is(input[name="autoInfracao"], input[name="valor"], input[name="cidadeEstado"])) { grid-column: 1 / -1; }
+
+  /* rótulo no padrão do mock: mono 10.5px caps, apagado */
+  :is(#modal, #multaModal) .form-grid label {
+    font-family: var(--mono); font-size: 10.5px; font-weight: var(--ds-weight-medium);
+    letter-spacing: .1em; text-transform: uppercase; color: var(--muted);
+  }
+  /* o campo em si volta à família do corpo (o rótulo mono não pode vazar p/ dentro);
+     checkbox fica de fora — as etapas do Detran usam a caixinha nativa */
+  :is(#modal, #multaModal) .form-grid input:not([type="checkbox"]),
+  :is(#modal, #multaModal) .form-grid select,
+  :is(#modal, #multaModal) .form-grid textarea,
+  :is(#modal, #multaModal) .form-grid .cs-btn {
+    font-family: var(--body); font-size: var(--ds-text-lg); letter-spacing: normal; text-transform: none;
+    min-height: 44px; padding: 0 12px; box-sizing: border-box; width: 100%;
+    border: var(--ds-border) solid var(--line); border-radius: var(--ds-radius-lg);
+    color: var(--ink); background: var(--panel);
+  }
+  :is(#modal, #multaModal) .form-grid input[type="date"] { font-size: 14px; }
+  :is(#modal, #multaModal) .form-grid textarea { padding: 10px 12px; min-height: 76px; resize: vertical; }
+  :is(#modal, #multaModal) .form-grid :is(input, select, textarea):focus {
+    outline: none; border-color: var(--ds-focus);
+    box-shadow: 0 0 0 var(--ds-ring-width) color-mix(in srgb, var(--ds-focus) 18%, transparent);
+  }
+  :is(#modal, #multaModal) .form-grid .dica { font-family: var(--body); letter-spacing: normal; text-transform: none; }
+
+  /* campos-informação (FIPE, valores dos sócios, valor da multa): barra de acento
+     + fundo suave, valor forte tabular — "número que importa", como nos mocks */
+  #modal .form-grid #inpFipe, #modal .form-grid .calc input, #formMulta input[name="valor"] {
+    min-height: 48px; font-size: 17px; font-weight: var(--ds-weight-bold);
+    font-variant-numeric: tabular-nums;
+    border-left: var(--ds-border-plate) solid var(--ds-info);
+    background: color-mix(in srgb, var(--ds-info) 6%, var(--panel));
+  }
+  #modal .form-grid .calc input { color: var(--ink); }
+
+  /* caixas administrativas (vínculo FIPE / CRLV) viram linhas com divisória,
+     sem moldura — mesmo tratamento do design-veiculo-modal.css no desktop */
+  #modal .veic-doc-box {
+    background: transparent; border: 0; border-radius: 0;
+    border-top: var(--ds-border) solid var(--line); padding: 12px 0;
+  }
+
+  /* Multa: Detran em coluna única (os cartões de etapa ganham a largura toda);
+     no cartão, o rótulo do checkbox volta à fonte do corpo (o mono 10.5px do
+     label genérico o espremia) e a DATA desce para a linha de baixo, inteira */
+  #formMulta .detran-grid { grid-template-columns: 1fr; gap: 10px; }
+  /* label.detran-check: empata a especificidade (1,1,1) do rótulo mono genérico */
+  #formMulta label.detran-check {
+    font-family: var(--body); font-size: 14.5px; font-weight: var(--ds-weight-semibold);
+    letter-spacing: normal; text-transform: none; color: var(--ink);
+  }
+  #formMulta .detran-check input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--m-primary); }
+  /* a linha é GRID [rótulo · balão · data]: no celular a data desce, largura toda */
+  #formMulta .detran-linha { grid-template-columns: minmax(0, 1fr) auto; row-gap: 8px; }
+  #formMulta .detran-linha input.detran-data { grid-column: 1 / -1; width: 100%; text-align: left; }
+  #formMulta .detran-obs-btn { min-width: 36px; min-height: 36px; }
+  /* anexos: botão principal confortável; o cabeçalho de colunas é do desktop */
+  #formMulta .func-docs-acoes .btn { min-height: 44px; }
+  #multaModal .multa-docs-cab { display: none; }
+  #formMulta .multa-docs-lista { overflow-x: auto; }
+
+  /* rodapé no FLUXO, logo após os campos (como no mock — em etapa curta os botões
+     sobem junto); respiro extra embaixo para não colar na borda do aparelho */
+  :is(#modal, #multaModal) .form-grid .modal-foot {
+    margin-top: 6px; padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  }
+  :is(#modal, #multaModal) .modal-foot .btn { flex: 1 1 0; min-height: 46px; font-size: var(--ds-text-lg); }
+  :is(#modal, #multaModal) .modal-foot .btn-primary { flex: 1.4 1 0; font-weight: var(--ds-weight-bold); box-shadow: var(--ds-shadow-float); }
+
+  /* histórico (clique na placa): painel empilhado ocupa o resto da tela */
+  :is(#modal, #multaModal) .modal-hist { border-left: 0; border-top: var(--ds-border) solid var(--line); padding: 14px 16px 16px; }
+
+  /* menus flutuantes de seleção (select custom do modal e pílulas dos cartões):
+     opção com ≥44px de alvo e a ATUAL destacada — exigência de toque do mock */
+  .cs-menu .cs-item, .pill-menu-portaled .pill-item {
+    min-height: 44px; display: flex; align-items: center; font-size: 14px; padding: 8px 14px;
+  }
+  /* Gravame no cartão da Frota é texto puro (~18px de altura): estica a área
+     CLICÁVEL com padding compensado por margin — o texto não sai do lugar */
+  #tabela td[data-label="Gravame"] .pill-trigger { padding: 8px 0; margin: -8px 0; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .msheet-painel, .filtros.aberto[id], .user-menu.tela-perfil,
+    .subview.m-swipe-esq, .subview.m-swipe-dir { animation: none; }
+    .msheet-item:active, #mnavAdd:active .mnav-tile { transform: none; }
+  }
+}

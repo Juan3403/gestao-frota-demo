@@ -1,0 +1,645 @@
+/* ============================================================================
+   09-superficies.css — NORMALIZAÇÃO DE SUPERFÍCIE, RAIO, SOMBRA E RELEVO
+
+   Auditoria visual de ago/2026. A migração módulo a módulo trouxe para o
+   Design System o que era ESTRUTURA de tela (toolbar, tabela, filtros,
+   indicadores, estados). O que ficou para trás foi o miolo: os painéis, fichas,
+   linhas e cartões que cada módulo desenhou por conta própria ao longo do
+   tempo. Medido no styles.css, o legado tinha NOVE raios diferentes em uso
+   simultâneo — 8, 9, 10, 11, 12, 13, 14, 16 e 18px — enquanto o Design System
+   define três (3, 4 e 8px) mais a cápsula. Duas telas lado a lado nunca
+   fechavam a mesma silhueta.
+
+   Três desvios, três seções:
+
+     1. RAIO. Cada tela escolheu o seu. Aqui tudo cai na escala: painel/cartão
+        em `--ds-radius-lg`, controle em `--ds-radius-sm`.
+
+     2. RELEVO. `translateY(-2px)` + `0 12px 28px` no hover é vocabulário de
+        cartão de marketing: promete que o objeto sobe da página. Num registro
+        operacional, o cartão é uma LINHA — quem responde ao mouse é a borda,
+        não a altura. Superfície chapada é a regra do desenho desde o piloto
+        (ver a nota de sombra em 01-tokens.css); sombra só em quem realmente
+        flutua: menu portado, modal, toast, barra de seleção.
+
+     3. GRADIENTE. Fundo em degradê é decoração: não carrega informação, muda
+        de leitura conforme o tema e não existe em nenhum token. Sai em favor
+        da superfície chapada + borda.
+
+   O que NÃO entra aqui, de propósito:
+     · `.cartao-cc` (Cartões) — é a representação de um cartão FÍSICO, com
+       proporção 1.586 e canto de plástico. O degradê ali é o objeto, não
+       enfeite;
+     · `.sw-*` (amostras de tema) — o degradê É o conteúdo do botão;
+     · o pulso do aviso de versão OBRIGATÓRIA — é um diálogo que bloqueia a
+       tela de propósito, o único lugar do app onde chamar atenção é a função.
+
+   ⚠️ Esses três não são "casos que sobraram": são entradas do REGISTRO DE
+   EXCEÇÃO VISUAL, em docs/DESIGN.md seção 11 — a lista completa e vinculante
+   mora lá, junto com o teste que separa componente funcional de identidade
+   institucional. Antes de abrir exceção nova, passe pelo teste de 11.2; sem
+   entrada no registro, o componente segue o Design System (seção 9, item 13).
+
+   Nada aqui conhece um módulo: só classes de componente, como manda o DS.
+   Sem `!important` e sem cor literal. Só >= 768px — o celular fica intocado.
+   ============================================================================ */
+
+@media (min-width: 768px) {
+
+/* ============================================================
+   1. MENUS FLUTUANTES
+
+   `.pill-menu-portaled` e `.msel-menu-flutuante` já eram vestidos em
+   04-shell.css; estes são os outros seis, com o mesmo papel e três desenhos
+   diferentes (11px/12px de raio, sombra `0 10px 34px` ou `var(--shadow)`).
+
+   ⚠️ `.tema-menu` e `.ferramentas-menu` pedem `box-shadow: var(--shadow)` — e
+   `--shadow` é reapontado para NENHUMA sombra dentro do escopo do DS (é o que
+   deixa cartão e painel chapados). O efeito colateral era um menu suspenso sem
+   sombra nenhuma, colado na página. Flutuante recebe `--ds-shadow-float`
+   explicitamente, que é justamente a distinção que o token faz.
+   ============================================================ */
+body.design-v2 .tema-menu,
+body.design-v2 .ferramentas-menu,
+body.design-v2 .ctx-menu,
+body.design-v2 .ac-menu,
+body.design-v2 .cs-menu,
+body.design-v2 .ds-modulo .msel-menu {
+  border-radius: var(--ds-radius-lg);
+  border-color: var(--ds-line);
+  box-shadow: var(--ds-shadow-float);
+}
+body.design-v2 .tema-opcao,
+body.design-v2 .ferramentas-item,
+body.design-v2 .ferramentas-menu .manut-toggle,
+body.design-v2 .ctx-item,
+body.design-v2 .ac-item,
+body.design-v2 .cs-item,
+body.design-v2 .ds-modulo .msel-item,
+body.design-v2 .ds-modulo .msel-busca {
+  border-radius: var(--ds-radius-sm);
+}
+
+/* ============================================================
+   2. AVISO DE NOVA VERSÃO
+   Cartão fixo no canto: flutua de verdade, então mantém sombra — só troca a
+   `0 12px 40px` por a do sistema, e o raio de 14px pelo de painel.
+   O banner vive FORA de qualquer `.ds-modulo` (é filho direto do body), então
+   as regras de botão/tipografia do DS não o alcançavam — o miolo continuava
+   com o azul vivo legado e o `.btn-primary` antigo. As regras abaixo fecham
+   isso, no mesmo contrato dos botões de modal (08-modal.css §5).
+   A variante `.obrigatoria` fica de fora do raio/sombra (ver cabeçalho), mas
+   os botões e a tipografia valem para ela também: a exceção registrada é o
+   pulso e o véu, não uma paleta própria.
+   ============================================================ */
+body.design-v2 .update-banner:not(.obrigatoria) .update-card {
+  border-radius: var(--ds-radius-lg);
+  box-shadow: var(--ds-shadow-float);
+}
+body.design-v2 .update-card {
+  background: var(--ds-surface);
+  border-color: var(--ds-line);
+  border-left: 3px solid var(--ds-primary);
+}
+body.design-v2 .update-ico {
+  border-radius: var(--ds-radius-sm);
+  background: var(--ds-info-soft);
+  color: var(--ds-info);
+}
+/* Tipografia: título na fonte base (o --display legado punha Bricolage aqui). */
+body.design-v2 .update-corpo strong {
+  font-family: var(--body);
+  font-size: var(--ds-text-md);
+  font-weight: var(--ds-weight-semibold);
+  color: var(--ds-ink);
+}
+body.design-v2 .update-corpo p { color: var(--ds-muted); font-size: var(--ds-text-sm); }
+body.design-v2 .update-info { color: var(--ds-muted); font-size: var(--ds-text-xs); }
+/* Fade de rolagem da lista de novidades: o legado pinta com var(--panel), mas o
+   banner vive como filho direto do body — fora dos escopos da ponte — e lia o
+   branco antigo nos dois temas. Reposto por token do DS (gradiente funcional
+   de recorte de rolagem, não decoração). */
+body.design-v2 .update-info::after { background: linear-gradient(to top, var(--ds-surface), transparent); }
+body.design-v2 .update-lista li { color: var(--ds-ink); font-size: var(--ds-text-xs); }
+/* Botões: mesmo contrato de 08-modal.css §5 (chapado, sem pulo no hover). */
+body.design-v2 .update-banner .btn {
+  height: var(--ds-control-h-sm);
+  min-height: var(--ds-control-h-sm);
+  padding: 0 var(--ds-space-6);
+  border-radius: var(--ds-radius-sm);
+  font-size: var(--ds-text-sm);
+  font-weight: var(--ds-weight-medium);
+  box-shadow: var(--ds-shadow-none);
+}
+body.design-v2 .update-banner .btn:hover {
+  transform: none;
+  box-shadow: var(--ds-shadow-none);
+}
+body.design-v2 .update-banner .btn:active { transform: none; }
+body.design-v2 .update-banner .btn-primary {
+  background: var(--ds-primary);
+  border-color: var(--ds-primary);
+  color: var(--ds-on-primary);
+}
+body.design-v2 .update-banner .btn-primary::after { content: none; }
+body.design-v2 .update-banner .btn-primary:hover {
+  background: var(--ds-primary-hover);
+  border-color: var(--ds-primary-hover);
+  filter: none;
+}
+body.design-v2 .update-banner .btn-ghost {
+  background: var(--ds-surface);
+  border-color: var(--ds-line-strong);
+  color: var(--ds-ink);
+}
+body.design-v2 .update-banner .btn-ghost:hover {
+  background: var(--ds-surface-subtle);
+  border-color: var(--ds-primary);
+  color: var(--ds-primary);
+}
+/* Banner de instalação (mesma carcaça): acento de sucesso por token — o
+   legado fixava rgba() literais aqui dentro. */
+body.design-v2 .install-banner .update-card { border-left-color: var(--ds-success); }
+body.design-v2 .install-banner .update-ico {
+  background: var(--ds-success-soft);
+  color: var(--ds-success);
+}
+/* Obrigatória: o acento continua vermelho, agora pelo token. O pulso e o véu
+   ficam no styles.css (exceção registrada, DESIGN.md §11.4). */
+body.design-v2 .update-banner.obrigatoria .update-card { border-left-color: var(--ds-danger); }
+
+/* ============================================================
+   3. PAINÉIS, FICHAS E CARTÕES → raio de painel
+
+   Lista explícita, e não um seletor genérico: raio é forma, e apagar em massa
+   acertaria junto o que é redondo de propósito (avatar, cápsula de status,
+   polegar de rolagem, placa Mercosul). Cada nome aqui é uma superfície com
+   fundo e borda que hoje escreve o próprio raio em pixel.
+   ============================================================ */
+body.design-v2 .ds-modulo .card,
+body.design-v2 .ds-modulo .inicio-backup-card,
+body.design-v2 .ds-modulo .cst-kpi,
+body.design-v2 .ds-modulo .cst-filtro,
+body.design-v2 .ds-modulo .cst-he-item,
+body.design-v2 .ds-modulo .modelo-card,
+body.design-v2 .ds-modulo .bak2-card,
+body.design-v2 .ds-modulo .imp-card,
+body.design-v2 .ds-modulo .imp-tabela-wrap,
+body.design-v2 .ds-modulo .changelog-item,
+body.design-v2 .ds-modulo .cad-painel,
+body.design-v2 .ds-modulo .cad-item,
+body.design-v2 .ds-modulo .inv-avisos,
+body.design-v2 .ds-modulo .contab-liq-card,
+body.design-v2 .ds-modulo .contab-comp-card,
+body.design-v2 .ds-modulo .contab-preview,
+body.design-v2 .ds-modulo .sim-bloco,
+body.design-v2 .ds-modulo .sim-veredito,
+body.design-v2 .ds-modulo .rel-kpi,
+body.design-v2 .ds-modulo .rel-assina-lista,
+body.design-v2 .ds-modulo .acmp-tabela-wrap,
+body.design-v2 .ds-modulo .ro-banner,
+body.design-v2 .ds-modulo .veic-doc-box,
+body.design-v2 .ds-modulo .midia-bloco,
+body.design-v2 .ds-modulo .func-pend-segs,
+body.design-v2 .ds-modulo .func-obrig-aviso,
+body.design-v2 .ds-modulo .func-item-row,
+body.design-v2 .ds-modulo .func-salario-row,
+body.design-v2 .ds-modulo .func-adm-ficha,
+body.design-v2 .ds-modulo .func-docs-zipbar,
+body.design-v2 .ds-modulo .func-doc-row,
+body.design-v2 .ds-modulo .func-docs-drop,
+body.design-v2 .ds-modulo .func-alerta-item,
+body.design-v2 .ds-modulo .func-pend-row,
+body.design-v2 .ds-modulo .bkp-fs,
+body.design-v2 .ds-modulo .bkp-card,
+body.design-v2 .ds-modulo .bkp-hrow,
+body.design-v2 .ds-modulo .bkp-file,
+body.design-v2 .ds-modulo .bkp-aviso-risco,
+body.design-v2 .ds-modulo .adm-card,
+body.design-v2 .ds-modulo .adm-sel-bar,
+body.design-v2 .ds-modulo .adm-vazio,
+body.design-v2 .ds-modulo .adm-rev-docs-lista,
+body.design-v2 .ds-modulo .loc-card,
+body.design-v2 .ds-modulo .loc-det-hero,
+body.design-v2 .ds-modulo .loc-fatura-nota,
+body.design-v2 .ds-modulo .loc-fatura-preview,
+body.design-v2 .ds-modulo .seg-scan,
+body.design-v2 .ds-modulo .trn-lote-lista,
+body.design-v2 .ds-modulo .trn-res-linha,
+body.design-v2 .ds-modulo .almox-ultima,
+body.design-v2 .ds-modulo .ndj-tile,
+body.design-v2 .ds-modulo .perm-usuario-resumo,
+body.design-v2 .ds-modulo .perm-sistema,
+body.design-v2 .ds-modulo .perm-empresa,
+body.design-v2 .ds-modulo .perm-contratos,
+body.design-v2 .ds-modulo .perm-acoes-wrap,
+body.design-v2 .ds-modulo .perm-linha,
+body.design-v2 .modal-overlay .assina-quadro,
+body.design-v2 .modal-overlay .assina-modos,
+body.design-v2 .modal-overlay .veic-doc-box,
+body.design-v2 .modal-overlay .func-doc-row,
+body.design-v2 .modal-overlay .func-item-row,
+body.design-v2 .modal-overlay .func-docs-drop,
+body.design-v2 .modal-overlay .func-salario-row,
+body.design-v2 .modal-overlay .adm-rev-docs-lista,
+/* Migração de #funcModal/#multaModal/#almoxModal (docs/DESIGN.md §11.7): estas
+   três já estavam na lista `.ds-modulo` acima, mas ninguém tinha reparado que
+   nenhuma delas fica DENTRO de uma `.ds-modulo` — vivem só em `#funcModal`,
+   que é um `.modal-overlay` solto fora de qualquer `<section>` migrada. Ficavam
+   com o raio legado só por causa desse buraco, não por decisão. */
+body.design-v2 .modal-overlay .func-obrig-aviso,
+body.design-v2 .modal-overlay .func-adm-ficha,
+body.design-v2 .modal-overlay .func-docs-zipbar,
+body.design-v2 .modal-overlay .func-fichaepi-chip,
+/* `.almox-foto` (miniatura de foto da entrega, só existe em #almoxModal). */
+body.design-v2 .modal-overlay .almox-foto,
+/* ↓ medidos pela auditoria de navegador: painéis e miniaturas que chegavam com 9, 10, 11, 13 e
+   14px. Foto do colaborador, ícone do fornecedor e tile da logo entram aqui como SUPERFÍCIE (a
+   moldura da imagem é um painel pequeno, não um controle) — a cor da logo continua sendo marca,
+   e essa não se mexe (docs/DESIGN.md §11.4). */
+body.design-v2 .ds-modulo .func-foto,
+body.design-v2 .ds-modulo .func-empresa-logo,
+body.design-v2 .ds-modulo .forn-ic,
+body.design-v2 .ds-modulo .epi-alertas-card,
+body.design-v2 .ds-modulo .epi-al-item,
+body.design-v2 .modal-overlay .func-foto {
+  border-radius: var(--ds-radius-lg);
+}
+
+/* Barra fina e marcador de legenda: o raio de painel engorda um traço de 4px de altura, e o de
+   controle já é quase a metade dele. `--ds-radius-xs` existe exatamente para esta escala. */
+body.design-v2 .ds-modulo .epi-al-barra,
+body.design-v2 .ds-modulo .epi-al-barra i,
+body.design-v2 .ds-modulo .contr-crono-legenda-status i {
+  border-radius: var(--ds-radius-xs);
+}
+
+/* ============================================================
+   4. CONTROLES → raio de controle
+
+   Mesma régua que a toolbar (05-components, 3.1) e o campo de modal
+   (08-modal, 4) já usam. Estes são os controles que vivem SOLTOS no miolo das
+   telas — busca de cadastro, seletor de permissão, campo de hora extra,
+   paginação — e que hoje variam entre 8 e 10px.
+   ============================================================ */
+body.design-v2 .ds-modulo .cad-add input,
+body.design-v2 .ds-modulo .cad-edit-input,
+body.design-v2 .ds-modulo .cad-busca,
+body.design-v2 .ds-modulo .cad-acoes button,
+body.design-v2 .ds-modulo .perm-empresa-sel,
+body.design-v2 .ds-modulo .perm-grupo-set,
+body.design-v2 .ds-modulo .perm-grupo-titulo,
+body.design-v2 .ds-modulo .perm-sel,
+body.design-v2 .ds-modulo .perm-ctr-item,
+body.design-v2 .ds-modulo .paginacao .pag-tamanho select,
+body.design-v2 .ds-modulo .pag-salto,
+body.design-v2 .ds-modulo .cst-prev-ctrl select,
+body.design-v2 .ds-modulo .cst-filtro-mes input,
+body.design-v2 .ds-modulo .cst-he-form > label input,
+body.design-v2 .ds-modulo .cst-he-item input,
+body.design-v2 .ds-modulo .inv-cdi input,
+body.design-v2 .ds-modulo .usr-busca,
+body.design-v2 .ds-modulo .usr-senha-input,
+body.design-v2 .ds-modulo .usr-nivel-sel,
+body.design-v2 .ds-modulo .logs-sel,
+body.design-v2 .ds-modulo .func-pend-dias select,
+body.design-v2 .ds-modulo .func-doc-seg,
+body.design-v2 .ds-modulo .func-vis,
+body.design-v2 .ds-modulo .adm-input,
+body.design-v2 .ds-modulo .thumb-abrir,
+body.design-v2 .ds-modulo .foto-padrao-btn,
+body.design-v2 .modal-overlay .obrig-docs,
+body.design-v2 .modal-overlay .obrig-docs-ct,
+body.design-v2 .modal-overlay .obrig-add input,
+body.design-v2 .modal-overlay .vig-linha input,
+body.design-v2 .modal-overlay .vig-linha select,
+body.design-v2 .modal-overlay .func-lbl-solto input,
+body.design-v2 .modal-overlay .adm-input,
+body.design-v2 .modal-overlay .thumb-abrir,
+body.design-v2 .modal-overlay .foto-padrao-btn,
+body.design-v2 .modal-overlay .func-doc-seg,
+body.design-v2 .modal-overlay .fipe-vinc select,
+body.design-v2 .modal-overlay .treino-q-enun,
+body.design-v2 .modal-overlay .treino-alt-txt,
+/* ↓ medidos pela auditoria de navegador (scripts/auditoria-design.mjs): estes chegaram à tela
+   com 5, 7, 9, 10 e 11px. `.vd-inp` (campos das sub-abas Comprados/Vendidos) é o caso que abriu
+   esta rodada — 7px fixo no legado, sem nenhuma regra do DS por cima. */
+body.design-v2 .ds-modulo .vd-inp,
+body.design-v2 .ds-modulo .func-edit,
+body.design-v2 .ds-modulo .func-del,
+body.design-v2 .ds-modulo .func-cracha,
+body.design-v2 .ds-modulo .func-hist,
+body.design-v2 .ds-modulo .func-desativar,
+body.design-v2 .ds-modulo .func-reativar,
+body.design-v2 .ds-modulo .func-desmob-edit,
+body.design-v2 .ds-modulo .func-pend-seg-tag,
+body.design-v2 .ds-modulo .forn-edit,
+body.design-v2 .ds-modulo .forn-del,
+body.design-v2 .ds-modulo .contr-crono-acao,
+body.design-v2 .ds-modulo .sim-money,
+body.design-v2 .ds-modulo .cs-btn,
+body.design-v2 .ds-modulo .msel-btn,
+body.design-v2 .ds-modulo .loc-busca-wrap,
+body.design-v2 .ds-modulo .busca,
+body.design-v2 .ds-modulo .hdate-ico,
+body.design-v2 .modal-overlay .msel-btn,
+body.design-v2 .modal-overlay .cs-btn,
+body.design-v2 .modal-overlay .hdate-ico {
+  border-radius: var(--ds-radius-sm);
+}
+
+/* Campo SEM classe própria — `<input>`/`<select>`/`<textarea>` solto no meio da tela (Simulador,
+   Contabilidade, Segurança) que nunca recebeu classe e por isso escapava de toda régua: chegava
+   com os 10px do legado, ou com a moldura crua do sistema operacional quando nem o legado o
+   alcançava. Exclusão em vez de lista de `type`: vários desses campos (ex. "Banco/instituição",
+   "Carência (meses)" do Simulador) não têm ATRIBUTO `type` no HTML — só o valor implícito de
+   "text" do navegador — e `[type="text"]` nunca casa com um atributo que não existe de verdade no
+   DOM. A exclusão pega esses de graça; só ficam fora caixa de seleção, rádio e afins, que têm
+   forma própria (quadrado de 3px e círculo) e não devem virar retângulo de controle. */
+body.design-v2 .ds-modulo input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):not([type="color"]):not([type="submit"]):not([type="button"]):not([type="reset"]):not([type="image"]):not([type="hidden"]),
+body.design-v2 .ds-modulo select,
+body.design-v2 .ds-modulo textarea {
+  border-radius: var(--ds-radius-sm);
+}
+
+/* Botão fora da toolbar. A régua da toolbar (05-components, 3.2) já valia lá e
+   no modal (08-modal, 5); no miolo da tela o mesmo `.btn` continuava com os
+   8px do legado — dois raios para o mesmo componente, às vezes na mesma tela.
+   Só o raio: altura e padding continuam do legado, porque há botão de ação em
+   linha de tabela que depende deles. */
+body.design-v2 .ds-modulo .btn { border-radius: var(--ds-radius-sm); }
+
+/* ============================================================
+   5. RELEVO: o cartão não sobe da página
+
+   Todos estes fazem a mesma coisa no hover — `translateY(-1px..-3px)`, alguns
+   com `0 12px 28px` de sombra. A borda em `--ds-primary` já é a resposta ao
+   mouse no resto do sistema (linha de tabela, chip de filtro, faixa de
+   oficina); manter os dois vocabulários é o que faz uma tela parecer de outro
+   produto.
+
+   Cada regra abaixo mantém o que o legado já mudava de COR (borda em
+   `--brand-2`, que a ponte reaponta para o foco do tema) e desliga só o
+   deslocamento e a sombra.
+   ============================================================ */
+body.design-v2 .ds-modulo .card.card-clic:hover,
+body.design-v2 .ds-modulo .forn-card:hover,
+body.design-v2 .ds-modulo .rel-card:hover,
+body.design-v2 .ds-modulo .func-card:hover,
+body.design-v2 .ds-modulo .func-contrato-card:hover,
+body.design-v2 .ds-modulo .func-alerta-item:hover,
+body.design-v2 .ds-modulo .func-pend-row:hover,
+body.design-v2 .ds-modulo .func-dmb-doc.anexado:hover,
+body.design-v2 .ds-modulo .inicio-card:hover,
+body.design-v2 .ds-modulo .inicio-stat:hover,
+body.design-v2 .ds-modulo .empresa-card:hover,
+body.design-v2 .ds-modulo .documento-empresa-card:hover,
+body.design-v2 .ds-modulo .almox-ultima:hover,
+body.design-v2 .ds-modulo .perm-linha:hover,
+body.design-v2 .ds-modulo .contr-crono-acao:hover,
+body.design-v2 .ds-modulo .foto-padrao-btn:hover,
+body.design-v2 .ds-modulo .doc-emp-editar:hover,
+body.design-v2 .ds-modulo .doc-emp-editar:focus-visible,
+body.design-v2 .ds-modulo .empresa-acao-icone:hover,
+body.design-v2 .ds-modulo .empresa-acao-icone:focus-visible,
+body.design-v2 .ds-modulo .empresa-acao-icone:active,
+body.design-v2 .ds-modulo .btn:hover,
+body.design-v2 .ds-modulo .btn:active {
+  transform: none;
+  box-shadow: var(--ds-shadow-none);
+}
+/* `.perm-linha` marca a permissão vigente com uma barra lateral em `inset`, e
+   ela é INFORMAÇÃO, não relevo — a regra acima apagaria junto. Reposta aqui,
+   depois, para as três variantes. */
+body.design-v2 .ds-modulo .perm-linha[data-permissao="editar"]:hover { box-shadow: inset var(--ds-border-accent) 0 0 var(--ds-primary); }
+body.design-v2 .ds-modulo .perm-linha[data-permissao="ver"]:hover { box-shadow: inset var(--ds-border-accent) 0 0 var(--ds-warning); }
+body.design-v2 .ds-modulo .perm-linha[data-permissao="nenhum"]:hover { box-shadow: inset var(--ds-border-accent) 0 0 var(--ds-line); }
+
+/* Cartões da tela Início: o legado pede `box-shadow: var(--elev)`, e a ponte
+   reaponta `--elev` para a sombra de FLUTUANTE (é o valor certo para menu
+   portado e modal, que é quem mais consome a variável). O efeito era um cartão
+   parado com sombra de objeto suspenso. */
+body.design-v2 .ds-modulo .inicio-card,
+body.design-v2 .ds-modulo .inicio-stat {
+  box-shadow: var(--ds-shadow-none);
+  border-color: var(--ds-line);
+}
+
+/* ============================================================
+   6. GRADIENTES → superfície chapada
+
+   `.empresa-hero` foi rejeitado do Design System quando Senhas migrou, com
+   esta justificativa registrada em 05-components.css: "fundo em gradiente,
+   identidade visual própria". A auditoria reverte a decisão — "identidade
+   própria" dentro de um sistema único é exatamente o desvio que se foi
+   corrigir, e o degradê era o motivo de a busca ao lado ter precisado de
+   tratamento especial (ficar sem caixa para não empilhar duas molduras).
+   Chapado, a faixa vira um cabeçalho de seção como o de qualquer outra tela.
+   ============================================================ */
+body.design-v2 .ds-modulo .empresa-hero,
+body.design-v2 .ds-modulo .empresa-hero-cofre {
+  background: var(--ds-surface);
+  border-radius: var(--ds-radius-lg);
+  border-color: var(--ds-line);
+  box-shadow: var(--ds-shadow-none);
+}
+body.design-v2 .ds-modulo .documento-empresa-card {
+  background: var(--ds-surface);
+  border-radius: var(--ds-radius-lg);
+  border-color: var(--ds-line);
+  box-shadow: var(--ds-shadow-none);
+}
+/* Ladrilho da inicial da empresa: degradê da marca + halo colorido por baixo.
+   Vira o mesmo bloco sólido que o resto do sistema usa para marcar origem. */
+body.design-v2 .ds-modulo .empresa-icone {
+  background: var(--ds-primary);
+  color: var(--ds-on-primary);
+  border-radius: var(--ds-radius-sm);
+  box-shadow: var(--ds-shadow-none);
+}
+/* Cartão escuro de destaque do painel de Custos. Continuar ESCURO é decisão
+   mantida: o próprio Design System já tem uma superfície escura fixa nos dois
+   temas — a sidebar, "âncora visual do desenho" (01-tokens.css) — e o cartão
+   cumpre o mesmo papel de destaque no painel. O que sai é o degradê literal
+   (#101828 → #1d2939), que não vinha de token nenhum, mais o anel branco
+   interno e o raio de 14px. Passa a usar a mesma família grafite do shell, de
+   modo que os filhos (rótulo, barra, meses) continuam legíveis sem mudar. */
+body.design-v2 .ds-modulo .cstd-destaque {
+  background: var(--ds-shell-bg);
+  border-radius: var(--ds-radius-lg);
+  box-shadow: var(--ds-shadow-none);
+}
+
+/* ============================================================
+   7. CHECKLIST DO DETRAN (#multaModal) — conteúdo que só existe ali
+   Migração de #funcModal/#multaModal/#almoxModal (docs/DESIGN.md §11.7): sem
+   cobertura nenhuma do DS até aqui. `.detran-obs-btn.tem-obs` fixava
+   `#2563eb`/`#60a5fa` (claro/escuro) no legado, com um bloco `body.tema-escuro`
+   inteiro só pra duplicar a cor no tema errado — `--ds-info`/`--ds-info-soft`
+   já resolvem os dois tons sozinhos (conferido em 02-themes.css), então a
+   regra abaixo não precisa repetir a duplicação: um valor cobre os dois temas,
+   por especificidade, sem tocar no bloco `body.tema-escuro` do styles.css (que
+   fica órfão, não é apagado aqui — mesmo tratamento dado à `.empresa-kicker`
+   morta, faxina à parte, fora do escopo desta entrega).
+   ============================================================ */
+body.design-v2 .modal-overlay .detran-etapa { border-radius: var(--ds-radius-lg); }
+body.design-v2 .modal-overlay .detran-obs-btn.tem-obs {
+  color: var(--ds-info);
+  border-color: var(--ds-info);
+  background: var(--ds-info-soft);
+}
+body.design-v2 .modal-overlay .detran-obs-btn.tem-obs svg path { fill: var(--ds-info); }
+
+/* ============================================================
+   8. COR QUE NÃO ACOMPANHA O TEMA
+
+   Achadas rodando a auditoria de navegador nos DOIS temas e cruzando os dois
+   relatórios: cor que sai IDÊNTICA no claro e no escuro não vem de token nem da
+   paleta legada — está presa no CSS. O resto da paleta legada (fundo de célula,
+   sub-aba, badge de empresa) muda junto com o tema e por isso NÃO entra aqui:
+   trocá-la mexeria na identidade de cor de todas as telas, que é outra decisão.
+
+   `color: rgb(0,0,0)` é o caso mais traiçoeiro: `.func-contrato-card` e
+   `.func-pend-row` são `<button>`, e botão não herda `color` — sem declaração,
+   o navegador usa o preto do sistema. Hoje quase não aparece porque cada filho
+   declara a própria cor; qualquer texto novo dentro deles nasceria preto no
+   tema escuro.
+   ============================================================ */
+body.design-v2 .ds-modulo .func-contrato-card,
+body.design-v2 .ds-modulo .func-contrato-vig-btn,
+body.design-v2 .ds-modulo .func-pend-row,
+body.design-v2 .ds-modulo .func-pend-quem,
+body.design-v2 .ds-modulo .func-pend-quem-txt {
+  color: var(--ds-ink);
+}
+
+/* Âmbar de "vence em breve" — o mesmo alerta que a coluna Situação já dá com
+   `--ds-warning`, aqui ainda no hex antigo. */
+body.design-v2 .ds-modulo .func-doc-venc,
+body.design-v2 .ds-modulo .func-pill-warn,
+body.design-v2 .ds-modulo .func-dmb-falta {
+  color: var(--ds-warning);
+}
+body.design-v2 .ds-modulo .func-pill-warn { background: var(--ds-warning-soft); }
+
+/* `<select>` que nunca recebeu classe (Manutenção › Relatórios) chegava com a
+   moldura crua do sistema operacional — borda #767676 e texto preto, sem passar
+   nem pelo legado. Ganha a mesma veste dos demais controles (o raio dele já
+   está na seção 4). */
+body.design-v2 .ds-modulo select {
+  color: var(--ds-ink);
+  border-color: var(--ds-line);
+  background-color: var(--ds-surface);
+}
+
+/* Auditoria de aderência (scripts/auditoria-design.mjs, ago/2026) — restos do
+   tema escuro ANTIGO (azul-marinho/véu branco) que a ponte não alcança porque
+   o legado os escreve em literal por tema, não por token:
+
+   1. Botões de ação da tabela de Instalações: véu rgba(255,255,255,.92) no
+      claro e rgba(20,24,34,.92) (o navy antigo) no escuro. O véu é funcional
+      (cobre o texto da linha por baixo do botão flutuante) — só a COR migra. */
+body.design-v2 .ds-modulo .inst-acoes .edit,
+body.design-v2 .ds-modulo .inst-acoes .del {
+  background: color-mix(in srgb, var(--ds-surface) 92%, transparent);
+}
+/* 2. .mini-tabela (relatórios: Frota › Dashboard/Análises, Contratos › Painel,
+      Controles): no escuro o cabeçalho e a linha TOTAL usavam lavagem branca
+      rgba(255,255,255,.05) e divisória rgba(255,255,255,.08). Por token, os
+      dois temas saem certos de uma regra só. */
+body.design-v2 .ds-modulo .mini-tabela th,
+body.design-v2 .ds-modulo .mini-tabela tr.total td {
+  background: var(--ds-surface-subtle);
+  color: var(--ds-muted);
+}
+body.design-v2 .ds-modulo .mini-tabela tr.total td { color: var(--ds-ink); }
+body.design-v2 .ds-modulo .mini-tabela td { border-bottom-color: var(--ds-line); }
+/* 3. Selos neutros com fundo navy #2b3445 fixo no escuro: .emp-badge (Contratos)
+      repete a própria receita clara em token (primária diluída na superfície);
+      .fb-tipo/.fb-s-novo (Feedback) são etiquetas neutras e vestem a superfície
+      sutil. Nada disso é "paleta por significado" (§11.8) — é o cinza do tema
+      escuro anterior. */
+body.design-v2 .ds-modulo .emp-badge {
+  background: color-mix(in srgb, var(--ds-primary) 15%, var(--ds-surface));
+  color: color-mix(in srgb, var(--ds-primary) 70%, var(--ds-ink));
+}
+body.design-v2 .ds-modulo .fb-tipo,
+body.design-v2 .ds-modulo .fb-s-novo {
+  background: var(--ds-surface-subtle);
+  color: var(--ds-ink);
+}
+
+}
+
+/* ============================================================================
+   9. FORMA NO CELULAR (< 768px) — SÓ RAIO, NADA DE LAYOUT
+
+   O resto deste arquivo (e o Design System inteiro) fica FORA do celular de
+   propósito: o legado já reescreve tabela em cards e a faixa de KPI em coluna
+   só abaixo de 768px, e o DS não tem esse mecanismo — abrir tudo aqui quebraria
+   esses layouts (ver docs/DESIGN.md). Mas RAIO não é layout: um campo ou botão
+   redondo demais incomoda tanto no celular quanto no desktop, e corrigi-lo não
+   move nada na tela.
+
+   Por isso este bloco fica FORA do `@media (min-width: 768px)` acima — vale em
+   qualquer largura — e só repete `border-radius` dos MESMOS seletores já
+   corrigidos para desktop nas seções 3 e 4, com os tokens PRIMITIVOS de raio
+   (`--ds-radius-*`, 01-tokens.css, que são globais — ao contrário dos tokens
+   SEMÂNTICOS de cor de 02-themes.css, que só existem dentro do
+   `@media (min-width: 768px)` daquele arquivo). É por isso que aqui só entra
+   raio: estender cor ao celular exigiria antes desacoplar os tokens semânticos
+   do breakpoint, mudança maior e fora desta rodada.
+   ============================================================================ */
+body.design-v2 .ds-modulo .btn,
+body.design-v2 .ds-modulo input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):not([type="color"]):not([type="submit"]):not([type="button"]):not([type="reset"]):not([type="image"]):not([type="hidden"]),
+body.design-v2 .ds-modulo select,
+body.design-v2 .ds-modulo textarea,
+body.design-v2 .ds-modulo .vd-inp,
+body.design-v2 .ds-modulo .func-edit,
+body.design-v2 .ds-modulo .func-del,
+body.design-v2 .ds-modulo .func-cracha,
+body.design-v2 .ds-modulo .func-hist,
+body.design-v2 .ds-modulo .func-desativar,
+body.design-v2 .ds-modulo .func-reativar,
+body.design-v2 .ds-modulo .func-desmob-edit,
+body.design-v2 .ds-modulo .func-pend-seg-tag,
+body.design-v2 .ds-modulo .forn-edit,
+body.design-v2 .ds-modulo .forn-del,
+body.design-v2 .ds-modulo .contr-crono-acao,
+body.design-v2 .ds-modulo .sim-money,
+body.design-v2 .ds-modulo .cs-btn,
+body.design-v2 .ds-modulo .msel-btn,
+body.design-v2 .ds-modulo .loc-busca-wrap,
+body.design-v2 .ds-modulo .busca,
+body.design-v2 .ds-modulo .hdate-ico,
+body.design-v2 .ds-modulo .func-vis-btn,
+/* Badges de tipo/categoria (05-components.css §9) — só o raio; padding e
+   tipografia do badge continuam exclusivos do desktop. */
+body.design-v2 .ds-modulo .tipo-badge,
+body.design-v2 .ds-modulo .mntv-tipo,
+body.design-v2 .ds-modulo .apt-pill,
+body.design-v2 .ds-modulo .func-pill,
+body.design-v2 .ds-modulo .treino-status,
+body.design-v2 .ds-modulo .seg-area,
+body.design-v2 .ds-modulo .acao-tag,
+body.design-v2 .ds-modulo .inv-fonte,
+body.design-v2 .ds-modulo .loc-table-contrato,
+body.design-v2 .ds-modulo .almox-sit,
+body.design-v2 .ds-modulo .usr-badge,
+body.design-v2 .ds-modulo .fb-status,
+body.design-v2 .ds-modulo .fb-tipo,
+body.design-v2 .ds-modulo .adm-pill {
+  border-radius: var(--ds-radius-sm);
+}
+body.design-v2 .ds-modulo .func-foto,
+body.design-v2 .ds-modulo .func-empresa-logo,
+body.design-v2 .ds-modulo .forn-ic,
+body.design-v2 .ds-modulo .epi-alertas-card,
+body.design-v2 .ds-modulo .epi-al-item {
+  border-radius: var(--ds-radius-lg);
+}
+body.design-v2 .ds-modulo .epi-al-barra,
+body.design-v2 .ds-modulo .epi-al-barra i,
+body.design-v2 .ds-modulo .contr-crono-legenda-status i {
+  border-radius: var(--ds-radius-xs);
+}

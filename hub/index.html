@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Acesso NTE · Gestão RM e Fluxo RM</title>
+<meta name="description" content="Hub de acesso aos sistemas da Norte Engenharia: Gestão RM (frota, multas, rastreadores, pessoas e SST) e Fluxo RM (fluxo de pagamentos).">
+<meta name="author" content="Gestão RM">
+<!-- Grafite do shell: é a cor da faixa de topo no celular, igual nos dois temas. -->
+<meta name="theme-color" content="#121417">
+<link rel="icon" href="/hub/assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/hub/styles.css?v=1.55.45">
+<!-- Síncrono no <head> DE PROPÓSITO: aplica o tema escuro no <html> antes do primeiro paint
+     (no fim do <body> a página piscava clara para quem usa o escuro). O resto do script
+     espera o DOMContentLoaded. -->
+<script src="/hub/script.js?v=1.55.45"></script>
+</head>
+<body>
+<div class="stage">
+  <button type="button" class="btn-tema" id="temaToggle" aria-label="Usar tema escuro">
+    <svg class="ico-lua" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
+    <svg class="ico-sol" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+  </button>
+
+  <!-- ============ PAINEL INSTITUCIONAL (grafite, igual nos 2 temas) ============ -->
+  <aside class="shell">
+    <div class="marca">
+      <span class="marca-tile"><span class="marca-mark" aria-hidden="true"></span></span>
+      <span class="marca-texto">
+        <span class="marca-nome">Gestão RM</span>
+        <span class="marca-sub">Acesso aos sistemas</span>
+      </span>
+    </div>
+
+    <div class="shell-meio">
+      <h1>Um acesso para cada frente da operação.</h1>
+      <p>O Gestão RM cuida da operação, das pessoas e da segurança do trabalho; o Fluxo RM, dos pagamentos. Cada sistema tem login próprio.</p>
+      <div class="atalhos">
+        <p class="atalhos-titulo" id="atalhosTitulo">Atalhos de teclado</p>
+        <ul class="atalhos-lista" aria-labelledby="atalhosTitulo">
+          <li><span class="teclas"><kbd>1</kbd></span>Abre o Gestão RM</li>
+          <li><span class="teclas"><kbd>2</kbd></span>Abre o Fluxo RM</li>
+          <li><span class="teclas"><kbd><span aria-hidden="true">←</span><span class="sr-only">seta para a esquerda</span></kbd><kbd><span aria-hidden="true">→</span><span class="sr-only">seta para a direita</span></kbd></span>Alterna entre os sistemas</li>
+          <li><span class="teclas"><kbd>Enter</kbd></span>Entra no sistema marcado</li>
+        </ul>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============ ESCOLHA DO SISTEMA ============ -->
+  <main class="painel">
+    <div class="conteudo">
+      <header class="cabecalho">
+        <h2 id="tituloSistemas">Escolha o sistema</h2>
+        <p><span class="so-desktop">Seu último acesso fica marcado. Entrar abre a tela de login do sistema escolhido.</span><span class="so-celular">Cada sistema tem login próprio. Seu último acesso fica marcado.</span></p>
+      </header>
+
+      <!-- Cartão = 1 link só (o "Entrar"); o ::after dele cobre o cartão inteiro, então clicar em
+           qualquer ponto entra, sem aninhar interativos. `marcado` (sistema que o Enter abre) e
+           `abrindo` são postos pelo script; o selo "Último acesso" nasce oculto. -->
+      <ul class="sistemas" aria-labelledby="tituloSistemas">
+        <li class="sistema" data-sistema="gestao">
+          <div class="sistema-previa">
+            <picture>
+              <source srcset="/hub/assets/preview-gestao.webp" type="image/webp">
+              <img src="/hub/assets/preview-gestao.png" alt="Prévia da tela inicial do Gestão RM" width="900" height="432" loading="lazy" decoding="async">
+            </picture>
+          </div>
+          <div class="sistema-corpo">
+            <div class="sistema-topo">
+              <span class="sistema-tile"><span class="marca-mark" aria-hidden="true"></span></span>
+              <div class="sistema-titulos">
+                <h3 class="sistema-nome">Gestão RM</h3>
+                <span class="sistema-sub">Central de gestão</span>
+              </div>
+              <span class="sistema-selo" hidden><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Último acesso</span>
+            </div>
+            <p class="sistema-desc">Frota, multas, rastreadores, manutenção, pessoas e segurança do trabalho em um só painel.</p>
+            <ul class="sistema-modulos" aria-label="Módulos do Gestão RM">
+              <li>Frota</li><li>Multas</li><li>Rastreadores</li><li>Manutenção</li><li>Pessoas</li><li>SST</li>
+            </ul>
+            <div class="sistema-rodape">
+              <span class="sistema-endereco"><span class="sistema-url">gestao.example.com/painel</span><kbd class="tecla" title="Atalho: tecla 1">1</kbd></span>
+              <a class="sistema-entrar" href="/painel">
+                <span class="spin" aria-hidden="true"></span>
+                <span class="rotulo">Entrar<span class="rotulo-sistema"> no Gestão RM</span></span>
+                <span class="rotulo-abrindo" aria-hidden="true">Abrindo…</span>
+                <svg class="seta" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </a>
+            </div>
+          </div>
+        </li>
+
+        <li class="sistema" data-sistema="fluxo">
+          <div class="sistema-previa">
+            <picture>
+              <source srcset="/hub/assets/preview-fluxo.webp" type="image/webp">
+              <img src="/hub/assets/preview-fluxo.png" alt="Prévia do painel do Fluxo RM" width="900" height="451" loading="lazy" decoding="async">
+            </picture>
+          </div>
+          <div class="sistema-corpo">
+            <div class="sistema-topo">
+              <span class="sistema-tile sistema-tile--fluxo"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 20v-4"/><path d="M10 20v-7"/><path d="M14 20v-5"/><path d="M18 20v-9"/><path d="m4 11 5-4 4 3 7-6"/></svg></span>
+              <div class="sistema-titulos">
+                <h3 class="sistema-nome">Fluxo RM</h3>
+                <span class="sistema-sub">Fluxo de pagamentos</span>
+              </div>
+              <span class="sistema-selo" hidden><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Último acesso</span>
+            </div>
+            <p class="sistema-desc">Pagamentos, contas, aportes e conciliação, com a cobertura de cada conta no painel.</p>
+            <ul class="sistema-modulos" aria-label="Módulos do Fluxo RM">
+              <li>Pagamentos</li><li>Aportes</li><li>Adiantamentos</li><li>Conciliação</li><li>Indicadores</li>
+            </ul>
+            <div class="sistema-rodape">
+              <span class="sistema-endereco"><span class="sistema-url">fluxo.example.com</span><kbd class="tecla" title="Atalho: tecla 2">2</kbd></span>
+              <a class="sistema-entrar" href="https://fluxo.example.com">
+                <span class="spin" aria-hidden="true"></span>
+                <span class="rotulo">Entrar<span class="rotulo-sistema"> no Fluxo RM</span></span>
+                <span class="rotulo-abrindo" aria-hidden="true">Abrindo…</span>
+                <svg class="seta" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </a>
+            </div>
+          </div>
+        </li>
+      </ul>
+
+      <p class="nota">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+        <span>Sem acesso a um dos sistemas? Peça a liberação ao administrador.</span>
+      </p>
+    </div>
+  </main>
+</div>
+</body>
+</html>

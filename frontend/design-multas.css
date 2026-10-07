@@ -1,0 +1,466 @@
+/* ============================================================================
+   design-multas.css — CAMADA DO MÓDULO MULTAS
+
+   Mesma armadilha de especificidade do `design-manutencao.css`, com DUAS
+   fontes: o olho da coluna Observação e o clipe de anexos (`#tabelaMultas
+   .obs-multa`, `#tabelaMultas .anexos-multa`, styles.css) são botões por ID
+   a 28px de altura, e a caixa de seleção (`.sel-check`, o `<label>` que
+   estiliza o checkbox de cada linha — só Multas usa esse wrapper, a Frota
+   usa `<input>` nu) tem `min-height: 28px` sem media query nenhuma. As duas
+   coisas são maiores que os `--ds-action-h` (22px) do resto da coluna de
+   Ações, e um ID sempre vence o `.ds-modulo .acoes button` do Design
+   System (a classe sem ID, `.sel-check`, ainda perde para qualquer regra
+   do DS por ORDEM — mas como não há regra do DS para `.sel-check`, ela
+   também precisa de reforço aqui). Isso empurrava a linha inteira de
+   Multas para 37px em vez dos 32px de referência da Frota (achado na
+   auditoria de padronização visual, comparação de estilos computados
+   contra Rastreadores/Frota).
+
+   Único jeito de vencer um ID sem `!important` é igualar a especificidade
+   com outro ID — mesmo recurso do `design-manutencao.css`. `.anexos-multa`
+   mantém largura livre (ícone + contador, não é um quadrado) — só a altura
+   acompanha `--ds-action-h`.
+
+   Carrega DEPOIS do Design System. Sem nenhum `!important`.
+   ============================================================================ */
+
+@media (min-width: 768px) {
+
+body.design-v2 #multas #tabelaMultas .obs-multa {
+  width: var(--ds-action-h);
+  height: var(--ds-action-h);
+  min-height: var(--ds-action-h);
+}
+/* A linha compacta de 32px fechava em 33,5px SÓ nas Multas — e a culpada era esta célula: o
+   botão de observação é inline num texto de line-height 19,5px, e o encaixe pela BASELINE
+   soma o descensor do texto embaixo do botão (o clássico gap de inline-block). Zerar o
+   line-height da célula tira o "texto fantasma" da conta: quem dita a altura passa a ser só
+   o botão, como nas células de ação das outras abas. Mesma família da correção da pílula da
+   Frota (design-v2.css) — depois dela a Frota fechou 32 e a diferença ficou visível. */
+body.design-v2 #multas #tabelaMultas td.col-obs { line-height: 1; }
+body.design-v2 #multas #tabelaMultas .anexos-multa {
+  min-width: var(--ds-action-h);
+  height: var(--ds-action-h);
+}
+body.design-v2 #multas #tabelaMultas .sel-check {
+  min-width: var(--ds-action-h);
+  min-height: var(--ds-action-h);
+}
+
+/* ----- Cartões de indicador (StatTile) -----
+   A Multas usa a marcação `.v2-kpi*` do Design System sem ser um módulo migrado: a <section>
+   não tem `.ds-modulo`, então nenhuma regra da seção 2/3 do 05-components a alcança. Estas
+   regras são o PAR `#multas` daquelas — mesmos valores, mesmos tokens, nenhum valor novo.
+   Moram aqui porque o Design System genérico não pode conhecer nome de módulo (é o que
+   test/design-system.test.js cobra); a camada do próprio módulo existe justamente para isso.
+   Ao migrar a Multas para `.ds-modulo`, este bloco inteiro pode ser apagado. */
+body.design-v2 #multas .v2-kpis {
+  display: grid;
+  gap: 1px;
+  margin-bottom: var(--ds-space-6);
+  background: var(--ds-line);
+  border: var(--ds-border) solid var(--ds-line);
+  border-radius: var(--ds-radius-lg);
+  overflow: hidden;
+}
+body.design-v2 #multas .v2-kpi {
+  display: flex; flex-direction: column; gap: 1px;
+  padding: var(--ds-space-4) 14px;
+  background: var(--ds-surface);
+  min-width: 0;
+  container-type: inline-size;
+}
+body.design-v2 #multas .v2-kpi-rot {
+  font-size: var(--ds-text-xs);
+  font-weight: var(--ds-weight-medium);
+  color: var(--ds-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+body.design-v2 #multas .v2-kpi-val {
+  font-family: var(--mono);
+  font-size: clamp(14px, 8.5cqi, var(--ds-text-2xl));
+  font-weight: var(--ds-weight-medium);
+  line-height: var(--ds-leading-tight);
+  color: var(--ds-ink);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+body.design-v2 #multas .v2-kpi-nota { font-size: var(--ds-text-xs); color: var(--ds-muted); }
+body.design-v2 #multas .v2-kpi.aviso .v2-kpi-val { color: var(--ds-warning); }
+body.design-v2 #multas .v2-kpi.risco .v2-kpi-val { color: var(--ds-danger); }
+body.design-v2 #multas .v2-kpi.positivo .v2-kpi-val { color: var(--ds-success); }
+/* `.alugado` — mesmo azul-céu da pílula de situação `.m-alugado` (05-components §pílulas):
+   o número do KPI e a badge da tabela contam a mesma coisa, então vestem o mesmo token. */
+body.design-v2 #multas .v2-kpi.alugado .v2-kpi-val { color: var(--ds-accent-sky); }
+body.design-v2 #multas .v2-kpi-clicavel {
+  cursor: pointer;
+  transition: background-color .12s ease, box-shadow .12s ease;
+}
+body.design-v2 #multas .v2-kpi-clicavel:hover { background: var(--ds-surface-hover); }
+body.design-v2 #multas .v2-kpi-clicavel.ativo {
+  background: var(--ds-surface-hover);
+  box-shadow: inset 0 0 0 2px var(--ds-primary);
+}
+
+}
+
+/* ----- Filtro de período de Vencimento (criarFiltroPeriodo) -----
+   O BOTÃO não recebe nada aqui: é a anatomia .msel-btn de sempre, que herda a
+   régua dos demais filtros (§4/§4.1 do 05-components) e o sheet mobile. Só o
+   CONTEÚDO do menu (chips de modo, campos, Aplicar) é deste módulo — e fica
+   FORA do @media acima de propósito: o menu abre igual no celular. */
+body.design-v2 #multas #fmVencPeriodo .msel-menu {
+  min-width: 300px;
+  padding: var(--ds-space-6);
+}
+body.design-v2 #multas .fperiodo-modos {
+  display: flex; flex-wrap: wrap;
+  gap: var(--ds-space-3);
+  margin-bottom: var(--ds-space-5);
+}
+/* um degrau acima do chip padrão do DS (6px 12px) só na VERTICAL: mais horizontal
+   quebraria "Intervalo" para a segunda linha nos 300px do menu */
+body.design-v2 #multas .fperiodo-modos .forn-chip {
+  padding: var(--ds-space-4) var(--ds-space-6);
+}
+body.design-v2 #multas .fperiodo-campos {
+  display: flex; flex-direction: column;
+  gap: var(--ds-space-4);
+  padding: var(--ds-space-2) 0 var(--ds-space-4);
+}
+/* rótulo (Dia/De/Até) e campo na mesma linha, com o campo confortável para
+   "dd / mm / aaaa" + ícone do calendário */
+body.design-v2 #multas .fperiodo-campos .almox-data {
+  display: flex; align-items: center;
+  gap: var(--ds-space-4);
+}
+/* compacto de propósito: só o necessário para "dd / mm / aaaa" + ícone,
+   sem esticar até a borda do menu (o espaço vazio ao lado é intencional) */
+body.design-v2 #multas .fperiodo-campos .hdate,
+body.design-v2 #multas .fperiodo-campos .almox-data input[type="date"] {
+  min-width: 148px;
+  flex: 0 0 auto;
+}
+body.design-v2 #multas .fperiodo-linha { display: flex; gap: var(--ds-space-3); }
+body.design-v2 #multas .fperiodo-linha > select { flex: 1 1 0; min-width: 0; }
+/* selects de mês/ano na mesma régua dos controles do DS (§3.3.1) */
+body.design-v2 #multas .fperiodo-campos select {
+  height: var(--ds-control-h);
+  padding: 0 var(--ds-space-4);
+  border: var(--ds-border) solid var(--ds-line-strong);
+  border-radius: var(--ds-radius-sm);
+  background: var(--ds-surface);
+  color: var(--ds-ink);
+  font-family: inherit;
+  font-size: var(--ds-text-base);
+}
+body.design-v2 #multas .fperiodo-campos select:hover { border-color: var(--ds-primary); }
+body.design-v2 #multas .fperiodo-campos select:focus-visible {
+  outline: none;
+  border-color: var(--ds-focus);
+  box-shadow: 0 0 0 var(--ds-ring-width) color-mix(in srgb, var(--ds-focus) 18%, transparent);
+}
+/* divisor e rodapé com mais respiro que o .msel-foot legado (6px/6px/2px) */
+body.design-v2 #multas #fmVencPeriodo .msel-foot {
+  margin-top: var(--ds-space-5);
+  padding-top: var(--ds-space-5);
+  gap: var(--ds-space-3);
+}
+body.design-v2 #multas .fp-aplicar {
+  width: 100%;
+  height: var(--ds-control-h);
+  margin: var(--ds-space-1) 0;
+  border: 0;
+  border-radius: var(--ds-radius-sm);
+  background: var(--ds-primary);
+  color: var(--ds-on-primary);
+  font-family: inherit;
+  font-size: var(--ds-text-base);
+  font-weight: var(--ds-weight-semibold);
+  cursor: pointer;
+}
+body.design-v2 #multas .fp-aplicar:hover { background: var(--ds-primary-hover); }
+
+/* ----- Termo da multa preenchido (1.55.49) -----
+   Cabeçalho do bloco "Status do Processo no Detran" com o botão "Gerar termo" e o modal
+   "Gerar termo" (abrirGerarTermoMulta, anexado ao body: escopo .modal-overlay). Só tokens. */
+@media (min-width: 768px) {
+body.design-v2 .modal-overlay .detran-cab {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--ds-space-5);
+  margin-bottom: var(--ds-space-6);
+}
+body.design-v2 .modal-overlay .detran-cab .detran-titulo { margin: 0; }
+body.design-v2 .modal-overlay .detran-cab .btn,
+body.design-v2 .modal-overlay .termo-marc { display: inline-flex; align-items: center; gap: var(--ds-space-3); }
+body.design-v2 .modal-overlay .termo-corpo { grid-template-columns: minmax(0, 1fr); }
+body.design-v2 .modal-overlay .termo-corpo .dica { margin: 0; }
+body.design-v2 .modal-overlay .form-grid .termo-func { min-height: 132px; padding: var(--ds-space-2); }
+body.design-v2 .modal-overlay .termo-aviso {
+  margin: 0; padding: var(--ds-space-4) var(--ds-space-5);
+  border-radius: var(--ds-radius-sm); background: var(--ds-warning-soft); color: var(--ds-warning-ink);
+  font-size: var(--ds-text-sm);
+}
+body.design-v2 .modal-overlay .termo-ok { margin: 0; color: var(--ds-success); font-size: var(--ds-text-sm); font-weight: var(--ds-weight-medium); }
+body.design-v2 .modal-overlay .termo-extras { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: var(--ds-space-5) var(--ds-space-6); }
+body.design-v2 .modal-overlay .termo-extras[hidden], body.design-v2 .modal-overlay .termo-extras label[hidden] { display: none; }
+body.design-v2 .modal-overlay .termo-previa { display: flex; flex-direction: column; gap: var(--ds-space-5); }
+body.design-v2 .modal-overlay .termo-valores {
+  display: grid; grid-template-columns: minmax(0, 200px) minmax(0, 1fr); gap: var(--ds-space-2) var(--ds-space-6);
+  margin: 0; max-height: 260px; overflow-y: auto; padding: var(--ds-space-4) var(--ds-space-5);
+  border: var(--ds-border) solid var(--ds-line); border-radius: var(--ds-radius-sm);
+  font-size: var(--ds-text-sm);
+}
+body.design-v2 .modal-overlay .termo-valores dt { color: var(--ds-muted); }
+body.design-v2 .modal-overlay .termo-valores dd { margin: 0; color: var(--ds-ink); overflow-wrap: anywhere; }
+body.design-v2 .modal-overlay .termo-valores dd.termo-vazio { color: var(--ds-warning-ink); font-style: italic; }
+body.design-v2 .modal-overlay .termo-marcadores summary { cursor: pointer; font-size: var(--ds-text-sm); font-weight: var(--ds-weight-semibold); color: var(--ds-ink); }
+body.design-v2 .modal-overlay .termo-marcadores[open] summary { margin-bottom: var(--ds-space-4); }
+body.design-v2 .modal-overlay .termo-marc-grupo { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ds-space-3); margin-top: var(--ds-space-5); }
+body.design-v2 .modal-overlay .termo-marc-grupo b { flex: 1 0 100%; font-size: var(--ds-text-xs); color: var(--ds-muted); }
+body.design-v2 .modal-overlay .termo-marc {
+  padding: var(--ds-space-1) var(--ds-space-4);
+  border: var(--ds-border) solid var(--ds-line); border-radius: var(--ds-radius-sm);
+  background: var(--ds-surface); color: var(--ds-ink); font: inherit; font-size: var(--ds-text-xs); cursor: pointer;
+}
+body.design-v2 .modal-overlay .termo-marc code { font-family: var(--mono); font-weight: var(--ds-weight-semibold); }
+body.design-v2 .modal-overlay .termo-marc span { color: var(--ds-muted); }
+body.design-v2 .modal-overlay .termo-marc:hover { border-color: var(--ds-primary); }
+body.design-v2 .modal-overlay .termo-marc:focus-visible { outline: var(--ds-border-tab) solid var(--ds-focus); outline-offset: var(--ds-space-1); }
+}
+
+/* ----- Conferência do OCR da multa -----
+   USO: #multaModal details.mocr-revisao começa recolhido, com <summary>,
+   .mocr-revisao-topo e #mocrLista; a conferência é opcional para salvar.
+   cada .mocr-item traz título, .mocr-motivo, recorte opcional, .mocr-edicao
+   com input.mocr-valor, alternativas opcionais e .mocr-acoes. A classe
+   .resolvido indica uma sugestão já aceita/descartada. .mocr-diagnostico
+   é um <details> com o texto extraído e as correções; [hidden] retira cada
+   bloco da tela. Resultado: revisão no próprio formulário, sem cores por
+   tema e sem alterar a casca nem as etapas do wizard mobile.
+   Não definir display no bloco externo: no celular, o wizard controla
+   sua visibilidade com data-etapa; flex-direction preserva a coluna. */
+body.design-v2 #multaModal .mocr-bar {
+  gap: var(--ds-space-4);
+  padding-bottom: var(--ds-space-4);
+  margin-bottom: 0;
+  border-bottom: var(--ds-border) solid var(--ds-line);
+}
+body.design-v2 #multaModal .mocr-status {
+  min-width: 0;
+  color: var(--ds-muted);
+  font-size: var(--ds-text-xs);
+  line-height: var(--ds-leading-normal);
+  overflow-wrap: anywhere;
+}
+body.design-v2 #multaModal .mocr-status.lendo { color: var(--ds-info); }
+body.design-v2 #multaModal .mocr-status.ok { color: var(--ds-success); }
+body.design-v2 #multaModal .mocr-status.erro { color: var(--ds-danger); }
+body.design-v2 #multaModal .mocr-status.revisar { color: var(--ds-warning-ink); }
+body.design-v2 #multaModal .mocr-revisao,
+body.design-v2 #multaModal .mocr-diagnostico {
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+  flex-direction: column;
+  padding: var(--ds-space-6);
+  border: var(--ds-border) solid var(--ds-line);
+  border-radius: var(--ds-radius-lg);
+  background: var(--ds-surface);
+  color: var(--ds-ink);
+}
+body.design-v2 #multaModal .mocr-revisao[hidden],
+body.design-v2 #multaModal .mocr-diagnostico[hidden],
+body.design-v2 #multaModal .mocr-status[hidden],
+body.design-v2 #multaModal #mocrCancelar[hidden],
+body.design-v2 #multaModal #mocrSalvarDica[hidden] { display: none; }
+/* O wizard usa flex no <details> da etapa ativa. Preservar explicitamente
+   o recolhimento dos filhos impede a grade da lista de escapar do disclosure. */
+body.design-v2 #multaModal .mocr-revisao:not([open]) > :not(summary),
+body.design-v2 #multaModal .mocr-revisao:not([open]) > #mocrLista,
+body.design-v2 #multaModal .mocr-diagnostico:not([open]) > :not(summary) { display: none; }
+body.design-v2 #multaModal .mocr-revisao-topo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--ds-space-4);
+  margin-top: var(--ds-space-6);
+  margin-bottom: var(--ds-space-6);
+}
+body.design-v2 #multaModal #mocrLista {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--ds-space-6);
+  min-width: 0;
+}
+body.design-v2 #multaModal .mocr-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: var(--ds-space-4) var(--ds-space-6);
+  min-width: 0;
+  padding: var(--ds-space-6);
+  border: var(--ds-border) solid var(--ds-line);
+  border-left: var(--ds-border-accent) solid var(--ds-warning);
+  border-radius: var(--ds-radius-sm);
+  background: var(--ds-surface);
+  box-shadow: var(--ds-shadow-none);
+}
+body.design-v2 #multaModal .mocr-item > * { min-width: 0; }
+body.design-v2 #multaModal .mocr-item h4 {
+  margin: 0;
+  color: var(--ds-ink);
+  font-size: var(--ds-text-base);
+  font-weight: var(--ds-weight-semibold);
+  line-height: var(--ds-leading-normal);
+}
+body.design-v2 #multaModal .mocr-motivo,
+body.design-v2 #multaModal .mocr-original {
+  margin: 0;
+  font-size: var(--ds-text-xs);
+  line-height: var(--ds-leading-normal);
+  overflow-wrap: anywhere;
+}
+body.design-v2 #multaModal .mocr-motivo { color: var(--ds-warning-ink); }
+body.design-v2 #multaModal .mocr-original { color: var(--ds-muted); }
+body.design-v2 #multaModal .mocr-recorte {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  max-height: calc(var(--ds-space-8) * 5);
+  object-fit: contain;
+  object-position: left center;
+  border: var(--ds-border) solid var(--ds-line);
+  border-radius: var(--ds-radius-sm);
+  background: var(--ds-surface-subtle);
+}
+body.design-v2 #multaModal .mocr-item label.mocr-edicao {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-space-2);
+  margin: 0;
+  color: var(--ds-muted);
+  font-family: inherit;
+  font-size: var(--ds-text-xs);
+  font-weight: var(--ds-weight-semibold);
+  letter-spacing: normal;
+  text-transform: none;
+}
+body.design-v2 #multaModal .mocr-item .mocr-valor,
+body.design-v2 #multaModal .mocr-item .mocr-alternativas {
+  min-width: 0;
+  width: 100%;
+  min-height: var(--ds-control-h);
+  box-sizing: border-box;
+  padding: var(--ds-space-2) var(--ds-space-4);
+  border: var(--ds-border) solid var(--ds-line-strong);
+  border-radius: var(--ds-radius-sm);
+  background: var(--ds-surface);
+  color: var(--ds-ink);
+  font-family: inherit;
+  font-size: var(--ds-text-base);
+  font-weight: var(--ds-weight-regular);
+  letter-spacing: normal;
+  text-transform: none;
+}
+body.design-v2 #multaModal .mocr-item :is(.mocr-valor, .mocr-alternativas):focus-visible,
+body.design-v2 #multaModal .mocr-revisao summary:focus-visible,
+body.design-v2 #multaModal .mocr-diagnostico summary:focus-visible {
+  outline: var(--ds-border-tab) solid var(--ds-focus);
+  outline-offset: var(--ds-space-1);
+}
+body.design-v2 #multaModal .mocr-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ds-space-3);
+}
+body.design-v2 #multaModal :is(.mocr-acoes, .mocr-revisao-topo) .btn,
+body.design-v2 #multaModal #mocrCancelar {
+  min-width: 0;
+  max-width: 100%;
+  min-height: var(--ds-control-h-sm);
+  height: auto;
+  padding: var(--ds-space-3) var(--ds-space-5);
+  border-radius: var(--ds-radius-sm);
+  font-size: var(--ds-text-xs);
+  font-weight: var(--ds-weight-medium);
+  line-height: var(--ds-leading-normal);
+  white-space: normal;
+  overflow-wrap: anywhere;
+  box-shadow: var(--ds-shadow-none);
+}
+body.design-v2 #multaModal :is(.mocr-acoes, .mocr-revisao-topo) .btn:hover,
+body.design-v2 #multaModal #mocrCancelar:hover { transform: none; }
+body.design-v2 #multaModal .mocr-item.resolvido {
+  border-left-color: var(--ds-line-strong);
+  background: var(--ds-surface-subtle);
+}
+body.design-v2 #multaModal .mocr-item.resolvido .mocr-motivo { color: var(--ds-muted); }
+body.design-v2 #multaModal .mocr-revisao summary,
+body.design-v2 #multaModal .mocr-diagnostico summary {
+  min-width: 0;
+  min-height: var(--ds-control-h-sm);
+  box-sizing: border-box;
+  padding: var(--ds-space-3) 0;
+  color: var(--ds-ink);
+  font-family: inherit;
+  font-size: var(--ds-text-xs);
+  font-weight: var(--ds-weight-semibold);
+  line-height: var(--ds-leading-normal);
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+body.design-v2 #multaModal .mocr-diagnostico pre {
+  max-width: 100%;
+  max-height: calc(var(--ds-space-8) * 10);
+  margin: var(--ds-space-6) 0 0;
+  padding: var(--ds-space-4);
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  border: var(--ds-border) solid var(--ds-line);
+  border-radius: var(--ds-radius-sm);
+  background: var(--ds-surface-subtle);
+  color: var(--ds-ink);
+  font-size: var(--ds-text-xs);
+  line-height: var(--ds-leading-normal);
+}
+body.design-v2 #multaModal .mocr-diagnostico ul {
+  margin: var(--ds-space-4) 0 0;
+  padding-left: var(--ds-space-7);
+  color: var(--ds-muted);
+  font-size: var(--ds-text-xs);
+  line-height: var(--ds-leading-normal);
+  overflow-wrap: anywhere;
+}
+body.design-v2 #multaModal #mocrSalvarDica {
+  margin: 0;
+  min-width: 0;
+  color: var(--ds-warning-ink);
+  font-size: var(--ds-text-xs);
+  line-height: var(--ds-leading-normal);
+  overflow-wrap: anywhere;
+}
+@media (min-width: 768px) {
+  body.design-v2 #multaModal .mocr-item:has(.mocr-recorte) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  body.design-v2 #multaModal .mocr-item:has(.mocr-recorte) :is(h4, .mocr-motivo, .mocr-original, .mocr-acoes, .dica) { grid-column: 1 / -1; }
+  body.design-v2 #multaModal .mocr-item:has(.mocr-recorte) .mocr-recorte { grid-column: 2; grid-row: 3 / span 2; }
+  body.design-v2 #multaModal .mocr-item:has(.mocr-recorte) .mocr-edicao { grid-column: 1; grid-row: 3; }
+  body.design-v2 #multaModal .mocr-item:has(.mocr-opcoes) .mocr-edicao:not(.mocr-opcoes) { grid-row: 4; }
+}
+@media (max-width: 767px) {
+  /* Só a nova área de conferência recebe alvos de toque; a casca do wizard
+     e os campos existentes permanecem com o contrato mobile atual. */
+  body.design-v2 #multaModal .mocr-item .mocr-valor,
+  body.design-v2 #multaModal .mocr-item .mocr-alternativas,
+  body.design-v2 #multaModal .mocr-revisao summary,
+  body.design-v2 #multaModal .mocr-diagnostico summary,
+  body.design-v2 #multaModal :is(.mocr-acoes, .mocr-revisao-topo) .btn,
+  body.design-v2 #multaModal #mocrCancelar {
+    min-height: calc(var(--ds-control-h) + var(--ds-space-5));
+    font-size: var(--ds-text-base);
+  }
+}

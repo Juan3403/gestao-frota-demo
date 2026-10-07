@@ -1,0 +1,58 @@
+/* ============================================================================
+   design-manutencao.css — CAMADA DO MÓDULO MANUTENÇÃO
+
+   Só existe por causa de uma armadilha de especificidade do legado: a tabela de
+   Eventos tem regras por ID em styles.css (`#tabelaMnt`, `#tabelaMnt thead th`,
+   `#tabelaMnt tbody td`, `#tabelaMnt .pill-trigger`) que datam de quando a
+   tabela precisou ficar mais compacta que o padrão — um ID sempre vence
+   qualquer seletor de classe do Design System (`.ds-modulo .tabela-wrap
+   thead th`), então sem isto o cabeçalho e as células ficavam presos no
+   tamanho antigo enquanto o resto do módulo já vestia o Design System
+   (achado ao migrar Manutenção, pego pela comparação de estilos computados
+   contra Rastreadores). A pílula Tipo/Centro de Custo (`#tabelaMnt
+   .pill-trigger`, `styles.css:412`) escapou dessa primeira migração — pego na
+   auditoria de padronização visual seguinte, com o mesmo detector.
+
+   Único jeito de vencer um ID sem `!important` é igualar a especificidade com
+   outro ID — é o mesmo recurso que `design-v2.css` já usa para a Frota
+   (`#frota #tabela thead th[data-campo="modelo"]`). Os valores usados abaixo
+   são os MESMOS tokens que o resto do Design System já usa para tabela — não é
+   um tamanho novo, é o mesmo tamanho, só que reafirmado com a especificidade
+   necessária para vencer o ID do legado.
+
+   Carrega DEPOIS do Design System. Continua sem um único `!important`.
+   ============================================================================ */
+
+@media (min-width: 768px) {
+
+body.design-v2 #manutencao #tabelaMnt {
+  font-size: var(--ds-text-base);
+}
+body.design-v2 #manutencao #tabelaMnt thead th {
+  padding: var(--ds-space-4) var(--ds-space-6);
+  font-size: var(--ds-text-xs);
+}
+body.design-v2 #manutencao #tabelaMnt tbody td {
+  padding: var(--ds-space-2) var(--ds-space-6);
+}
+/* o padding por ID acima vence a regra genérica de densidade (03-base.css) —
+   repõe o respiro no modo confortável */
+body.design-v2 #manutencao[data-densidade="confortavel"] #tabelaMnt tbody td {
+  padding: var(--ds-space-4) var(--ds-space-6);
+}
+body.design-v2 #manutencao #tabelaMnt .pill-trigger {
+  padding: var(--ds-space-1) var(--ds-space-4);
+  font-size: var(--ds-text-xs);
+}
+
+}
+
+/* ----- Odômetro (sub-aba #mnt-odometro e o modal #odoVeiculoModal) -----
+   A Situação do veículo reusa a pílula `.mntv-tipo` da Manutenção (forma no DS §11.8,
+   `cor` = a conferir, `prev` = em dia, paleta no styles.css). Faltava um TERCEIRO estado,
+   "sem leitura recente", que é aviso e não erro: variante âmbar, só por token. Fica FORA do
+   @media acima de propósito: o modal (fora do .ds-modulo) e o celular também a usam. */
+body.design-v2 .mntv-tipo.aviso {
+  background: var(--ds-warning-soft);
+  color: var(--ds-warning-ink);
+}

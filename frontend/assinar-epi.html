@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>Assinatura de Ficha de EPI – Gestão RM</title>
+<meta name="description" content="Assine a distância a ficha de entrega de EPI recebida." />
+<link rel="icon" type="image/png" sizes="64x64" href="/favicon-64.png" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* Tela pública auto-contida: os valores abaixo são cópia literal de
+     design-system/01-tokens.css + 02-themes.css (mesmo padrão do login —
+     a página não carrega o DS; ver docs/DESIGN.md §11.4). */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --tinta: #17211b; --tinta-2: #414b44; --mudo: #5c685f; --linha: #d4dad5; --linha-forte: #808d85;
+    --papel: #ffffff; --fundo: #f3f5f2; --brand: #31363e; --brand-hover: #4a5058;
+    --shell-bg: #121417; --shell-tile: #1f2227; --shell-tile-line: #31363e;
+    --erro: #b42318; --erro-nevoa: #fbefed;
+    --ok: #1f6f4a; --ok-nevoa: #eaf7ef; --radius: 8px;
+  }
+  html { -webkit-text-size-adjust: 100%; }
+  body { font-family: 'Hanken Grotesk', system-ui, sans-serif; background: var(--fundo); color: var(--tinta); min-height: 100vh; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  .topo { background: var(--shell-bg); height: 52px; display: flex; align-items: center; padding: 0 clamp(16px, 4vw, 40px); gap: 12px; }
+  .logo-box { background: var(--shell-tile); border: 1px solid var(--shell-tile-line); color: #fff; font-weight: 700; font-size: 17px; letter-spacing: .04em; padding: 3px 10px; border-radius: 6px; }
+  .topo-nome { color: #f0f1f3; font-size: 13px; font-weight: 600; letter-spacing: .04em; }
+  main { max-width: 640px; margin: 0 auto; padding: clamp(16px, 4vw, 40px) clamp(12px, 4vw, 24px) 96px; }
+  .folha { background: var(--papel); border: 1px solid var(--linha); border-radius: var(--radius); overflow: hidden; padding: clamp(18px, 4vw, 30px); }
+  h1 { font-size: clamp(19px, 4vw, 23px); font-weight: 700; letter-spacing: -.015em; margin-bottom: 4px; }
+  .sub { font-size: 13px; color: var(--mudo); margin-bottom: 18px; }
+  .sub b { color: var(--tinta); }
+  /* ---- status (carregando / erro / expirado / já assinado) ---- */
+  #status-screen { text-align: center; padding: 40px 10px; }
+  .status-icon { font-size: 44px; margin-bottom: 12px; }
+  .status-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  .status-msg { font-size: 13.5px; color: var(--mudo); max-width: 420px; margin: 0 auto; }
+  /* ---- lista de itens ---- */
+  .itens { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+  .item { flex: 1 1 200px; min-width: 160px; display: flex; flex-direction: column; gap: 2px; padding: 8px 12px; border-radius: 4px; background: var(--fundo); border: 1px solid var(--linha); font-size: 12.5px; }
+  .item-tit { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .item-tit b { flex: 0 0 auto; white-space: nowrap; }
+  .item-sub { font-size: 11.5px; color: var(--mudo); }
+  /* ---- assinatura ---- */
+  label.rotulo { display: block; font-size: 12.5px; font-weight: 600; color: var(--tinta-2); margin-bottom: 6px; }
+  #nome-quem-assina { width: 100%; height: 40px; padding: 0 12px; border: 1px solid var(--linha-forte); border-radius: 4px; font: inherit; font-size: 14px; margin-bottom: 14px; background: var(--papel); color: var(--tinta); }
+  #nome-quem-assina:focus { outline: none; }
+  #nome-quem-assina:focus-visible { border-color: var(--brand-hover); box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-hover) 22%, transparent); }
+  .modos { display: flex; border: 1px solid var(--linha-forte); border-radius: 4px; overflow: hidden; margin-bottom: 12px; }
+  .modo-btn { flex: 1 1 0; padding: 10px; border: 0; background: var(--fundo); font: inherit; font-size: 13.5px; font-weight: 600; color: var(--mudo); cursor: pointer; }
+  .modo-btn.on { background: var(--brand); color: #fff; }
+  .quadro { position: relative; border: 2px dashed var(--linha-forte); border-radius: var(--radius); background: #fff; overflow: hidden; margin-bottom: 6px; }
+  #assina-canvas { display: block; width: 100%; height: clamp(150px, 32vh, 220px); touch-action: none; cursor: crosshair; }
+  .quadro-digitado { display: none; align-items: center; justify-content: center; height: clamp(150px, 32vh, 220px); }
+  .previa { font-family: 'Segoe Script', 'Brush Script MT', cursive; font-size: clamp(24px, 6vw, 36px); color: var(--tinta); }
+  .dica { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--linha-forte); font-size: 13px; pointer-events: none; }
+  .ferramentas { position: absolute; top: 8px; right: 8px; display: flex; gap: 6px; }
+  .ferramentas button { border: 1px solid var(--linha); background: #fff; border-radius: 4px; padding: 5px 9px; font-size: 11.5px; cursor: pointer; color: var(--mudo); }
+  .ferramentas button:disabled { opacity: .45; cursor: default; }
+  .aceite { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 4px; background: var(--fundo); border: 1px solid var(--linha); font-size: 12px; line-height: 1.55; color: var(--tinta-2); margin: 14px 0 18px; }
+  .aceite input { margin-top: 3px; width: 16px; height: 16px; flex: 0 0 auto; }
+  .btn-confirmar { width: 100%; height: 44px; border: 0; border-radius: 4px; background: var(--brand); color: #fff; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; transition: background .12s ease; }
+  .btn-confirmar:hover { background: var(--brand-hover); }
+  .btn-confirmar:disabled { opacity: .45; cursor: default; }
+  #erro-envio { display: none; margin-top: 10px; padding: 10px 12px; border-radius: 4px; background: var(--erro-nevoa); color: var(--erro); font-size: 12.5px; }
+  #toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%) translateY(20px); background: var(--shell-bg); color: #fff; padding: 10px 18px; border-radius: 4px; font-size: 13px; opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; z-index: 20; }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  #toast.erro { background: var(--erro); }
+  @media (max-width: 480px) { .itens { flex-direction: column; } }
+</style>
+</head>
+<body>
+
+<header class="topo">
+  <div class="logo-box">RM</div>
+  <span class="topo-nome">Gestão RM · Assinatura de EPI</span>
+</header>
+
+<main>
+  <div class="folha">
+    <div id="status-screen">
+      <div class="status-icon" id="status-icon">⏳</div>
+      <div class="status-title" id="status-title">Carregando…</div>
+      <p class="status-msg" id="status-msg">Validando o seu link.</p>
+    </div>
+
+    <div id="form-main" style="display:none;">
+      <h1>Assinatura de Ficha de EPI</h1>
+      <p class="sub">Confira os equipamentos recebidos e assine abaixo, <b id="colab-nome"></b>.</p>
+
+      <div class="itens" id="itens-lista"></div>
+
+      <label class="rotulo" for="nome-quem-assina">Nome de quem assina</label>
+      <input id="nome-quem-assina" maxlength="120" autocomplete="off" placeholder="Nome completo">
+
+      <div class="modos">
+        <button type="button" class="modo-btn on" id="modo-desenhar" data-modo="desenho">✍ Desenhar</button>
+        <button type="button" class="modo-btn" id="modo-digitar" data-modo="digitado">⌨ Digitar</button>
+      </div>
+
+      <div class="quadro" id="quadro-desenho">
+        <canvas id="assina-canvas"></canvas>
+        <span class="dica" id="dica-assina">assine aqui com o dedo ou o mouse</span>
+        <div class="ferramentas">
+          <button type="button" id="btn-desfazer" disabled>↶ desfazer</button>
+          <button type="button" id="btn-limpar">✕ limpar</button>
+        </div>
+      </div>
+      <div class="quadro-digitado" id="quadro-digitado">
+        <span class="previa" id="previa-assinatura"></span>
+      </div>
+
+      <label class="aceite">
+        <input type="checkbox" id="aceite-check">
+        <span id="aceite-texto"></span>
+      </label>
+
+      <button type="button" class="btn-confirmar" id="btn-confirmar" disabled>Confirmar assinatura</button>
+      <p id="erro-envio"></p>
+    </div>
+
+    <div id="success-screen" style="display:none; text-align:center; padding:40px 10px;">
+      <div class="status-icon">✅</div>
+      <div class="status-title">Assinatura registrada!</div>
+      <p class="status-msg">Obrigado — a ficha já foi atualizada no sistema. Pode fechar esta página.</p>
+    </div>
+  </div>
+</main>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="/assinar-epi.js"></script>
+</body>
+</html>

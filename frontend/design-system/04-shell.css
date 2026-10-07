@@ -1,0 +1,223 @@
+/* ============================================================================
+   04-shell.css — ESTRUTURA GLOBAL (sidebar, topbar, cabeçalho, área principal)
+
+   ⚠️ NENHUM seletor aqui menciona módulo. O shell pende de UMA classe no
+   <body>:
+
+       body.ds-shell
+
+   ligada pelo app.js (`sincronizarShellDS`) quando o Design System está ativo E
+   a view em cena é um módulo migrado (`.ds-modulo`). Isso substitui o
+   `body.design-v2:has(#frota.view.active)` do piloto e tem três ganhos:
+
+     1. o CSS deixa de conhecer o nome do módulo — migrar o próximo é
+        acrescentar `ds-modulo` na <section> dele, sem tocar aqui;
+     2. some a reavaliação de `:has()` no <body> a cada troca de aba (são 28
+        views);
+     3. os menus que o app porta para o <body> (pílula de status, multiselect
+        flutuante) ficam no mesmo escopo, sem seletor especial.
+
+   O shell continua NÃO vazando para módulos não migrados: sair de um módulo
+   migrado devolve o tema escolhido pelo usuário. Isso é contrato coberto por
+   teste ("o shell do piloto vive na Frota e não vaza para Multas").
+   ============================================================================ */
+
+@media (min-width: 768px) {
+
+/* ============================================================
+   1. Área principal
+   ============================================================ */
+body.ds-shell { background: var(--ds-canvas); }
+/* A GRADE BLUEPRINT de 44px mora em `.main-area` (styles.css, padrão Núcleo RM
+   v2), não no `body::after` que já está desligado. Sem este reset o fundo
+   chapado nem aparece. */
+body.ds-shell .main-area {
+  background-color: var(--ds-canvas);
+  background-image: none;
+}
+body.ds-shell main { padding: var(--ds-space-7) var(--ds-space-8) 28px; }
+
+/* ============================================================
+   2. Sidebar
+   Os tokens dela (superfície escura) vêm da ponte em 02-themes.
+   ============================================================ */
+body.ds-shell .sidebar {
+  background: var(--ds-shell-bg);
+  border-right: var(--ds-border) solid var(--ds-shell-line);
+  box-shadow: var(--ds-shadow-none);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  /* Fonte NATIVA só na sidebar (pedido ago/2026): Segoe UI no Windows. O escopo
+     ds-shell já vive dentro do @media ≥768px — o celular continua na fonte do app. */
+  font-family: system-ui, 'Segoe UI', sans-serif;
+}
+/* A marca era o único ponto do shell ainda em Bricolage (h1 herda --display) */
+body.ds-shell .sidebar .brand-text h1 { font-family: inherit; }
+body.ds-shell .sidebar-top {
+  padding: var(--ds-space-7) var(--ds-space-7) 14px;
+  border-bottom: var(--ds-border) solid var(--ds-shell-line);
+}
+body.ds-shell .logo {
+  width: 40px; height: 40px;
+  border-radius: var(--ds-radius-md);
+  background: var(--ds-shell-tile);
+  border: var(--ds-border) solid var(--ds-shell-tile-line);
+  box-shadow: var(--ds-shadow-none);
+}
+body.ds-shell .logo:hover {
+  filter: none; transform: none;
+  background: var(--ds-shell-tile-hover);
+}
+body.ds-shell .brand-text h1 {
+  font-size: var(--ds-text-lg);
+  font-weight: var(--ds-weight-bold);
+  letter-spacing: var(--ds-tracking-snug);
+  color: var(--ds-shell-ink);
+}
+/* eyebrow mono minúsculo em caixa alta sai — regra do desenho */
+body.ds-shell .brand-text .sub {
+  font-family: var(--body);
+  font-size: var(--ds-text-2xs);
+  font-weight: var(--ds-weight-regular);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ds-shell-muted-2);
+}
+
+/* ----- 2.1 Navegação ----- */
+body.ds-shell .side-nav { padding: var(--ds-space-4) var(--ds-space-4) var(--ds-space-5); }
+body.ds-shell .nav-group { margin-top: 14px; gap: 1px; }
+body.ds-shell .nav-group-title {
+  font-family: var(--body);
+  font-size: var(--ds-text-3xs);
+  font-weight: var(--ds-weight-semibold);
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ds-shell-muted-2);
+  padding: var(--ds-space-3) var(--ds-space-5) var(--ds-space-2);
+}
+body.ds-shell .side-nav .tab {
+  padding: 7px var(--ds-space-5);
+  border-radius: var(--ds-radius-sm);
+  font-size: var(--ds-text-md);
+  font-weight: var(--ds-weight-medium);
+  color: var(--ds-shell-ink-2);
+  border: var(--ds-border) solid transparent;
+  gap: var(--ds-space-5);
+}
+body.ds-shell .side-nav .tab:hover {
+  background: var(--ds-shell-bg-2);
+  color: var(--ds-shell-ink);
+  box-shadow: var(--ds-shadow-none);
+  border-color: transparent;
+}
+body.ds-shell .side-nav .tab.active {
+  background: var(--ds-shell-bg-active);
+  color: var(--ds-shell-ink);
+  font-weight: var(--ds-weight-semibold);
+  box-shadow: var(--ds-shadow-none);
+}
+body.ds-shell .side-nav .tab.active svg { color: var(--ds-shell-accent); }
+/* a barra de 3px continua: é a pista de "aba ativa" que NÃO depende de cor */
+body.ds-shell .side-nav .tab.active::before {
+  left: calc(var(--ds-space-4) * -1);
+  top: var(--ds-space-3);
+  bottom: var(--ds-space-3);
+  width: var(--ds-border-accent);
+  background: var(--ds-shell-accent);
+  border-radius: 0 var(--ds-space-1) var(--ds-space-1) 0;
+}
+body.ds-shell .sidebar-perfil,
+body.ds-shell .sidebar-versao { border-radius: var(--ds-radius-sm); }
+
+/* ----- 2.2 Sidebar estilo Cobli (trilho + painel de 2º nível, só desktop) -----
+   A geometria mora em styles.css (~linha 190); aqui só as cores do shell escuro —
+   os tabs dentro do painel usam tinta clara (--ds-shell-ink-2), então o painel
+   PRECISA da superfície do shell, não de --panel. */
+@media (min-width: 901px) {
+  /* a regra base do shell (padding/fonte de título de acordeão) espremia o rótulo do
+     trilho — aqui ele é coluna ícone+texto, sem padding lateral */
+  body.ds-shell .nav-group-title { padding: 7px 0 6px; font-size: 10px; font-weight: var(--ds-weight-semibold); }
+  body.ds-shell .side-nav { padding-left: 3px; padding-right: 3px; }
+  /* o padding largo da regra base do shell espremia o logo de 40px no trilho — centro real */
+  body.ds-shell .sidebar-top { padding: 14px 0 10px; width: 64px; justify-content: center; }
+  body.ds-shell .nav-group-painel {
+    background: var(--ds-shell-bg);
+    border-right-color: var(--ds-shell-line);
+  }
+  body.ds-shell .nav-group-painel .nav-flyout-head { border-bottom-color: var(--ds-shell-line); }
+  body.ds-shell .nav-flyout-head .nfh-titulo { color: var(--ds-shell-ink); }
+  body.ds-shell .nav-flyout-head .nfh-pin { border-color: var(--ds-shell-line); color: var(--ds-shell-muted-2); }
+  body.ds-shell .nav-flyout-head .nfh-pin:hover { border-color: var(--ds-shell-accent); color: var(--ds-shell-accent); }
+  body.ds-shell .nav-flyout-head .nfh-pin[aria-pressed="true"] {
+    background: var(--ds-shell-accent); border-color: var(--ds-shell-accent); color: var(--ds-shell-bg);
+  }
+  body.ds-shell .nav-group-title:hover .ngt-ico,
+  body.ds-shell .nav-group-title:focus-visible .ngt-ico { background: var(--ds-shell-bg-2); color: var(--ds-shell-ink); }
+  body.ds-shell .nav-group.ativo > .nav-group-title,
+  body.ds-shell .nav-group.flyout-aberto > .nav-group-title,
+  body.ds-shell .nav-group.flyout-fixado > .nav-group-title { color: var(--ds-shell-ink); }
+  body.ds-shell .nav-group.ativo > .nav-group-title .ngt-ico,
+  body.ds-shell .nav-group.flyout-aberto > .nav-group-title .ngt-ico,
+  body.ds-shell .nav-group.flyout-fixado > .nav-group-title .ngt-ico {
+    background: var(--ds-shell-bg-active); color: var(--ds-shell-accent);
+    box-shadow: inset 0 0 0 1px var(--ds-shell-tile-line);
+  }
+}
+
+/* ============================================================
+   3. Topbar = cabeçalho institucional da página
+   ============================================================ */
+body.ds-shell .topbar {
+  background: var(--ds-surface);
+  border-bottom: var(--ds-border) solid var(--ds-line);
+  border-top: 0; border-left: 0; border-right: 0;
+  border-radius: 0;
+  box-shadow: var(--ds-shadow-none);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  padding: var(--ds-space-5) var(--ds-space-8);
+  gap: 14px;
+}
+body.ds-shell .page-title {
+  font-family: var(--body);
+  font-size: var(--ds-text-3xl);
+  font-weight: var(--ds-weight-bold);
+  letter-spacing: var(--ds-tracking-tight);
+  color: var(--ds-ink);
+  line-height: var(--ds-leading-snug);
+}
+body.ds-shell .page-sub {
+  font-size: var(--ds-text-base);
+  color: var(--ds-muted);
+}
+body.ds-shell .topbar .btn-ghost {
+  border-radius: var(--ds-radius-sm);
+  border-color: var(--ds-line-strong);
+  background: var(--ds-surface);
+  color: var(--ds-ink);
+  box-shadow: var(--ds-shadow-none);
+}
+body.ds-shell .topbar .btn-ghost:hover {
+  transform: none;
+  box-shadow: var(--ds-shadow-none);
+  background: var(--ds-surface-subtle);
+  border-color: var(--ds-primary);
+  color: var(--ds-primary);
+}
+
+/* ============================================================
+   4. Menus portados para o <body>
+   O app move a pílula de status e o multiselect para fora do módulo
+   (`ancorarMenuFixo`), então eles não estão dentro de `.ds-modulo` e precisam
+   ser vestidos pelo escopo do shell.
+   ============================================================ */
+body.ds-shell .pill-menu-portaled,
+body.ds-shell .msel-menu-flutuante {
+  background: var(--ds-surface);
+  border: var(--ds-border) solid var(--ds-line);
+  border-radius: var(--ds-radius-lg);
+  box-shadow: var(--ds-shadow-float);
+}
+
+}

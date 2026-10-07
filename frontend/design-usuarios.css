@@ -1,0 +1,301 @@
+/* ============================================================================
+   CAMADA DO MÓDULO: Painel Administrativo — <section id="usuarios">
+   Carrega DEPOIS do Design System e do styles.css (ver a ordem em index.html), então vence o
+   legado por posição, sem `!important`.
+
+   POR QUE ESTA CAMADA EXISTE: a tela foi desenhada no Claude Design e o handoff pede recriação
+   pixel-perfect. O desenho foi feito SOBRE a paleta deste Design System — cada hex do protótipo
+   é um token daqui (#fff3d6 = --ds-amber-50/--ds-warning-soft, #8a5700 = --ds-warning,
+   #6f4600 = --ds-warning-ink, #d4dad5 = --ds-line, #808d85 = --ds-line-strong,
+   #e9ede9 = --ds-surface-subtle, #175cd3 = --ds-info, #1f6f4a = --ds-success...), e a fonte do
+   protótipo ('Hanken Grotesk') é a mesma --body. Ou seja: só a MEDIDA precisava ser trazida.
+   Onde o desenho conflita com o componente genérico do DS, o desenho ganha — foi decisão do
+   Juan (17/08/2026), ciente de que esta aba passa a divergir das outras nesses pontos:
+     · o número do indicador é 28px/700 na fonte do corpo, não a mono fluida do .v2-kpi;
+     · o rótulo do indicador vai em MAIÚSCULAS;
+     · controle é 34px (busca/segmentado) e 30/32px (ações e filtros da auditoria).
+   A única parte do protótipo deliberadamente NÃO recriada é a barra branca de topo com os quatro
+   botões de ícone: a v1.53.28 tirou essa barra do desktop em todo o site e mandou os ícones para o
+   menu do usuário — recriá-la só aqui deixaria esta aba fora do padrão das outras.
+
+   `test/design-system.test.js` audita este arquivo (achado pelo padrão `design-*.css`): sem
+   `!important`, cor só por token/color-mix, e raio/sombra/espessura só por var(--ds-*).
+   ============================================================================ */
+
+/* ---------------------------------------------------------------------------
+   1. FAIXA DE INDICADORES (#admStats)
+   A moldura (grade de 1px, borda, raio) vem do `.v2-kpis` genérico; aqui fica o que é decisão
+   do módulo — quantas colunas — mais a tipografia do desenho. Mesmo arranjo de #frotaKpis
+   (design-v2.css) e #cardsMultas.
+   --------------------------------------------------------------------------- */
+body.design-v2 #usuarios #admStats { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+@media (max-width: 1100px) {
+  body.design-v2 #usuarios #admStats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+body.design-v2 #usuarios #admStats .v2-kpi { padding: 14px 18px; gap: 2px; }
+body.design-v2 #usuarios #admStats .v2-kpi-rot {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+}
+body.design-v2 #usuarios #admStats .v2-kpi-val {
+  font-family: var(--body);
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+body.design-v2 #usuarios #admStats .v2-kpi-nota { font-size: 12px; }
+/* A fila de aprovação é o único item acionável da tela: com gente esperando, a nota
+   ("há 3 dias, sem resposta") acompanha o número em âmbar em vez de ficar cinza. */
+body.design-v2 #usuarios #admStats .v2-kpi.aviso .v2-kpi-nota { color: var(--ds-warning); }
+
+/* ---------------------------------------------------------------------------
+   2. BANNER DE PEDIDOS PENDENTES
+   Âmbar de verdade (--ds-warning-soft É o #fff3d6 do desenho), não um creme lavado.
+   --------------------------------------------------------------------------- */
+body.design-v2 #usuarios .usr-banner-pend {
+  background: var(--ds-warning-soft);
+  border: var(--ds-border) solid var(--ds-line);
+  border-left: var(--ds-border-accent) solid var(--ds-warning);
+  border-radius: var(--ds-radius-lg);
+}
+body.design-v2 #usuarios .usr-banner-pend-cab { padding: 12px 16px; gap: 12px; }
+body.design-v2 #usuarios .usr-banner-pend-ico { color: var(--ds-warning); }
+body.design-v2 #usuarios .usr-banner-pend-tit {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ds-warning-ink);
+}
+body.design-v2 #usuarios .usr-banner-pend .usr-hint {
+  font-size: 12.5px;
+  color: var(--ds-warning-ink-soft);
+}
+body.design-v2 #usuarios #btnRecolherPend {
+  padding: 7px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  background: transparent;
+  color: var(--ds-warning-ink);
+  border: var(--ds-border) solid var(--ds-warning);
+  border-radius: var(--ds-radius-sm);
+}
+/* Os pedidos ficam em cartão branco POR CIMA do âmbar — aqui o cartão é o desenho, ao contrário
+   das linhas do card Usuários, que são faixas (ver bloco 5). */
+body.design-v2 #usuarios #listaPendentes { padding: 0 16px 12px; gap: 6px; }
+body.design-v2 #usuarios #listaPendentes .usr-item {
+  padding: 10px 12px;
+  gap: 12px;
+  background: var(--ds-surface);
+  border: var(--ds-border) solid var(--ds-line);
+  border-radius: var(--ds-radius-md);
+}
+body.design-v2 #usuarios #listaPendentes .usr-nome { font-size: 13.5px; font-weight: 600; }
+body.design-v2 #usuarios #listaPendentes .usr-sub { font-size: 12px; }
+
+/* ---------------------------------------------------------------------------
+   3. OS DOIS CARDS: respiro POR SEÇÃO, não no cartão
+   O `.cad-painel` legado tem padding uniforme (18px 20px), o que faria o filete separador nascer
+   e morrer longe da borda. No desenho o cartão não tem respiro: cada seção interna traz o seu, e
+   os filetes correm de ponta a ponta. Escopado em #usuarios porque Cadastros usa a MESMA classe.
+   --------------------------------------------------------------------------- */
+body.design-v2 #usuarios .usr-grid > .cad-painel {
+  padding: 0;
+  border-radius: var(--ds-radius-lg);
+}
+body.design-v2 #usuarios .usr-grid > .cad-painel > .cad-painel-head {
+  margin: 0;
+  padding: 14px 18px;
+  border-bottom: var(--ds-border) solid var(--ds-line);
+}
+body.design-v2 #usuarios .usr-grid > .cad-painel > .logs-filtros,
+body.design-v2 #usuarios .usr-painel-auditoria .subview > .logs-filtros {
+  margin: 0;
+  padding: 10px 18px;
+  border-bottom: var(--ds-border) solid var(--ds-line);
+}
+body.design-v2 #usuarios .usr-grid .cad-lista { padding: 0; gap: 0; }
+body.design-v2 #usuarios .usr-grid .cad-vazio { padding: 16px 18px; }
+body.design-v2 #usuarios .cad-painel-head h3 {
+  font-family: var(--body);
+  font-size: 15px;
+  font-weight: 700;
+}
+/* O contador divide a linha com a explicação da sub-aba; sem `nowrap` + `flex-shrink: 0` ele é o
+   item que encolhe (a explicação é longa) e o texto empilhava número em cima do rótulo. Quem cede
+   espaço agora é a explicação, que já quebra em várias linhas por natureza. */
+body.design-v2 #usuarios .cad-contagem { font-size: 12px; white-space: nowrap; flex: 0 0 auto; }
+
+/* ---------------------------------------------------------------------------
+   4. CARD USUÁRIOS: toggle, busca e filtro segmentado
+   --------------------------------------------------------------------------- */
+body.design-v2 #usuarios .usr-card-switch .usr-hint { font-size: 12.5px; }
+body.design-v2 #usuarios .usr-card-switch .switch-track { width: 40px; height: 22px; }
+body.design-v2 #usuarios .usr-card-switch .switch-thumb { width: 16px; height: 16px; }
+body.design-v2 #usuarios .usr-card-switch input:checked + .switch-track .switch-thumb {
+  transform: translateX(18px);
+}
+body.design-v2 #usuarios .usr-busca,
+body.design-v2 #usuarios .logs-sel {
+  border-radius: var(--ds-radius-sm);
+  border-color: var(--ds-line-strong);
+}
+/* Só a busca DENTRO do invólucro tem a lupa — o recuo de 32px é para ela, não para as buscas da
+   Auditoria, que usam a mesma classe sem ícone. */
+body.design-v2 #usuarios .usr-busca-wrap .usr-busca {
+  height: 34px;
+  padding: 0 12px 0 32px;
+  font-size: 13.5px;
+}
+body.design-v2 #usuarios .usr-busca-ico { left: 10px; }
+/* A linha de busca é FLEX, não grade: o `.usr-grid .logs-filtros` do legado põe os filtros das
+   janelas numa grade de duas colunas iguais, e ali o grupo Todos/Comum/Admin/Dev era esticado
+   até a metade da linha, deixando um vão morto depois de "Dev". No desenho a busca cresce e o
+   grupo abraça os próprios botões. */
+body.design-v2 #usuarios .usr-filtros-topo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+body.design-v2 #usuarios .usr-filtros-topo .usr-busca-wrap { flex: 1 1 220px; }
+body.design-v2 #usuarios .usr-seg {
+  flex: 0 0 auto;
+  width: max-content;
+  border-radius: var(--ds-radius-sm);
+  border-color: var(--ds-line-strong);
+}
+body.design-v2 #usuarios .usr-seg-btn {
+  height: 34px;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 500;
+}
+body.design-v2 #usuarios .usr-seg-btn.ativ {
+  font-weight: 600;
+  background: var(--ds-primary);
+  color: var(--ds-on-primary);
+}
+
+/* ---------------------------------------------------------------------------
+   5. LINHAS DE USUÁRIO: faixa com filete, não cartão
+   --------------------------------------------------------------------------- */
+body.design-v2 #usuarios .usr-grid .usr-item {
+  padding: 12px 18px;
+  gap: 10px 12px;
+  background: none;
+  border: 0;
+  border-bottom: var(--ds-border) solid var(--ds-line);
+  border-radius: 0;
+}
+body.design-v2 #usuarios .usr-grid .usr-item:last-child { border-bottom: 0; }
+body.design-v2 #usuarios .usr-grid .usr-item:hover { background: var(--ds-surface-hover); }
+body.design-v2 #usuarios .usr-nome { font-size: 14px; font-weight: 600; }
+body.design-v2 #usuarios .usr-nome .usr-sub { font-size: 12px; }
+/* Chip de área: retângulo suave e SEM borda (a pílula fica reservada aos badges de nível), em
+   dois tons — quem edita puxa para o azul da marca, quem só vê fica no cinza neutro. */
+body.design-v2 #usuarios .usr-perm-rot { font-size: 11.5px; }
+body.design-v2 #usuarios .usr-perm-chip {
+  padding: 2px 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  border: 0;
+  border-radius: var(--ds-radius-sm);
+  background: var(--ds-surface-subtle);
+  color: var(--ds-ink-strong);
+}
+body.design-v2 #usuarios .usr-perm-chip.edita {
+  background: color-mix(in srgb, var(--ds-primary) 10%, var(--ds-surface-subtle));
+  color: color-mix(in srgb, var(--ds-primary) 80%, var(--ds-ink));
+}
+body.design-v2 #usuarios .usr-perm-mais { background: transparent; }
+/* Ações compactas: 30px só na lista de ativos. Os botões do pedido pendente são maiores no
+   desenho (Aprovar/Recusar são a ação principal da faixa) e ficam com o tamanho do .btn.small. */
+body.design-v2 #usuarios #listaAtivos .usr-acoes .btn.small {
+  height: 30px;
+  padding: 0 10px;
+  font-size: 12.5px;
+}
+body.design-v2 #usuarios .usr-nivel-sel {
+  height: 30px;
+  padding: 0 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  border-radius: var(--ds-radius-sm);
+  border-color: var(--ds-line-strong);
+}
+body.design-v2 #usuarios .usr-acoes [data-permissoes] {
+  border-color: var(--ds-primary);
+  color: var(--ds-primary);
+}
+body.design-v2 #usuarios .usr-acoes .perigo { color: var(--ds-danger); }
+
+/* ---------------------------------------------------------------------------
+   6. CARD AUDITORIA: título e sub-abas na MESMA linha
+   O `.subtabs` genérico é uma barra própria embaixo do título (Almoxarifado/EPI/Instalações usam
+   assim). Aqui ele encosta na linha do título, ancorado pela base — e por isso o cabeçalho perde
+   o padding de baixo: quem fecha a linha é o filete do próprio cabeçalho.
+   O sublinhado da aba ativa continua sendo o `border-bottom` do `.subtab` genérico.
+   --------------------------------------------------------------------------- */
+body.design-v2 #usuarios .usr-audit-head { align-items: flex-end; padding-bottom: 0; }
+body.design-v2 #usuarios .usr-audit-head h3 { margin: 0 auto 12px 0; }
+body.design-v2 #usuarios .usr-audit-head .subtabs {
+  margin: 0;
+  gap: 18px;
+  border-bottom: 0;
+  overflow: visible;
+}
+body.design-v2 #usuarios .usr-audit-head .subtab {
+  margin: 0;
+  padding: 0 2px 10px;
+  font-size: 13.5px;
+  font-weight: 500;
+  border-radius: 0;
+}
+body.design-v2 #usuarios .usr-audit-head .subtab.active { font-weight: 700; color: var(--ds-ink); }
+body.design-v2 #usuarios .usr-audit-head .subtab:hover:not(.active) {
+  background: none;
+  color: var(--ds-ink);
+}
+/* Dentro da sub-aba o "cabeçalho" é só a explicação + contador: sem filete, sem título repetido. */
+body.design-v2 #usuarios .usr-painel-auditoria .subview > .cad-painel-head {
+  margin: 0;
+  padding: 10px 18px 0;
+  border-bottom: 0;
+}
+body.design-v2 #usuarios .usr-painel-auditoria .subview > .cad-painel-head h3 { display: none; }
+/* Barra de filtros numa LINHA só, como no desenho: a busca cresce e os selects abraçam o próprio
+   conteúdo. O legado põe estes painéis numa grade de duas colunas (styles.css) — fazia sentido
+   quando a barra tinha cinco controles; com três, deixaria buraco. */
+body.design-v2 #usuarios .usr-painel-auditoria .logs-filtros {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px;
+}
+/* `width: auto` é essencial: a `.usr-busca` do legado é `width: 100%`, e como `flex-basis: auto`
+   lê a largura declarada, ela sozinha ocupava a linha e empurrava os selects para baixo. */
+body.design-v2 #usuarios .usr-painel-auditoria .usr-busca {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+  grid-column: auto;
+}
+body.design-v2 #usuarios .usr-painel-auditoria .logs-sel { flex: 0 0 auto; }
+body.design-v2 #usuarios .usr-painel-auditoria .usr-busca,
+body.design-v2 #usuarios .usr-painel-auditoria .logs-sel {
+  height: 32px;
+  padding: 0 10px;
+  font-size: 13px;
+}
+body.design-v2 #usuarios .usr-painel-auditoria .subview .cad-lista { padding: 6px 18px 14px; }
+body.design-v2 #usuarios .usr-painel-auditoria .usr-item { padding: 10px 0; }
+body.design-v2 #usuarios .atv-linha { gap: 12px; }
+body.design-v2 #usuarios .atv-texto { font-size: 13px; line-height: 1.45; }
+body.design-v2 #usuarios .atv-meta { font-size: 12px; margin-top: 2px; }
+/* Cor do ponto por natureza da ação — os hexes do desenho são estes tokens.
+   `importou` (roxo) não tem token semântico e continua vindo do styles.css. */
+body.design-v2 #usuarios .atv-dot.editou { background: var(--ds-info); }
+body.design-v2 #usuarios .atv-dot.adicionou,
+body.design-v2 #usuarios .atv-dot.entrou { background: var(--ds-success); }
+body.design-v2 #usuarios .atv-dot.excluiu,
+body.design-v2 #usuarios .atv-dot.bloqueado { background: var(--ds-danger); }
+body.design-v2 #usuarios .atv-dot.falhou { background: var(--ds-warning); }
